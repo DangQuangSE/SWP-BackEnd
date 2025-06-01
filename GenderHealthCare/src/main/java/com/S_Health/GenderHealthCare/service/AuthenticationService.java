@@ -6,13 +6,21 @@ import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Optional;
 
 @Service
 public class AuthenticationService implements UserDetailsService {
@@ -22,19 +30,23 @@ public class AuthenticationService implements UserDetailsService {
     PasswordEncoder passwordEncoder;
     @Autowired
     AuthenticationManager authenticationManager;
+    @Autowired
+    JWTService jwtService;
+    @Value("${google.client.id}")
+    private String googleClientId;
     public User registerStep1(RegisterRequestStep1 request) {
         // Kiểm tra trùng số điện thoại
         if (authenticationRepository.existsByPhone(request.getPhone())) {
-            throw new AuthenticationException("Số điện thoại đã tồn tại!");
+            throw new AuthenticationException("Phone exist!");
         }
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new AuthenticationException("Mật khẩu không khớp");
+            throw new AuthenticationException("Confirm password not match!");
         }
         User user = User.builder()
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.CUSTOMER)
-                .isActice(true)
+                .isActive(true)
                 .isVerify(false)
                 .build();
 
@@ -42,7 +54,7 @@ public class AuthenticationService implements UserDetailsService {
     }
     public User registerStep2(RegisterRequestStep2 request, String phone) {
         User user = authenticationRepository.findByPhone(phone)
-                .orElseThrow(() -> new AuthenticationException("Không tìm thấy số điện thoại"));
+                .orElseThrow(() -> new AuthenticationException("Phone not exist!"));
 
         user.setFullname(request.getFullname());
         user.setEmail(request.getEmail());
@@ -50,6 +62,43 @@ public class AuthenticationService implements UserDetailsService {
         user.setGender(request.getGender());
         return authenticationRepository.save(user);
     }
+
+    public String loginWithGoogleToken(String googleToken) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance()
+            ).setAudience(Collections.singletonList(googleClientId)).build();
+
+            GoogleIdToken idToken = verifier.verify(googleToken);
+            if (idToken == null) {
+                throw new AuthenticationException("Invalid Google ID Token");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String imageUrl = (String) payload.get("picture");
+
+            User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
+                return authenticationRepository.save(User.builder()
+                        .email(email)
+                        .fullname(name)
+                        .imageUrl(imageUrl)
+                        .isVerify(true)
+                        .isActive(true)
+                        .role(UserRole.CUSTOMER)
+                        .build());
+            });
+
+            return jwtService.generateToken(user);
+
+        } catch (Exception e) {
+            throw new AuthenticationException("Google login failed: " + e.getMessage());
+        }
+    }
+
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return null;
