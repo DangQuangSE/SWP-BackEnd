@@ -42,7 +42,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     public UserRole role;
 
-
+//test
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
