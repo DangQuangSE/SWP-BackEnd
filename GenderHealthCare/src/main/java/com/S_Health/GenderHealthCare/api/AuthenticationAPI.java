@@ -7,12 +7,7 @@ import com.S_Health.GenderHealthCare.service.AuthenticationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class AuthenticationAPI {
@@ -27,9 +22,8 @@ public class AuthenticationAPI {
     public ResponseEntity registerStep2( @Valid @RequestBody RegisterRequestStep2 request, @RequestParam String phone){
         return ResponseEntity.ok(authenticationService.registerStep2(request, phone));
     }
-    @PostMapping("/api/login-google")
+    @PostMapping("/api/auth/google")
     public ResponseEntity loginWithGoogle(@RequestBody OAuthLoginRequest request){
-        String jwt = authenticationService.loginWithGoogleToken(request.getToken());
-        return ResponseEntity.ok(Map.of("jwt", jwt));
+        return ResponseEntity.ok(authenticationService.loginWithGoogleToken(request.getToken()));
     }
 }

@@ -26,9 +26,10 @@
 		<tag/>
 		<url/>
 	</scm>
-	<properties>
-		<java.version>24</java.version>
-	</properties>
+    <properties>
+        <java.version>24</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+    </properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

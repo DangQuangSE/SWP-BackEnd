@@ -1,7 +1,9 @@
 package com.S_Health.GenderHealthCare.service;
 
+import com.S_Health.GenderHealthCare.dto.JwtReponse;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep1;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
@@ -34,6 +36,7 @@ public class AuthenticationService implements UserDetailsService {
     JWTService jwtService;
     @Value("${google.client.id}")
     private String googleClientId;
+
     public User registerStep1(RegisterRequestStep1 request) {
         // Kiểm tra trùng số điện thoại
         if (authenticationRepository.existsByPhone(request.getPhone())) {
@@ -52,6 +55,7 @@ public class AuthenticationService implements UserDetailsService {
 
         return authenticationRepository.save(user);
     }
+
     public User registerStep2(RegisterRequestStep2 request, String phone) {
         User user = authenticationRepository.findByPhone(phone)
                 .orElseThrow(() -> new AuthenticationException("Phone not exist!"));
@@ -63,7 +67,7 @@ public class AuthenticationService implements UserDetailsService {
         return authenticationRepository.save(user);
     }
 
-    public String loginWithGoogleToken(String googleToken) {
+    public JwtReponse loginWithGoogleToken(String googleToken) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
@@ -72,7 +76,7 @@ public class AuthenticationService implements UserDetailsService {
 
             GoogleIdToken idToken = verifier.verify(googleToken);
             if (idToken == null) {
-                throw new AuthenticationException("Invalid Google ID Token");
+                throw new AuthenticationException("Mã xác minh không chính xác!");
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
@@ -91,10 +95,17 @@ public class AuthenticationService implements UserDetailsService {
                         .build());
             });
 
-            return jwtService.generateToken(user);
-
+            String jwt = jwtService.generateToken(user);
+            UserDTO userDTO = new UserDTO(
+                    user.getId(),
+                    user.getFullname(),
+                    user.getPhone(),
+                    user.getEmail(),
+                    user.getImageUrl(),
+                    user.getRole().name());
+            return new JwtReponse(jwt, userDTO, "google");
         } catch (Exception e) {
-            throw new AuthenticationException("Google login failed: " + e.getMessage());
+            throw new AuthenticationException("Đăng nhập Google thất bại " + e.getMessage());
         }
     }
 
