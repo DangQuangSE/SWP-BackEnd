@@ -1,9 +1,11 @@
 package com.S_Health.GenderHealthCare.service;
 
+import com.S_Health.GenderHealthCare.dto.JwtReponse;
 import com.S_Health.GenderHealthCare.dto.LoginRequest;
 import com.S_Health.GenderHealthCare.dto.OAuthLoginRequest;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep1;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
@@ -29,6 +31,9 @@ public class AuthenticationService implements UserDetailsService {
     @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
+    JWTService jwtService;
+    @Value("${google.client.id}")
+    private String googleClientId;
     private JWTService jWTService;
 
     final RestTemplate restTemplate = new RestTemplate();
@@ -63,6 +68,45 @@ public class AuthenticationService implements UserDetailsService {
         return authenticationRepository.save(user);
     }
 
+    public JwtReponse loginWithGoogleToken(String googleToken) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance()
+            ).setAudience(Collections.singletonList(googleClientId)).build();
+
+            GoogleIdToken idToken = verifier.verify(googleToken);
+            if (idToken == null) {
+                throw new AuthenticationException("Mã xác minh không chính xác!");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String imageUrl = (String) payload.get("picture");
+
+            User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
+                return authenticationRepository.save(User.builder()
+                        .email(email)
+                        .fullname(name)
+                        .imageUrl(imageUrl)
+                        .isVerify(true)
+                        .isActive(true)
+                        .role(UserRole.CUSTOMER)
+                        .build());
+            });
+
+            String jwt = jwtService.generateToken(user);
+            UserDTO userDTO = new UserDTO(
+                    user.getId(),
+                    user.getFullname(),
+                    user.getPhone(),
+                    user.getEmail(),
+                    user.getImageUrl(),
+                    user.getRole().name());
+            return new JwtReponse(jwt, userDTO, "google");
+        } catch (Exception e) {
+            throw new AuthenticationException("Đăng nhập Google thất bại " + e.getMessage());
     public User login(LoginRequest request) {
         try{
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(

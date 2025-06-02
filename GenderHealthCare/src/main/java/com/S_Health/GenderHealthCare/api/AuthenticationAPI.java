@@ -24,6 +24,9 @@ public class AuthenticationAPI {
     public ResponseEntity registerStep2( @Valid @RequestBody RegisterRequestStep2 request, @RequestParam String phone){
         return ResponseEntity.ok(authenticationService.registerStep2(request, phone));
     }
+    @PostMapping("/api/auth/google")
+    public ResponseEntity loginWithGoogle(@RequestBody OAuthLoginRequest request){
+        return ResponseEntity.ok(authenticationService.loginWithGoogleToken(request.getToken()));
 
     //login phone
     @PostMapping("/login")
