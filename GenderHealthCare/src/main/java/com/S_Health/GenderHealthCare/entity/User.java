@@ -32,7 +32,7 @@ public class User implements UserDetails {
     public String password;
     public String imageUrl;
     public boolean isVerify;
-    public boolean isActice;
+    public boolean isActive;
     @CreationTimestamp
     public LocalDate createdAt;
     @UpdateTimestamp

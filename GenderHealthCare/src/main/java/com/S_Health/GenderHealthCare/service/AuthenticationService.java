@@ -1,24 +1,30 @@
 package com.S_Health.GenderHealthCare.service;
 
-import com.S_Health.GenderHealthCare.dto.LoginRequest;
-import com.S_Health.GenderHealthCare.dto.OAuthLoginRequest;
-import com.S_Health.GenderHealthCare.dto.RegisterRequestStep1;
+import com.S_Health.GenderHealthCare.dto.JwtReponse;
+import com.S_Health.GenderHealthCare.dto.EmailRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Collections;
 
 @Service
 public class AuthenticationService implements UserDetailsService {
@@ -29,23 +35,26 @@ public class AuthenticationService implements UserDetailsService {
     @Autowired
     AuthenticationManager authenticationManager;
     @Autowired
+    JWTService jwtService;
+    @Value("${google.client.id}")
+    private String googleClientId;
     private JWTService jWTService;
 
     final RestTemplate restTemplate = new RestTemplate();
 
-    public User registerStep1(RegisterRequestStep1 request) {
-        // Kiểm tra trùng số điện thoại
-        if (authenticationRepository.existsByPhone(request.getPhone())) {
-            throw new AuthenticationException("Số điện thoại đã tồn tại!");
+    public User registerByEmail(EmailRegisterRequest request) {
+
+        if (authenticationRepository.existsByEmail(request.getEmail())) {
+            throw new AuthenticationException("Email này đã tồn tại!");
         }
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new AuthenticationException("Mật khẩu không khớp");
+            throw new AuthenticationException("Mật khẩu không khớp!");
         }
         User user = User.builder()
-                .phone(request.getPhone())
+                .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.CUSTOMER)
-                .isActice(true)
+                .isActive(true)
                 .isVerify(false)
                 .build();
 
@@ -63,21 +72,64 @@ public class AuthenticationService implements UserDetailsService {
         return authenticationRepository.save(user);
     }
 
-    public User login(LoginRequest request) {
-        try{
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    request.getPhone(),
-                    request.getPassword()
-            ));
-        }catch (Exception e) {
-            //sai thông tin đăng nhập
-            System.out.println("thông tin đăng nhập không chính xác");
+    public JwtReponse loginWithGoogleToken(String googleToken) {
+        try {
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance()
+            ).setAudience(Collections.singletonList(googleClientId)).build();
 
-            throw new AuthenticationException("invalid phone or password");
+            GoogleIdToken idToken = verifier.verify(googleToken);
+            if (idToken == null) {
+                throw new AuthenticationException("Mã xác minh không chính xác!");
+            }
+
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String imageUrl = (String) payload.get("picture");
+
+            User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
+                return authenticationRepository.save(User.builder()
+                        .email(email)
+                        .fullname(name)
+                        .imageUrl(imageUrl)
+                        .isVerify(true)
+                        .isActive(true)
+                        .role(UserRole.CUSTOMER)
+                        .build());
+            });
+
+            String jwt = jwtService.generateToken(user);
+            UserDTO userDTO = new UserDTO(
+                    user.getId(),
+                    user.getFullname(),
+                    user.getPhone(),
+                    user.getEmail(),
+                    user.getImageUrl(),
+                    user.getRole().name());
+
+            return new JwtReponse(jwt, userDTO, "google");
+        } catch (Exception e) {
+            throw new AuthenticationException("Đăng nhập Google thất bại: " + e.getMessage());
         }
-
-        return  authenticationRepository.findUserByPhone(request.getPhone());
     }
+
+//    public User login(LoginRequest request) {
+//        try{
+//            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+//                    request.getPhone(),
+//                    request.getPassword()
+//            ));
+//        }catch (Exception e) {
+//            //sai thông tin đăng nhập
+//            System.out.println("thông tin đăng nhập không chính xác");
+//
+//            throw new AuthenticationException("invalid phone or password");
+//        }
+//
+//        return  authenticationRepository.findUserByPhone(request.getPhone());
+//    }
 
     public String loginWithFacebook(String accessToken) {
 
@@ -114,10 +166,8 @@ public class AuthenticationService implements UserDetailsService {
     }
 
 
-
-
     @Override
-    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-        return authenticationRepository.findUserByPhone(phone);
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return null;
     }
 }
