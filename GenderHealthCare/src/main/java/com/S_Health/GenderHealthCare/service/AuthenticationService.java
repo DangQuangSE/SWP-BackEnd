@@ -3,6 +3,7 @@ package com.S_Health.GenderHealthCare.service;
 import com.S_Health.GenderHealthCare.dto.JwtResponse;
 import com.S_Health.GenderHealthCare.dto.EmailRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
+import com.S_Health.GenderHealthCare.dto.response.OAuthLoginResponse;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
@@ -15,6 +16,9 @@ import com.google.api.client.json.gson.GsonFactory;
 import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,6 +39,7 @@ public class AuthenticationService implements UserDetailsService {
     PasswordEncoder passwordEncoder;
     @Autowired
     AuthenticationManager authenticationManager;
+
     @Autowired
     JWTService jwtService;
     @Value("${google.client.id}")
@@ -71,7 +76,6 @@ public class AuthenticationService implements UserDetailsService {
         user.setFullname(request.getFullname());
         user.setEmail(request.getEmail());
         user.setDateOfBirth(request.getDateOfBirth());
-        user.setGender(request.getGender());
         return authenticationRepository.save(user);
     }
 
@@ -112,30 +116,26 @@ public class AuthenticationService implements UserDetailsService {
         }
     }
 
-//    public User login(LoginRequest request) {
-//        try{
-//            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-//                    request.getPhone(),
-//                    request.getPassword()
-//            ));
-//        }catch (Exception e) {
-//            //sai thông tin đăng nhập
-//            System.out.println("thông tin đăng nhập không chính xác");
-//
-//            throw new AuthenticationException("invalid phone or password");
-//        }
-//
-//        return  authenticationRepository.findUserByPhone(request.getPhone());
-//    }
 
-    public String loginWithFacebook(String accessToken) {
+    public OAuthLoginResponse loginWithFacebook(String accessToken) {
 
-        String fbGraphUrl = "https://graph.facebook.com/me?fields=id,name,email&access_token=" + accessToken;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(accessToken); // chuẩn: Authorization: Bearer <token>
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<String> response = restTemplate.getForEntity(fbGraphUrl, String.class);
+            // 2. Gọi Graph API để lấy thông tin user
+            String url = "https://graph.facebook.com/me?fields=id,name,email";
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+        System.out.println("Access token from frontend: " + accessToken);
+
 
         if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Invalid Facebook token");
+            throw new RuntimeException("Token Facebook không hợp lệ");
         }
 
         JSONObject fbUser = new JSONObject(response.getBody());
@@ -143,8 +143,7 @@ public class AuthenticationService implements UserDetailsService {
         String name = fbUser.optString("name");
         String email = fbUser.optString("email");
 
-        System.out.println("Facebook user: " + name + " - " + email + " - " + fbId);
-
+        System.out.println("Facebook user: " + name + " - " + email + " - " + fbId );
 
         // Kiểm tra hoặc tạo user trong DB
         User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
@@ -152,19 +151,23 @@ public class AuthenticationService implements UserDetailsService {
             newUser.setEmail(email);
             newUser.setFullname(name);
             newUser.setPassword("");
+            newUser.setActive(true);
+            newUser.setVerify(true);
             newUser.setRole(UserRole.CUSTOMER);// không cần mật khẩu
             return authenticationRepository.save(newUser);
         });
 
         // Tạo JWT token
-        String token = jWTService.generateToken(user);
+        String token = jwtService.generateToken(user);
 
-        return token;
+        return new OAuthLoginResponse(token, user.fullname, user.email, true);
     }
 
 
+
+
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
         return null;
     }
 }
