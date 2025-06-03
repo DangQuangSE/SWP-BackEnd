@@ -1,6 +1,6 @@
 package com.S_Health.GenderHealthCare.service;
 
-import com.S_Health.GenderHealthCare.dto.JwtReponse;
+import com.S_Health.GenderHealthCare.dto.JwtResponse;
 import com.S_Health.GenderHealthCare.dto.EmailRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
@@ -75,7 +75,7 @@ public class AuthenticationService implements UserDetailsService {
         return authenticationRepository.save(user);
     }
 
-    public JwtReponse loginWithGoogleToken(String googleToken) {
+    public JwtResponse loginWithGoogleToken(String googleToken) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     GoogleNetHttpTransport.newTrustedTransport(),
@@ -106,7 +106,7 @@ public class AuthenticationService implements UserDetailsService {
             String jwt = jwtService.generateToken(user);
             UserDTO userDTO =  modelMapper.map(user, UserDTO.class);
 
-            return new JwtReponse(jwt, userDTO, "google");
+            return new JwtResponse(jwt, userDTO, "google");
         } catch (Exception e) {
             throw new AuthenticationException("Đăng nhập Google thất bại: " + e.getMessage());
         }
