@@ -13,6 +13,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import org.json.JSONObject;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -42,8 +43,10 @@ public class AuthenticationService implements UserDetailsService {
     JWTService jwtService;
     @Value("${google.client.id}")
     private String googleClientId;
+    @Autowired
     private JWTService jWTService;
-
+    @Autowired
+    private ModelMapper modelMapper;
     final RestTemplate restTemplate = new RestTemplate();
 
     public User registerByEmail(EmailRegisterRequest request) {
@@ -104,13 +107,7 @@ public class AuthenticationService implements UserDetailsService {
             });
 
             String jwt = jwtService.generateToken(user);
-            UserDTO userDTO = new UserDTO(
-                    user.getId(),
-                    user.getFullname(),
-                    user.getPhone(),
-                    user.getEmail(),
-                    user.getImageUrl(),
-                    user.getRole().name());
+            UserDTO userDTO =  modelMapper.map(user, UserDTO.class);
 
             return new JwtReponse(jwt, userDTO, "google");
         } catch (Exception e) {
