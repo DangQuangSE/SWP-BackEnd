@@ -1,7 +1,8 @@
 package com.S_Health.GenderHealthCare.service;
 
-import com.S_Health.GenderHealthCare.dto.JwtResponse;
-import com.S_Health.GenderHealthCare.dto.EmailRegisterRequest;
+import com.S_Health.GenderHealthCare.dto.request.PasswordRequest;
+import com.S_Health.GenderHealthCare.dto.response.JwtResponse;
+import com.S_Health.GenderHealthCare.dto.request.EmailRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
 import com.S_Health.GenderHealthCare.dto.response.OAuthLoginResponse;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
@@ -13,6 +14,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationService implements UserDetailsService {
     @Autowired
     AuthenticationRepository authenticationRepository;
@@ -39,34 +43,33 @@ public class AuthenticationService implements UserDetailsService {
     PasswordEncoder passwordEncoder;
     @Autowired
     AuthenticationManager authenticationManager;
-
+    @Autowired
+    OTPService otpService;
     @Autowired
     JWTService jwtService;
     @Value("${google.client.id}")
-    private String googleClientId;
+    String googleClientId;
     @Autowired
-    private JWTService jWTService;
+    JWTService jWTService;
     @Autowired
-    private ModelMapper modelMapper;
+    ModelMapper modelMapper;
+
+
     final RestTemplate restTemplate = new RestTemplate();
 
-    public User registerByEmail(EmailRegisterRequest request) {
-
-        if (authenticationRepository.existsByEmail(request.getEmail())) {
-            throw new AuthenticationException("Email này đã tồn tại!");
-        }
+    public void setPassword(PasswordRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new AuthenticationException("Mật khẩu không khớp!");
         }
-        User user = User.builder()
+        String password = passwordEncoder.encode(request.getPassword());
+        authenticationRepository.save(User.builder()
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.CUSTOMER)
+                .password(password)
+                .isVerify(true)
                 .isActive(true)
-                .isVerify(false)
-                .build();
-
-        return authenticationRepository.save(user);
+                .role(UserRole.CUSTOMER)
+                .build());
+        otpService.removeOtp(request.getEmail());
     }
 
     public User registerStep2(RegisterRequestStep2 request, String phone) {
@@ -108,7 +111,7 @@ public class AuthenticationService implements UserDetailsService {
             });
 
             String jwt = jwtService.generateToken(user);
-            UserDTO userDTO =  modelMapper.map(user, UserDTO.class);
+            UserDTO userDTO = modelMapper.map(user, UserDTO.class);
 
             return new JwtResponse(jwt, userDTO, "google");
         } catch (Exception e) {
@@ -117,53 +120,51 @@ public class AuthenticationService implements UserDetailsService {
     }
 
 
-    public OAuthLoginResponse loginWithFacebook(String accessToken) {
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(accessToken); // chuẩn: Authorization: Bearer <token>
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            // 2. Gọi Graph API để lấy thông tin user
-            String url = "https://graph.facebook.com/me?fields=id,name,email";
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    String.class
-            );
-        System.out.println("Access token from frontend: " + accessToken);
-
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Token Facebook không hợp lệ");
-        }
-
-        JSONObject fbUser = new JSONObject(response.getBody());
-        String fbId = fbUser.optString("id");
-        String name = fbUser.optString("name");
-        String email = fbUser.optString("email");
-
-        System.out.println("Facebook user: " + name + " - " + email + " - " + fbId );
-
-        // Kiểm tra hoặc tạo user trong DB
-        User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setFullname(name);
-            newUser.setPassword("");
-            newUser.setActive(true);
-            newUser.setVerify(true);
-            newUser.setRole(UserRole.CUSTOMER);// không cần mật khẩu
-            return authenticationRepository.save(newUser);
-        });
-
-        // Tạo JWT token
-        String token = jwtService.generateToken(user);
-
-        return new OAuthLoginResponse(token, user.fullname, user.email, true);
-    }
-
-
+//    public OAuthLoginResponse loginWithFacebook(String accessToken) {
+//
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setBearerAuth(accessToken); // chuẩn: Authorization: Bearer <token>
+//        HttpEntity<Void> entity = new HttpEntity<>(headers);
+//
+//        // 2. Gọi Graph API để lấy thông tin user
+//        String url = "https://graph.facebook.com/me?fields=id,name,email";
+//        ResponseEntity<String> response = restTemplate.exchange(
+//                url,
+//                HttpMethod.GET,
+//                entity,
+//                String.class
+//        );
+//        System.out.println("Access token from frontend: " + accessToken);
+//
+//
+//        if (!response.getStatusCode().is2xxSuccessful()) {
+//            throw new RuntimeException("Token Facebook không hợp lệ");
+//        }
+//
+//        JSONObject fbUser = new JSONObject(response.getBody());
+//        String fbId = fbUser.optString("id");
+//        String name = fbUser.optString("name");
+//        String email = fbUser.optString("email");
+//
+//        System.out.println("Facebook user: " + name + " - " + email + " - " + fbId);
+//
+//        // Kiểm tra hoặc tạo user trong DB
+//        User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
+//            User newUser = new User();
+//            newUser.setEmail(email);
+//            newUser.setFullname(name);
+//            newUser.setPassword("");
+//            newUser.setActive(true);
+//            newUser.setVerify(true);
+//            newUser.setRole(UserRole.CUSTOMER);// không cần mật khẩu
+//            return authenticationRepository.save(newUser);
+//        });
+//
+//        // Tạo JWT token
+//        String token = jwtService.generateToken(user);
+//
+//        return new OAuthLoginResponse(token, user.fullname, user.email, true);
+//    }
 
 
     @Override
