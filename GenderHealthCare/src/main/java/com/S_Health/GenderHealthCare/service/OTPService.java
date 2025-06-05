@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.service;
 
+import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -14,7 +15,19 @@ public class OTPService {
     private CacheManager cacheManager;
     @Autowired
     private EmailService emailService;
-    public void generateOTP(String email){
+    @Autowired
+    private AuthenticationRepository authenticationRepository;
+
+    public void generateOTP(String email , boolean isForgotPassword){
+        if(isForgotPassword){
+            if(!authenticationRepository.existsByEmail(email)){
+                throw new RuntimeException("Email does not exist");
+            }
+        }else {
+            if(authenticationRepository.existsByEmail(email)){
+                throw new RuntimeException("Email đã tồn tại!");
+            }
+        }
         String otp = String.format("%06d", new Random().nextInt(999999));
         Cache cache = cacheManager.getCache("otpCache");
         cache.put(email, otp);

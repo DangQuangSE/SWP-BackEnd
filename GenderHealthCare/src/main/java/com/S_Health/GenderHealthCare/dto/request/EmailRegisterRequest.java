@@ -9,9 +9,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EmailRegisterRequest {
    @Email(message = "Email không hợp lệ!")
-    String email;
-//   String email;
-//   @NotBlank(message = "Vui lòng nhập mật khẩu!")
-//   String password;
-//   String confirmPassword;
+   String email;
+   boolean isForgotPassword;
+
 }

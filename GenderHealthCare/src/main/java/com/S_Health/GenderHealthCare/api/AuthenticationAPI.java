@@ -24,8 +24,14 @@ public class AuthenticationAPI {
 
     @PostMapping("/auth/request-OTP")
     public ResponseEntity loginWithEmail(@Valid @RequestBody EmailRegisterRequest request) {
-        otpService.generateOTP(request.getEmail());
+        otpService.generateOTP(request.getEmail(),false);
         return ResponseEntity.ok("OTP đã được gửi tới email!");
+    }
+
+    @PostMapping("/auth/forgot-password/request-OTP")
+    public ResponseEntity forgotOtp(@RequestBody EmailRegisterRequest request) {
+        otpService.generateOTP(request.getEmail(), true); // true = quên mật khẩu
+        return ResponseEntity.ok("OTP đã được gửi tới email để đặt lại mật khẩu!");
     }
 
     @PostMapping("/auth/verify-Otp")
@@ -33,6 +39,7 @@ public class AuthenticationAPI {
         Boolean check = otpService.verifyOtp(request.getEmail(), request.getOtp());
         return check ? ResponseEntity.ok("OTP hợp lệ!") : ResponseEntity.badRequest().body("OTP không hợp lệ hoặc đã hết hạn!");
     }
+
     @PostMapping("/auth/config-password")
     public ResponseEntity setPassword(@Valid @RequestBody PasswordRequest request){
             authenticationService.setPassword(request);
@@ -53,9 +60,9 @@ public class AuthenticationAPI {
 
 
     //login facebook
-//    @PostMapping("/auth/facebook")
-//    public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request) {
-//        System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
-//        return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
-//    }
+    @PostMapping("/auth/facebook")
+    public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request) {
+        System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
+        return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
+    }
 }

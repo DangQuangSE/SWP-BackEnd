@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.dto.response;
 
-import com.S_Health.GenderHealthCare.dto.UserDTO;
+
+import com.S_Health.GenderHealthCare.dto.request.UserDTO;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
