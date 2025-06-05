@@ -7,11 +7,8 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class EmailRegisterRequest {
-   @Email(message = "Email không hợp lệ!")
-    String email;
-//   String email;
-//   @NotBlank(message = "Vui lòng nhập mật khẩu!")
-//   String password;
-//   String confirmPassword;
+
+public class VerifyOTPRequest {
+     String email;
+     String otp;
 }
