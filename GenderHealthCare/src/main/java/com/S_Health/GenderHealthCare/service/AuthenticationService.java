@@ -1,10 +1,8 @@
 package com.S_Health.GenderHealthCare.service;
 
+import com.S_Health.GenderHealthCare.dto.request.LoginEmailRequest;
 import com.S_Health.GenderHealthCare.dto.request.PasswordRequest;
 import com.S_Health.GenderHealthCare.dto.response.JwtResponse;
-import com.S_Health.GenderHealthCare.dto.request.EmailRegisterRequest;
-import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
-import com.S_Health.GenderHealthCare.dto.response.OAuthLoginResponse;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
@@ -16,15 +14,11 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.json.JSONObject;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -57,6 +51,9 @@ public class AuthenticationService implements UserDetailsService {
 
     final RestTemplate restTemplate = new RestTemplate();
 
+    public boolean checkExistEmail(String email){
+        return authenticationRepository.existsByEmail(email);
+    }
     public void setPassword(PasswordRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new AuthenticationException("Mật khẩu không khớp!");
@@ -72,14 +69,20 @@ public class AuthenticationService implements UserDetailsService {
         otpService.removeOtp(request.getEmail());
     }
 
-    public User registerStep2(RegisterRequestStep2 request, String phone) {
-        User user = authenticationRepository.findByPhone(phone)
-                .orElseThrow(() -> new AuthenticationException("Không tìm thấy số điện thoại"));
-
-        user.setFullname(request.getFullname());
-        user.setEmail(request.getEmail());
-        user.setDateOfBirth(request.getDateOfBirth());
-        return authenticationRepository.save(user);
+    public JwtResponse loginWithEmail(LoginEmailRequest loginEmailRequest) {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    loginEmailRequest.getEmail(),
+                    loginEmailRequest.getPassword()
+            ));
+        } catch (Exception e) {
+            System.out.println("Thông tin đăng nhập không chính xác!");
+            throw new AuthenticationException("Email hoặc mật khẩu không chính xác!");
+        }
+        User user = authenticationRepository.findUserByEmail(loginEmailRequest.getEmail());
+        String jwt = jwtService.generateToken(user);
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+        return new JwtResponse(jwt, userDTO, "email");
     }
 
     public JwtResponse loginWithGoogleToken(String googleToken) {
@@ -168,7 +171,8 @@ public class AuthenticationService implements UserDetailsService {
 
 
     @Override
-    public UserDetails loadUserByUsername(String phone) throws UsernameNotFoundException {
-        return null;
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return authenticationRepository.findUserByEmail(email);
     }
+
 }

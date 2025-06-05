@@ -1,9 +1,6 @@
 package com.S_Health.GenderHealthCare.api;
 
-import com.S_Health.GenderHealthCare.dto.request.EmailRegisterRequest;
-import com.S_Health.GenderHealthCare.dto.request.OAuthLoginRequest;
-import com.S_Health.GenderHealthCare.dto.request.PasswordRequest;
-import com.S_Health.GenderHealthCare.dto.request.VerifyOTPRequest;
+import com.S_Health.GenderHealthCare.dto.request.*;
 import com.S_Health.GenderHealthCare.service.AuthenticationService;
 import com.S_Health.GenderHealthCare.service.EmailService;
 import com.S_Health.GenderHealthCare.service.OTPService;
@@ -24,6 +21,9 @@ public class AuthenticationAPI {
 
     @PostMapping("/auth/request-OTP")
     public ResponseEntity loginWithEmail(@Valid @RequestBody EmailRegisterRequest request) {
+        if(authenticationService.checkExistEmail(request.getEmail())){
+            return ResponseEntity.badRequest().body("Email đã tồn tại!");
+        }
         otpService.generateOTP(request.getEmail());
         return ResponseEntity.ok("OTP đã được gửi tới email!");
     }
@@ -42,14 +42,10 @@ public class AuthenticationAPI {
     public ResponseEntity loginWithGoogle(@RequestBody OAuthLoginRequest request) {
         return ResponseEntity.ok(authenticationService.loginWithGoogleToken(request.getAccessToken()));
     }
-//    @PostMapping("/register-step1")
-//    public ResponseEntity registerStep1(@Valid @RequestBody RegisterRequestStep1 request){
-//        return ResponseEntity.ok(authenticationService.registerStep1(request));
-//    }
-//    @PostMapping("/register-step2")
-//    public ResponseEntity registerStep2( @Valid @RequestBody RegisterRequestStep2 request, @RequestParam String phone){
-//        return ResponseEntity.ok(authenticationService.registerStep2(request, phone));
-//    }
+    @PostMapping("/auth/login")
+    public ResponseEntity loginWithEmail(@RequestBody LoginEmailRequest request){
+        return ResponseEntity.ok(authenticationService.loginWithEmail(request));
+    }
 
 
     //login facebook
