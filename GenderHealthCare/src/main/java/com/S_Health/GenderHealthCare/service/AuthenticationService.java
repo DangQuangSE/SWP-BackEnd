@@ -1,9 +1,8 @@
 package com.S_Health.GenderHealthCare.service;
-import com.S_Health.GenderHealthCare.dto.JwtReponse;
-import com.S_Health.GenderHealthCare.dto.EmailRegisterRequest;
-import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
-import com.S_Health.GenderHealthCare.dto.response.OAuthLoginResponse;
-import com.S_Health.GenderHealthCare.dto.UserDTO;
+import com.S_Health.GenderHealthCare.dto.response.JwtReponse;
+import com.S_Health.GenderHealthCare.dto.request.EmailRegisterRequest;
+import com.S_Health.GenderHealthCare.dto.request.RegisterRequestStep2;
+import com.S_Health.GenderHealthCare.dto.request.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
@@ -116,52 +115,56 @@ public class AuthenticationService implements UserDetailsService {
     }
 
 
-    public OAuthLoginResponse loginWithFacebook(String accessToken) {
+    public JwtReponse loginWithFacebook(String accessToken) {
+        try{
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(accessToken); // chuẩn: Authorization: Bearer <token>
             HttpEntity<Void> entity = new HttpEntity<>(headers);
-
             // 2. Gọi Graph API để lấy thông tin user
-            String url = "https://graph.facebook.com/me?fields=id,name,email";
+            String url = "https://graph.facebook.com/me?fields=id,name,email,picture.type(large)";
             ResponseEntity<String> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
                     String.class
             );
-        System.out.println("Access token from frontend: " + accessToken);
-
-
-        if (!response.getStatusCode().is2xxSuccessful()) {
+            //log xem lỗi
+            System.out.println("Access token from frontend: " + accessToken);
+            if (!response.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException("Token Facebook không hợp lệ");
-        }
+            }
 
-        JSONObject fbUser = new JSONObject(response.getBody());
-        String fbId = fbUser.optString("id");
-        String name = fbUser.optString("name");
-        String email = fbUser.optString("email");
+            JSONObject fbUser = new JSONObject(response.getBody());
+            String fbId = fbUser.optString("id");
+            String name = fbUser.optString("name");
+            String email = fbUser.optString("email");
+            String imageUrl = fbUser.getJSONObject("picture")
+                .getJSONObject("data")
+                .getString("url");
 
-        System.out.println("Facebook user: " + name + " - " + email + " - " + fbId );
+            System.out.println("Facebook user: " + name + " - " + email + " - " + fbId );
 
         // Kiểm tra hoặc tạo user trong DB
-        User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setFullname(name);
-            newUser.setPassword("");
-            newUser.setActive(true);
-            newUser.setVerify(true);
-            newUser.setRole(UserRole.CUSTOMER);// không cần mật khẩu
-            return authenticationRepository.save(newUser);
+            User user = authenticationRepository.findByEmail(email).orElseGet(() -> {
+                return authenticationRepository.save(User.builder()
+                        .email(email)
+                        .fullname(name)
+                        .imageUrl(imageUrl)
+                        .isVerify(true)
+                        .isActive(true)
+                        .role(UserRole.CUSTOMER)
+                        .build());
         });
 
-        // Tạo JWT token
-        String token = jwtService.generateToken(user);
+            String jwt = jwtService.generateToken(user);
+            UserDTO userDTO =  modelMapper.map(user, UserDTO.class);
 
-        return new OAuthLoginResponse(token, user.fullname, user.email, true);
+            return new JwtReponse(jwt, userDTO, "facebook");
+        } catch (Exception e) {
+            throw new AuthenticationException("Đăng nhập Facebook: " + e.getMessage());
+        }
     }
-
 
 
 

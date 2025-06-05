@@ -1,14 +1,17 @@
-package com.S_Health.GenderHealthCare.dto;
+package com.S_Health.GenderHealthCare.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class EmailRegisterRequest {
    @Email(message = "Email không hợp lệ!")
-   private String email;
+   String email;
    @NotBlank(message = "Vui lòng nhập mật khẩu!")
-   private String password;
-   private String confirmPassword;
+   String password;
+   String confirmPassword;
 }

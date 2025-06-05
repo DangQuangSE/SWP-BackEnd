@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.dto;
+package com.S_Health.GenderHealthCare.dto.request;
 
 import com.S_Health.GenderHealthCare.enums.Gender;
 import jakarta.validation.constraints.*;

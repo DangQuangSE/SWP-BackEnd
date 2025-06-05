@@ -1,11 +1,11 @@
-package com.S_Health.GenderHealthCare.dto;
+package com.S_Health.GenderHealthCare.dto.response;
 
+import com.S_Health.GenderHealthCare.dto.request.UserDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
+    @AllArgsConstructor
 public class JwtReponse {
     private String jwt;
     private UserDTO user;

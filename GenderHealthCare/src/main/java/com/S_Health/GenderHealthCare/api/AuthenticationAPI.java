@@ -1,8 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 
-import com.S_Health.GenderHealthCare.dto.OAuthLoginRequest;
-import com.S_Health.GenderHealthCare.dto.EmailRegisterRequest;
-import com.S_Health.GenderHealthCare.dto.RegisterRequestStep2;
+import com.S_Health.GenderHealthCare.dto.request.OAuthLoginRequest;
+import com.S_Health.GenderHealthCare.dto.request.RegisterRequestStep2;
 import com.S_Health.GenderHealthCare.service.AuthenticationService;
 import com.S_Health.GenderHealthCare.service.EmailService;
 import com.S_Health.GenderHealthCare.service.OTPService;
@@ -33,14 +32,14 @@ public class AuthenticationAPI {
 //    public ResponseEntity registerStep1(@Valid @RequestBody RegisterRequestStep1 request){
 //        return ResponseEntity.ok(authenticationService.registerStep1(request));
 //    }
-    @PostMapping("/register-step2")
-    public ResponseEntity registerStep2( @Valid @RequestBody RegisterRequestStep2 request, @RequestParam String phone){
-        return ResponseEntity.ok(authenticationService.registerStep2(request, phone));
-    }
+//    @PostMapping("/register-step2")
+//    public ResponseEntity registerStep2( @Valid @RequestBody RegisterRequestStep2 request, @RequestParam String phone){
+//        return ResponseEntity.ok(authenticationService.registerStep2(request, phone));
+//    }
 
 
     //login facebook
-    @PostMapping("/authFace")
+    @PostMapping("/auth/facebook")
     public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request){
         System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
         return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
