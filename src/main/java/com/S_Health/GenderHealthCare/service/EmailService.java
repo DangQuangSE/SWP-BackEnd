@@ -18,4 +18,13 @@ public class EmailService {
         message.setText("Mã OTP của bạn là: " + otp + ". Mã sẽ hết hạn sau 30 giây.");
         mailSender.send(message);
     }
+
+    public void sendForgotPasswordOtp(String toEmail, String otp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Khôi phục mật khẩu - Mã xác minh");
+        message.setText("Mã OTP để đặt lại mật khẩu của bạn là: " + otp + ". Mã này sẽ hết hạn sau 30 giây.");
+        mailSender.send(message);
+    }
+
 }
