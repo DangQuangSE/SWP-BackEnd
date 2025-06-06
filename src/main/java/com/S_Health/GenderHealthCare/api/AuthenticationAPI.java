@@ -55,9 +55,9 @@ public class AuthenticationAPI {
 
 
     //login facebook
-//    @PostMapping("/auth/facebook")
-//    public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request) {
-//        System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
-//        return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
-//    }
+    @PostMapping("/auth/facebook")
+    public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request) {
+        System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
+        return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
+    }
 }
