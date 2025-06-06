@@ -10,7 +10,6 @@ import lombok.experimental.FieldDefaults;
 
 public class PasswordRequest {
      String email;
-     String otp;
      @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$", message = "Mật khẩu có ít nhất 8 ký tự, bao gồm ít nhất một chữ cái và một chữ số!")
      String password;
      String confirmPassword;
