@@ -31,6 +31,13 @@ public class OTPService {
         return otp.equals(cachedOtp);
     }
 
+    public void generateForgotPasswordOTP(String email) {
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        Cache cache = cacheManager.getCache("forgotPasswordOtpCache");
+        cache.put(email, otp);
+        emailService.sendForgotPasswordOtp(email, otp);
+    }
+
     public void removeOtp(String email) {
         cacheManager.getCache("otpCache").evict(email);
     }

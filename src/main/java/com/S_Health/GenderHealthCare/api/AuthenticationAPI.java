@@ -28,12 +28,6 @@ public class AuthenticationAPI {
         return ResponseEntity.ok("OTP đã được gửi tới email!");
     }
 
-    @PostMapping("/auth/forgot-password/request-OTP")
-    public ResponseEntity forgotOtp(@RequestBody EmailRegisterRequest request) {
-        otpService.generateOTP(request.getEmail()); // true = quên mật khẩu
-        return ResponseEntity.ok("OTP đã được gửi tới email để đặt lại mật khẩu!");
-    }
-
     @PostMapping("/auth/verify-Otp")
     public ResponseEntity verifyOTP(@RequestBody VerifyOTPRequest request) {
         Boolean check = otpService.verifyOtp(request.getEmail(), request.getOtp());
@@ -44,6 +38,28 @@ public class AuthenticationAPI {
             authenticationService.setPassword(request);
             return ResponseEntity.ok("Thiết lập mật khẩu thành công!");
     }
+
+    @PostMapping("/auth/forgot-password/request-otp")
+    public ResponseEntity sendForgotOtp(@RequestBody EmailRegisterRequest request) {
+        if (!authenticationService.checkExistEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body("Email chưa được đăng ký.");
+        }
+        otpService.generateForgotPasswordOTP(request.getEmail()); // true = quên mật khẩu
+        return ResponseEntity.ok("OTP đã được gửi tới email để đặt lại mật khẩu!");
+    }
+
+    @PostMapping("/auth/forgot-password/verify-otp")
+    public ResponseEntity verifyForgotOtp(@RequestBody VerifyOTPRequest request) {
+        Boolean check = otpService.verifyOtp(request.getEmail(), request.getOtp());
+        return check ? ResponseEntity.ok("OTP hợp lệ!") : ResponseEntity.badRequest().body("OTP không hợp lệ hoặc đã hết hạn!");
+    }
+
+    @PostMapping("/auth/forgot-password/resetPass")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordRequest request) {
+        authenticationService.setPassword(request);
+        return ResponseEntity.ok("Mật khẩu đã được cập nhật thành công.");
+    }
+
     @PostMapping("/auth/google")
     public ResponseEntity loginWithGoogle(@RequestBody OAuthLoginRequest request) {
         return ResponseEntity.ok(authenticationService.loginWithGoogleToken(request.getAccessToken()));
@@ -55,9 +71,9 @@ public class AuthenticationAPI {
 
 
     //login facebook
-//    @PostMapping("/auth/facebook")
-//    public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request) {
-//        System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
-//        return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
-//    }
+    @PostMapping("/auth/facebook")
+    public ResponseEntity loginFacebook(@RequestBody OAuthLoginRequest request) {
+        System.out.println("Access token nhận từ frontend: " + request.getAccessToken());
+        return ResponseEntity.ok(authenticationService.loginWithFacebook(request.getAccessToken()));
+    }
 }
