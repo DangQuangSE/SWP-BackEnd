@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.dto.response;
 
+
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,4 +15,5 @@ public class JwtResponse {
      String jwt;
      UserDTO user;
      String loginProvider;
+     boolean success;
 }
