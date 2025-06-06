@@ -28,6 +28,12 @@ public class AuthenticationAPI {
         return ResponseEntity.ok("OTP đã được gửi tới email!");
     }
 
+    @PostMapping("/auth/forgot-password/request-OTP")
+    public ResponseEntity forgotOtp(@RequestBody EmailRegisterRequest request) {
+        otpService.generateOTP(request.getEmail()); // true = quên mật khẩu
+        return ResponseEntity.ok("OTP đã được gửi tới email để đặt lại mật khẩu!");
+    }
+
     @PostMapping("/auth/verify-Otp")
     public ResponseEntity verifyOTP(@RequestBody VerifyOTPRequest request) {
         Boolean check = otpService.verifyOtp(request.getEmail(), request.getOtp());
