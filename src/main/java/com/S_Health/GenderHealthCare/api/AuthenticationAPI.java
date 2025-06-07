@@ -4,6 +4,7 @@ import com.S_Health.GenderHealthCare.dto.request.*;
 import com.S_Health.GenderHealthCare.service.AuthenticationService;
 import com.S_Health.GenderHealthCare.service.EmailService;
 import com.S_Health.GenderHealthCare.service.OTPService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api")
 @RestController
+@SecurityRequirement(name = "/api")
 public class AuthenticationAPI {
     @Autowired
     private AuthenticationService authenticationService;
