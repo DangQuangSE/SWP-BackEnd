@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api")
 @RestController
-@SecurityRequirement(name = "/api")
+@SecurityRequirement(name = "api")
 public class AuthenticationAPI {
     @Autowired
     private AuthenticationService authenticationService;
@@ -58,7 +58,7 @@ public class AuthenticationAPI {
 
     @PostMapping("/auth/forgot-password/resetPass")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordRequest request) {
-        authenticationService.setPassword(request);
+        authenticationService.setPasswordForgot(request);
         return ResponseEntity.ok("Mật khẩu đã được cập nhật thành công.");
     }
 
