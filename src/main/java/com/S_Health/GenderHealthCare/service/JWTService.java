@@ -50,9 +50,10 @@ public class JWTService {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-    public Optional<User> extractAccount (String token){
+
+    public User extractAccount (String token){
         String email = extractClaim(token, Claims::getSubject);
-        return authenticationRepository.findByEmail(email);
+        return authenticationRepository.findUserByEmail(email);
     }
 
 
