@@ -1,7 +1,7 @@
-package com.S_Health.GenderHealthCare.service;
+package com.S_Health.GenderHealthCare.service.authentication;
 
-import com.S_Health.GenderHealthCare.dto.request.LoginEmailRequest;
-import com.S_Health.GenderHealthCare.dto.request.PasswordRequest;
+import com.S_Health.GenderHealthCare.dto.request.authentication.LoginEmailRequest;
+import com.S_Health.GenderHealthCare.dto.request.authentication.PasswordRequest;
 import com.S_Health.GenderHealthCare.dto.response.JwtResponse;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;

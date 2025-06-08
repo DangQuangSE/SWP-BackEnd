@@ -1,9 +1,8 @@
 package com.S_Health.GenderHealthCare.api;
 
-import com.S_Health.GenderHealthCare.dto.request.*;
-import com.S_Health.GenderHealthCare.service.AuthenticationService;
-import com.S_Health.GenderHealthCare.service.EmailService;
-import com.S_Health.GenderHealthCare.service.OTPService;
+import com.S_Health.GenderHealthCare.dto.request.authentication.*;
+import com.S_Health.GenderHealthCare.service.authentication.AuthenticationService;
+import com.S_Health.GenderHealthCare.service.authentication.OTPService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,16 +1,16 @@
-package com.S_Health.GenderHealthCare.dto.request;
+package com.S_Health.GenderHealthCare.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalTime;
+
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-
-public class OAuthLoginRequest {
-     String accessToken;
+public class TimeSlotDTO {
+    LocalTime startTime;
+    LocalTime endTime;
 }

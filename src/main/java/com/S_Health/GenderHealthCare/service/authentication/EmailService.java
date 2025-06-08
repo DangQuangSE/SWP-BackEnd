@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.service;
+package com.S_Health.GenderHealthCare.service.authentication;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
