@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.service;
+package com.S_Health.GenderHealthCare.service.authentication;
 
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;

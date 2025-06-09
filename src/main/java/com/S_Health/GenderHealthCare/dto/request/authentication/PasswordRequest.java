@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.dto.request;
+package com.S_Health.GenderHealthCare.dto.request.authentication;
 
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;

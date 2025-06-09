@@ -2,7 +2,7 @@ package com.S_Health.GenderHealthCare.config;
 
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
-import com.S_Health.GenderHealthCare.service.JWTService;
+import com.S_Health.GenderHealthCare.service.authentication.JWTService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.security.auth.message.AuthException;
