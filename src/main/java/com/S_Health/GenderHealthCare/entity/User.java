@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.Gender;
 import com.S_Health.GenderHealthCare.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -26,23 +27,26 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     Long id;
-     String fullname;
-     String email;
-     String phone;
-     LocalDate dateOfBirth;
-     String password;
-     String imageUrl;
-     boolean isVerify;
-     boolean isActive;
+    Long id;
+    String fullname;
+    String email;
+    String phone;
+    LocalDate dateOfBirth;
+    String password;
+    String imageUrl;
+    boolean isVerify;
+    boolean isActive;
     @CreationTimestamp
-     LocalDate createdAt;
+    LocalDate createdAt;
     @UpdateTimestamp
-     LocalDate updatedAt;
+    LocalDate updatedAt;
     @Enumerated(EnumType.STRING)
-     Gender gender;
+    Gender gender;
     @Enumerated(EnumType.STRING)
-     UserRole role;
+    UserRole role;
+    @OneToMany(mappedBy = "consultant")
+    @JsonIgnore
+    List<Schedule> schedules;
 
 
     @Override

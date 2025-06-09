@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.service;
+package com.S_Health.GenderHealthCare.service.authentication;
 
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
@@ -13,10 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Optional;
 import java.util.function.Function;
 
 @Service

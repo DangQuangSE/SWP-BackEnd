@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.service;
+package com.S_Health.GenderHealthCare.service.authentication;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
