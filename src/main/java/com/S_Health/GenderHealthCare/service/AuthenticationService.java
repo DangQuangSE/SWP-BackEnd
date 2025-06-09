@@ -52,6 +52,8 @@ public class AuthenticationService implements UserDetailsService {
     JWTService jWTService;
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    EmailService emailService;
 
 
     final RestTemplate restTemplate = new RestTemplate();
@@ -60,6 +62,22 @@ public class AuthenticationService implements UserDetailsService {
         return authenticationRepository.existsByEmail(email);
     }
     public void setPassword(PasswordRequest request) {
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new AuthenticationException("Mật khẩu không khớp!");
+        }
+        String password = passwordEncoder.encode(request.getPassword());
+        authenticationRepository.save(User.builder()
+                .email(request.getEmail())
+                .password(password)
+                .isVerify(true)
+                .isActive(true)
+                .role(UserRole.CUSTOMER)
+                .build());
+        otpService.removeOtp(request.getEmail());
+        emailService.sendWelcome(request.getEmail());
+    }
+
+    public void setPasswordForgot(PasswordRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new AuthenticationException("Mật khẩu không khớp!");
         }
