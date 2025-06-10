@@ -1,7 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.Gender;
-import com.S_Health.GenderHealthCare.enums.Specialization;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -45,16 +44,21 @@ public class User implements UserDetails {
     Gender gender;
     @Enumerated(EnumType.STRING)
     UserRole role;
-    @Enumerated(EnumType.STRING)
-    Specialization specialization;
 
     @OneToMany(mappedBy = "consultant")
     @JsonIgnore
     List<Schedule> schedules;
+
     @OneToMany(mappedBy = "consultant")
     @JsonIgnore
     List<Certification> certifications;
-
+    @ManyToMany
+    @JoinTable(
+            name = "consultant_specialization",
+            joinColumns = @JoinColumn(name = "consultant_id"),
+            inverseJoinColumns = @JoinColumn(name = "specialization_id")
+    )
+    List<Specialization> specializations;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

@@ -4,15 +4,21 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 @Entity
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Certification {
+public class HospitalSlotFree {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    String name;
-    String image;
+    LocalDate date;
+    LocalTime start;
+    LocalTime end;
     @ManyToOne
-    @JoinColumn(name = "consultant_id")
-    User consultant;
+    @JoinColumn(name = "specialization_id")
+    Specialization specialization;
+    int maxBooking;
+    int currentBooking;
 }

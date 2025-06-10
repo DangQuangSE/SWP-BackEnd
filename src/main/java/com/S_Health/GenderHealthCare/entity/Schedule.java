@@ -18,12 +18,11 @@ public class Schedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    LocalDate workDate;        // 2025-06-10
-    LocalTime startTime;       // 08:00
-    LocalTime endTime;         // 12:00
+    LocalDate workDate;
+    LocalTime startTime;
+    LocalTime endTime;
     boolean available;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "consultant_id")
     User consultant;
-
 }
