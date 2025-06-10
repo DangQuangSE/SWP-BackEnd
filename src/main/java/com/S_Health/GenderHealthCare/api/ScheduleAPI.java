@@ -14,7 +14,7 @@ import java.util.List;
 
 @RequestMapping("/api")
 @RestController
-@SecurityRequirement(name = "/api")
+@SecurityRequirement(name = "api")
 public class ScheduleAPI {
     @Autowired
     ScheduleService scheduleService;
