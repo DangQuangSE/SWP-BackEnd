@@ -3,11 +3,15 @@ package com.S_Health.GenderHealthCare.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Specialization {
     @Id
@@ -19,4 +23,7 @@ public class Specialization {
     List<User> consultants;
     @OneToMany(mappedBy = "specialization")
     List<HospitalSlotFree> hospitalSlotFrees;
+    @ManyToOne
+    @JoinColumn(name = "service_id")
+    Service service;
 }
