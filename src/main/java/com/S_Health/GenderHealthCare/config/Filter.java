@@ -33,7 +33,12 @@ public class Filter extends OncePerRequestFilter {
     private JWTService jwtService;
 
     private final List<String> PUBLIC_API = List.of(
-        "POST:/api/auth/**"
+            "POST:/api/auth/**",
+            "POST:/api/service/**",
+            "PUT:/api/service/**",
+            "DELETE:/api/service/**",
+            "PATCH:/api/service/**"
+
     );
 
     public boolean isPulicApi(String uri, String method) {
