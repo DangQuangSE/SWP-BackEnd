@@ -1,7 +1,7 @@
 package com.S_Health.GenderHealthCare.service.schedule;
 
-import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRequest;
-import com.S_Health.GenderHealthCare.dto.response.ScheduleResponse;
+import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
+import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.TimeSlotDTO;
 import com.S_Health.GenderHealthCare.entity.Schedule;
 import com.S_Health.GenderHealthCare.repository.ScheduleRepository;
@@ -17,7 +17,7 @@ public class ScheduleService {
     @Autowired
     ScheduleRepository scheduleRepository;
 
-    public List<ScheduleResponse> getScheduleOfConsultant(ScheduleRequest request) {
+    public List<ScheduleConsultantResponse> getScheduleOfConsultant(ScheduleConsultantRequest request) {
         List<Schedule> schedules = scheduleRepository.findByConsultantIdAndWorkDateBetween(
                 request.getConsultant_id(),
                 request.getFrom(),
@@ -28,13 +28,13 @@ public class ScheduleService {
                 .filter(Schedule::isAvailable)
                 .collect(Collectors.groupingBy(Schedule::getWorkDate))
                 .entrySet().stream()
-                .map(entry -> new ScheduleResponse(
+                .map(entry -> new ScheduleConsultantResponse(
                         entry.getKey(),
                         entry.getValue().stream()
                                 .map(s -> new TimeSlotDTO(s.getStartTime(), s.getEndTime()))
                                 .collect(Collectors.toList())
                 ))
-                .sorted(Comparator.comparing(ScheduleResponse::getWorkDate))
+                .sorted(Comparator.comparing(ScheduleConsultantResponse::getWorkDate))
                 .collect(Collectors.toList());
     }
 
