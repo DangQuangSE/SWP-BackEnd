@@ -5,7 +5,7 @@ import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequ
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
-import com.S_Health.GenderHealthCare.service.schedule.HospitalSlotFreeService;
+import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.service.schedule.ScheduleService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class ScheduleAPI {
     @Autowired
     ScheduleService scheduleService;
     @Autowired
-    HospitalSlotFreeService hospitalSlotFreeService;
+    ServiceSlotPoolService serviceSlotPoolService;
 
     @GetMapping("/view-schedule")
     public ResponseEntity getScheduleOfConsultant(
@@ -45,11 +45,14 @@ public class ScheduleAPI {
     @GetMapping("/slot-free-service")
     public ResponseEntity getAvailableSlots(
             @RequestParam Long service_id,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
     ) {
+        LocalDate today = LocalDate.now();
+        LocalDate start = from != null ? from : today;
+        LocalDate end = to != null ? to : today.plusWeeks(2);
         ScheduleServiceRequest request = new ScheduleServiceRequest(service_id, new RangeDate(from, to));
-        ScheduleServiceResponse response = hospitalSlotFreeService.getSlotFreeService(request);
+        ScheduleServiceResponse response = serviceSlotPoolService.getSlotFreeService(request);
         return ResponseEntity.ok(response);
     }
 }

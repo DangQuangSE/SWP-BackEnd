@@ -33,4 +33,12 @@ public class Service {
     @OneToMany(mappedBy = "service")
     List<Specialization> specializations;
 
+    @OneToMany(mappedBy = "service")
+    List<ServiceSlotPool> serviceSlotPools;
+
+    @OneToMany(mappedBy = "service")
+    List<MedicalProfile> medicalProfiles;
+
+    @OneToMany(mappedBy = "service")
+    List<Appointment> appointments;
 }

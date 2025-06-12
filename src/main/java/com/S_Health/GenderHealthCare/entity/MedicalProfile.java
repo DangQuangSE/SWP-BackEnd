@@ -1,27 +1,36 @@
 package com.S_Health.GenderHealthCare.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Specialization {
+public class MedicalProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    String name;
-    @ManyToMany(mappedBy = "specializations")
-    @JsonIgnore
-    List<User> consultants;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    User customer;
+
     @ManyToOne
     @JoinColumn(name = "service_id")
     Service service;
+
+    @OneToMany(mappedBy = "medicalProfile", cascade = CascadeType.ALL)
+    List<Appointment> appointments;
+
+    String result;
+    String note;
+    @CreationTimestamp
+    LocalDateTime create_at;
 }

@@ -6,12 +6,10 @@ import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.dto.response.TimeSlotDTO;
 import com.S_Health.GenderHealthCare.entity.Schedule;
+import com.S_Health.GenderHealthCare.entity.ServiceSlotPool;
 import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
-import com.S_Health.GenderHealthCare.repository.ScheduleRepository;
-import com.S_Health.GenderHealthCare.repository.ServiceRepository;
-import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
+import com.S_Health.GenderHealthCare.repository.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class HospitalSlotFreeService {
+public class ServiceSlotPoolService {
     @Autowired
     SpecializationRepository specializationRepository;
     @Autowired
@@ -35,6 +33,9 @@ public class HospitalSlotFreeService {
     ServiceRepository serviceRepository;
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    ServiceSlotPoolRepository serviceSlotPoolRepository;
+
     public ScheduleServiceResponse getSlotFreeService(ScheduleServiceRequest request) {
         List<Specialization> specializations = specializationRepository.findByServiceId(request.getService_id());
         //lấy ra những bác sĩ có chuyên sâu đó
@@ -56,6 +57,27 @@ public class HospitalSlotFreeService {
                 .toList();
         Optional<com.S_Health.GenderHealthCare.entity.Service> service = serviceRepository.findById(request.getService_id());
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
+        //lưu lịch rảnh của service vào serviceSlotPool
+        for (ScheduleConsultantResponse daily : scheduleResponses) {
+            for (TimeSlotDTO timeSlot : daily.getTimeSlotDTOs()) {
+                // Kiểm tra đã tồn tại chưa (tránh duplicate)
+                boolean exists = serviceSlotPoolRepository
+                        .findByService_idAndDateAndStartTime(request.getService_id(), daily.getWorkDate(), timeSlot.getStartTime())
+                        .isPresent();
+                if (!exists) {
+                    ServiceSlotPool pool = ServiceSlotPool.builder()
+                            .service(service.get())
+                            .date(daily.getWorkDate())
+                            .startTime(timeSlot.getStartTime())
+                            .endTime(timeSlot.getEndTime())
+                            .maxBooking(consultants.size() * 6)
+                            .currentBooking(0)
+                            .isActive(true)
+                            .build();
+                    serviceSlotPoolRepository.save(pool);
+                }
+            }
+        }
         return new ScheduleServiceResponse(serviceDTO, scheduleResponses);
     }
 }

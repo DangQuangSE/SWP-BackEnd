@@ -59,6 +59,15 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "specialization_id")
     )
     List<Specialization> specializations;
+
+    @OneToMany(mappedBy = "customer")
+    List<MedicalProfile> medicalProfiles;
+
+    @OneToMany(mappedBy = "customer")
+    List<Appointment> appointments;
+    @OneToMany(mappedBy = "consultant")
+    List<Appointment> listAppointment;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
