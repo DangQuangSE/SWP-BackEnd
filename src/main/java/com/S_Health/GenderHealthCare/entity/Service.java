@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,6 +30,15 @@ public class Service {
     Boolean isActive;
     LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "service")
+    List<Specialization> specializations;
 
+    @OneToMany(mappedBy = "service")
+    List<ServiceSlotPool> serviceSlotPools;
 
+    @OneToMany(mappedBy = "service")
+    List<MedicalProfile> medicalProfiles;
+
+    @OneToMany(mappedBy = "service")
+    List<Appointment> appointments;
 }

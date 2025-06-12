@@ -13,6 +13,6 @@ public class Certification {
     String name;
     String image;
     @ManyToOne
-    @JoinColumn(name = "doctor_id")
+    @JoinColumn(name = "consultant_id")
     User consultant;
 }

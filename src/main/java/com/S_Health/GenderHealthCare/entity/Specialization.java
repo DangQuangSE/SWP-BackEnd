@@ -1,28 +1,27 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Schedule {
+public class Specialization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    LocalDate workDate;
-    LocalTime startTime;
-    LocalTime endTime;
-    boolean available;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consultant_id")
-    User consultant;
+    String name;
+    @ManyToMany(mappedBy = "specializations")
+    @JsonIgnore
+    List<User> consultants;
+    @ManyToOne
+    @JoinColumn(name = "service_id")
+    Service service;
 }
