@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Service {
+public class MedicalService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

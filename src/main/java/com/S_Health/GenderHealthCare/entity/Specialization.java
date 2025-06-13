@@ -23,5 +23,5 @@ public class Specialization {
     List<User> consultants;
     @ManyToOne
     @JoinColumn(name = "service_id")
-    Service service;
+    MedicalService service;
 }

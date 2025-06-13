@@ -1,9 +1,8 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
-import com.S_Health.GenderHealthCare.entity.Service;
+import com.S_Health.GenderHealthCare.entity.MedicalService;
 import com.S_Health.GenderHealthCare.service.testService.ServiceManagementService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -70,14 +69,14 @@ public class ServiceAPI {
 
     @PatchMapping("/{id}/activate")
     public ResponseEntity<ServiceDTO> activateService(@PathVariable Long id) {
-        Service service = serviceManagementService.activateService(id);
+        MedicalService service = serviceManagementService.activateService(id);
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
         return ResponseEntity.ok(serviceDTO);
     }
 
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ServiceDTO> deactivateService(@PathVariable Long id) {
-        Service service = serviceManagementService.deactivateService(id);
+        MedicalService service = serviceManagementService.deactivateService(id);
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
         return ResponseEntity.ok(serviceDTO);
     }

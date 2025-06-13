@@ -5,10 +5,7 @@ import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.dto.response.TimeSlotDTO;
-import com.S_Health.GenderHealthCare.entity.Schedule;
-import com.S_Health.GenderHealthCare.entity.ServiceSlotPool;
-import com.S_Health.GenderHealthCare.entity.Specialization;
-import com.S_Health.GenderHealthCare.entity.User;
+import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.repository.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +52,7 @@ public class ServiceSlotPoolService {
                 .map(entry -> new ScheduleConsultantResponse(entry.getKey(), entry.getValue()))
                 .sorted(Comparator.comparing(ScheduleConsultantResponse::getWorkDate))
                 .toList();
-        Optional<com.S_Health.GenderHealthCare.entity.Service> service = serviceRepository.findById(request.getService_id());
+        Optional<MedicalService> service = serviceRepository.findById(request.getService_id());
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
         //lưu lịch rảnh của service vào serviceSlotPool
         for (ScheduleConsultantResponse daily : scheduleResponses) {

@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,7 +22,7 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    Service service;
+    MedicalService service;
 
     @ManyToOne
     @JoinColumn(name = "medicalProfile_id")
@@ -37,6 +38,10 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     User consultant;
+
+    @OneToMany(mappedBy = "appointment")
+    List<Payment> payments;
+
 
     String note;
     @Enumerated(EnumType.STRING)
