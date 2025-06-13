@@ -13,6 +13,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Service {
 
@@ -27,9 +28,10 @@ public class Service {
     @Enumerated(EnumType.STRING)
     ServiceType type;
     Double price;
+    Double discountPercent;
     Boolean isActive;
     LocalDateTime createdAt;
-
+    Boolean isCombo;
     @OneToMany(mappedBy = "service")
     List<Specialization> specializations;
 
@@ -41,4 +43,9 @@ public class Service {
 
     @OneToMany(mappedBy = "service")
     List<Appointment> appointments;
+
+    @OneToMany(mappedBy = "comboService")
+    List<ComboItem> comboItems;
+    @OneToMany(mappedBy = "subService")
+    List<ComboItem> subServices;
 }

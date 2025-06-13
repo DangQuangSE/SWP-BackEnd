@@ -22,6 +22,8 @@ public class ServiceDTO {
     Integer duration;
     ServiceType type;
     Double price;
+    Double discountPercent;
     Boolean isActive;
+    Boolean isCombo;
     LocalDateTime createdAt;
 }
