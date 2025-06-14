@@ -65,8 +65,8 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "customer")
     List<Appointment> appointments;
-    @OneToMany(mappedBy = "consultant")
-    List<Appointment> listAppointment;
+//    @OneToMany(mappedBy = "consultant")
+//    List<Appointment> listAppointment;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

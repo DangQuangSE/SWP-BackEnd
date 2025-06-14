@@ -34,14 +34,15 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     User customer;
-    @ManyToOne
-    @JoinColumn(name = "consultant_id")
-    User consultant;
+//    @ManyToOne
+//    @JoinColumn(name = "consultant_id")
+//    User consultant;
 
     String note;
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;
     @CreationTimestamp
     LocalDateTime created_at;
+
 
 }
