@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -43,6 +44,5 @@ public class Appointment {
     AppointmentStatus status;
     @CreationTimestamp
     LocalDateTime created_at;
-
-
+    LocalDate preferredDate;
 }

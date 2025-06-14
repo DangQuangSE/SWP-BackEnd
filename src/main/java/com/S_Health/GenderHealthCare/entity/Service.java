@@ -48,4 +48,6 @@ public class Service {
     List<ComboItem> comboItems;
     @OneToMany(mappedBy = "subService")
     List<ComboItem> subServices;
+    @OneToMany(mappedBy = "service")
+    List<AppointmentDetail> appointmentDetails;
 }

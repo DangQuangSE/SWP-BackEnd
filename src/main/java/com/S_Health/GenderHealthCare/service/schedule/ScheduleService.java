@@ -37,7 +37,4 @@ public class ScheduleService {
                 .sorted(Comparator.comparing(ScheduleConsultantResponse::getWorkDate))
                 .collect(Collectors.toList());
     }
-
-
-
 }

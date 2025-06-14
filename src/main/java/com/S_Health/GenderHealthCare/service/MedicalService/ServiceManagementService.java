@@ -87,7 +87,7 @@ public class ServiceManagementService {
 
         for (Long subId : request.getSubServiceIds()) {
             Service sub = serviceRepository.findById(subId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy service này"));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ này!"));
             ComboItem item = new ComboItem();
             item.setComboService(combo);
             item.setSubService(sub);
