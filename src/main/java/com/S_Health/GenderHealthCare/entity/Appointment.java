@@ -38,7 +38,7 @@ public class Appointment {
 //    @ManyToOne
 //    @JoinColumn(name = "consultant_id")
 //    User consultant;
-
+    Double price;
     String note;
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;

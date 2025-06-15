@@ -2,8 +2,7 @@ package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -11,6 +10,9 @@ import java.time.LocalTime;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AppointmentDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,9 +31,6 @@ public class AppointmentDetail {
     User consultant;
 
     LocalTime slotTime;
-
-    Double priceInCombo;
-
     @Enumerated(EnumType.STRING)
     AppointmentStatus status = AppointmentStatus.PENDING;
 }

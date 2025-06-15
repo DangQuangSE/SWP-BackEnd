@@ -13,6 +13,6 @@ import java.time.LocalTime;
 public class BookingRequest {
     long service_id;
     LocalDate preferredDate;
-    LocalTime slot;
+    LocalTime slot; //start
     String note;
 }
