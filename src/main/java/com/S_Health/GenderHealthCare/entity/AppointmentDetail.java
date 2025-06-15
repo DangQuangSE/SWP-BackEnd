@@ -3,8 +3,6 @@ package com.S_Health.GenderHealthCare.entity;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
