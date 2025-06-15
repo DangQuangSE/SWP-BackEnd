@@ -37,7 +37,8 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/service/**",
             "PUT:/api/service/**",
             "DELETE:/api/service/**",
-            "PATCH:/api/service/**"
+            "PATCH:/api/service/**",
+            "POST:/api/payment/vnpay/**"
 
     );
 

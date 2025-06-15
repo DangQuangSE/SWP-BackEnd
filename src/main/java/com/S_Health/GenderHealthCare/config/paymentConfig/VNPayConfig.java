@@ -12,10 +12,10 @@ import java.util.*;
 
 public class VNPayConfig {
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:8080/vnpay_jsp/vnpay_return.jsp";
+    public static String vnp_Returnurl = "/vnpay-payment";
     public static String vnp_TmnCode = "8L70A4M9";
-    public static String secretKey = "6G2LAMW0YI3UL5NI4JU9FV2EQM2M2VQG";
-    public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
+    public static String vnp_HashSecret = "G8JY74GUTUBWSHSBA25USMXK4MR1NGMT ";
+    public static String vnp_apiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
     public static String md5(String message) {
         String digest = null;
@@ -71,7 +71,7 @@ public class VNPayConfig {
                 sb.append("&");
             }
         }
-        return hmacSHA512(secretKey,sb.toString());
+        return hmacSHA512(vnp_HashSecret,sb.toString());
     }
 
     public static String hmacSHA512(final String key, final String data) {
@@ -102,7 +102,7 @@ public class VNPayConfig {
         try {
             ipAdress = request.getHeader("X-FORWARDED-FOR");
             if (ipAdress == null) {
-                ipAdress = request.getRemoteAddr();
+                ipAdress = request.getLocalAddr();
             }
         } catch (Exception e) {
             ipAdress = "Invalid IP:" + e.getMessage();
