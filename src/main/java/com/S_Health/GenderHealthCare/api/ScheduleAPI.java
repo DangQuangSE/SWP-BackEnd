@@ -1,7 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.RangeDate;
-import com.S_Health.GenderHealthCare.dto.request.schedule.InputScheduleRequest;
+import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
@@ -34,10 +34,10 @@ public class ScheduleAPI {
         LocalDate today = LocalDate.now();
         LocalDate start = from != null ? from : today;
         LocalDate end = to != null ? to : today.plusWeeks(2);
+        RangeDate rangeDate = new RangeDate(start, end);
         ScheduleConsultantRequest scheduleRequest = ScheduleConsultantRequest.builder()
                 .consultant_id(id)
-                .from(start)
-                .to(end)
+                .rangeDate(rangeDate)
                 .build();
         List<ScheduleConsultantResponse> result = scheduleService.getScheduleOfConsultant(scheduleRequest);
         return ResponseEntity.ok(result);
@@ -57,8 +57,8 @@ public class ScheduleAPI {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/input-schedule")
-    public ResponseEntity inputSchedule(@RequestBody InputScheduleRequest request) {
-        return null;
+    @PostMapping("/register-schedule")
+    public ResponseEntity registerSchedule(@RequestBody ScheduleRegisterRequest request) {
+        return ResponseEntity.ok(scheduleService.registerSchedule(request));
     }
 }
