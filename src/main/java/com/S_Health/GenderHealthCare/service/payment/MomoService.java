@@ -122,7 +122,7 @@ public class MomoService {
 
             Payment payment = Payment.builder()
                     .amount(price)
-                    .status(PaymentStatus.SUCCESS)
+                    .status(PaymentStatus.PENDING)
                     .method(PaymentMethod.MOMO)
                     .appointment(appointment)
                     .paidBy(appointment.getCustomer())
