@@ -55,7 +55,7 @@ public class AuthenticationAPI {
         return check ? ResponseEntity.ok("OTP hợp lệ!") : ResponseEntity.badRequest().body("OTP không hợp lệ hoặc đã hết hạn!");
     }
 
-    @PostMapping("/auth/forgot-password/resetPass")
+    @PutMapping("/auth/forgot-password/resetPass")
     public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordRequest request) {
         authenticationService.setPasswordForgot(request);
         return ResponseEntity.ok("Mật khẩu đã được cập nhật thành công.");
