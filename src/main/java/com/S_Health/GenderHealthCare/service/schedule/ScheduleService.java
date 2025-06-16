@@ -2,7 +2,7 @@ package com.S_Health.GenderHealthCare.service.schedule;
 
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
-import com.S_Health.GenderHealthCare.dto.response.TimeSlotDTO;
+import com.S_Health.GenderHealthCare.dto.TimeSlotDTO;
 import com.S_Health.GenderHealthCare.entity.Schedule;
 import com.S_Health.GenderHealthCare.repository.ScheduleRepository;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
@@ -25,8 +25,8 @@ public class ScheduleService {
     public List<ScheduleConsultantResponse> getScheduleOfConsultant(ScheduleConsultantRequest request) {
         List<Schedule> schedules = scheduleRepository.findByConsultantIdAndWorkDateBetween(
                 request.getConsultant_id(),
-                request.getFrom(),
-                request.getTo()
+                request.getRangeDate().getFrom(),
+                request.getRangeDate().getTo()
         );
 
         return schedules.stream()
@@ -47,4 +47,5 @@ public class ScheduleService {
                 .sorted(Comparator.comparing(ScheduleConsultantResponse::getWorkDate))
                 .collect(Collectors.toList());
     }
+    public 
 }

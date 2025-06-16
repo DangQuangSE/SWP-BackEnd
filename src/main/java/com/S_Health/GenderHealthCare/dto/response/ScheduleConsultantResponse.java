@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.dto.response;
 
+import com.S_Health.GenderHealthCare.dto.TimeSlotDTO;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;

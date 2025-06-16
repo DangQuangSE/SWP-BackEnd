@@ -4,7 +4,7 @@ import com.S_Health.GenderHealthCare.dto.ServiceDTO;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
-import com.S_Health.GenderHealthCare.dto.response.TimeSlotDTO;
+import com.S_Health.GenderHealthCare.dto.TimeSlotDTO;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
@@ -68,7 +68,7 @@ public class ServiceSlotPoolService {
                         .findFirst();
 
                 if (existingSlot.isPresent()) {
-                    existingSlot.get().setAvailable(existingSlot.get().getAvailable() + available);
+                    existingSlot.get().setAvailableBooking(existingSlot.get().getAvailableBooking() + available);
                 } else {
                     slotList.add(new TimeSlotDTO(slotStart, slotEnd, available));
                 }
@@ -85,7 +85,7 @@ public class ServiceSlotPoolService {
 
                 if (!exists) {
                     int max = consultants.size() * 6;
-                    int current = max - slot.getAvailable();
+                    int current = max - slot.getAvailableBooking();
 
                     ServiceSlotPool pool = ServiceSlotPool.builder()
                             .service(service)
@@ -94,7 +94,7 @@ public class ServiceSlotPoolService {
                             .endTime(slot.getEndTime())
                             .maxBooking(max)
                             .currentBooking(current)
-                            .availableBooking(slot.getAvailable())
+                            .availableBooking(slot.getAvailableBooking())
                             .isActive(true)
                             .build();
 

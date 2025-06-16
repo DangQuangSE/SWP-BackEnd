@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.dto.response;
+package com.S_Health.GenderHealthCare.dto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -13,7 +13,7 @@ import java.time.LocalTime;
 public class TimeSlotDTO {
     LocalTime startTime;
     LocalTime endTime;
-    int available;
+    int availableBooking;
     public TimeSlotDTO(LocalTime start, LocalTime end){
         this.startTime = start;
         this.endTime = end;

@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.RangeDate;
+import com.S_Health.GenderHealthCare.dto.request.schedule.InputScheduleRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
@@ -54,5 +55,10 @@ public class ScheduleAPI {
         ScheduleServiceRequest request = new ScheduleServiceRequest(service_id, new RangeDate(from, to));
         ScheduleServiceResponse response = serviceSlotPoolService.getSlotFreeService(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/input-schedule")
+    public ResponseEntity inputSchedule(@RequestBody InputScheduleRequest request) {
+        return null;
     }
 }
