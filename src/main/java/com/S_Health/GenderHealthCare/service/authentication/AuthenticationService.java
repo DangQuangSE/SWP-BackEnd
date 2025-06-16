@@ -82,13 +82,12 @@ public class AuthenticationService implements UserDetailsService {
             throw new AuthenticationException("Mật khẩu không khớp!");
         }
         String password = passwordEncoder.encode(request.getPassword());
-        authenticationRepository.save(User.builder()
-                .email(request.getEmail())
-                .password(password)
-                .isVerify(true)
-                .isActive(true)
-                .role(UserRole.CUSTOMER)
-                .build());
+        User user = authenticationRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AuthenticationException("Không tìm thấy người dùng với email: " + request.getEmail()));
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        authenticationRepository.save(user);
+
         otpService.removeOtp(request.getEmail());
     }
 
