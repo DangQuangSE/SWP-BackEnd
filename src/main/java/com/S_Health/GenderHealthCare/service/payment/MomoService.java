@@ -3,7 +3,18 @@ package com.S_Health.GenderHealthCare.service.payment;
 import com.S_Health.GenderHealthCare.config.paymentConfig.MomoConfig;
 import com.S_Health.GenderHealthCare.dto.request.payment.MomoRequest;
 import com.S_Health.GenderHealthCare.dto.response.payment.MomoResponse;
+import com.S_Health.GenderHealthCare.entity.Appointment;
+import com.S_Health.GenderHealthCare.entity.Payment;
+
+import com.S_Health.GenderHealthCare.entity.Transaction;
+import com.S_Health.GenderHealthCare.enums.PaymentMethod;
+import com.S_Health.GenderHealthCare.enums.PaymentStatus;
+import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
+import com.S_Health.GenderHealthCare.repository.PaymentRepository;
+import com.S_Health.GenderHealthCare.repository.TransactionRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,8 +23,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -37,11 +51,32 @@ public class MomoService {
 
     private String requestType = "captureWallet";
 
-    public MomoResponse createMomoPaymentUrl() throws Exception {
-       String orderId = UUID.randomUUID().toString();
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
+
+
+    public MomoResponse createMomoPaymentUrl(Long appointmentId) throws AuthenticationException {
+        String orderId = UUID.randomUUID().toString();
         String requestId = UUID.randomUUID().toString();
-        String orderInfo = "Thanh toán đơn hàng: 1" ;
-        long amount = 5000000; // Số tiền thanh toán, ví dụ 10.000 VND
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn này không tồn tại"));
+
+        Optional<Payment> existingPayment = paymentRepository
+                .findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
+
+        if (existingPayment.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn này đã được thanh toán thành công.");
+        }
+
+        BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
+
+        String orderInfo = "Thanh toán đơn hàng: " + appointment.getService().getName();
+        long amount = price.longValue();// Số tiền thanh toán, ví dụ 10.000 VND
 
         String rawHash = String.format(
                 "accessKey=%s&amount=%d&extraData=%s&ipnUrl=%s&orderId=%s&orderInfo=%s&partnerCode=%s&redirectUrl=%s&requestId=%s&requestType=%s",
@@ -84,6 +119,26 @@ public class MomoService {
         ResponseEntity<MomoResponse> response = restTemplate.postForEntity(endpoint, httpRequest, MomoResponse.class);
 
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+
+            Payment payment = Payment.builder()
+                    .amount(price)
+                    .status(PaymentStatus.SUCCESS)
+                    .method(PaymentMethod.MOMO)
+                    .appointment(appointment)
+                    .paidBy(appointment.getCustomer())
+                    .build();
+            paymentRepository.save(payment);
+
+            Transaction transaction = Transaction.builder()
+                    .orderId(response.getBody().getOrderId())
+                    .requestId(response.getBody().getRequestId())
+                    .responseMessage(response.getBody().getMessage())
+                    .payment(payment)
+                    .responseTime(LocalDateTime .now())
+                    .payUrl(response.getBody().getPayUrl())
+                    .build();
+            transactionRepository.save(transaction);
+
             return response.getBody();
         } else {
             log.error("Không nhận được phản hồi hợp lệ từ MoMo");

@@ -31,8 +31,6 @@ public class Payment {
 
     BigDecimal amount;
 
-    String transactionCode;
-
     @CreationTimestamp
     LocalDateTime createdAt;
 
@@ -45,4 +43,7 @@ public class Payment {
     @ManyToOne(optional = false)
     @JoinColumn(name = "paid_by_user_id")
     User paidBy;
+
+    @OneToOne(mappedBy = "payment", cascade = CascadeType.ALL)
+    private Transaction transaction;
 }

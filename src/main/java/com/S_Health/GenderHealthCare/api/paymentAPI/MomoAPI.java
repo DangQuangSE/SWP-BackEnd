@@ -16,9 +16,10 @@ public class MomoAPI {
     private MomoService momoService;
 
     @GetMapping("/create")
-    public MomoResponse createPayment() throws Exception {
-        return momoService.createMomoPaymentUrl();
+    public MomoResponse createPayment(@RequestParam long appointmentId) throws Exception, RuntimeException {
+        return momoService.createMomoPaymentUrl(appointmentId);
     }
+
 
     @GetMapping("/return")
     public ResponseEntity<String> handleReturn(@RequestParam Map<String, String> queryParams) {
