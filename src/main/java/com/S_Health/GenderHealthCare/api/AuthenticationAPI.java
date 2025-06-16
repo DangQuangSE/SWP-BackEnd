@@ -60,6 +60,7 @@ public class AuthenticationAPI {
         authenticationService.setPasswordForgot(request);
         return ResponseEntity.ok("Mật khẩu đã được cập nhật thành công.");
     }
+    
 
     @PostMapping("/auth/google")
     public ResponseEntity loginWithGoogle(@RequestBody OAuthLoginRequest request) {
