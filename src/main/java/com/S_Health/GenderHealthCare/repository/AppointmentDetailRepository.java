@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface AppointmentDetailRepository extends JpaRepository<AppointmentDetail, Long> {
@@ -14,5 +15,6 @@ public interface AppointmentDetailRepository extends JpaRepository<AppointmentDe
     @Query("SELECT COUNT(a) FROM AppointmentDetail a WHERE a.consultant.id = :consultantId AND a.slotTime = :slotTime")
     int countByConsultant_idAndSlotTime(@Param("consultantId") Long consultantId, @Param("slotTime") LocalDateTime slotTime);
     boolean existsByAppointment_Customer_IdAndSlotTime(Long customerId, LocalDateTime slotTime );
+    List<AppointmentDetail> findByConsultant_idAndSlotTime(Long customer_id, LocalDateTime slotTime);
 
 }

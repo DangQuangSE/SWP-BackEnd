@@ -1,9 +1,11 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.RangeDate;
+import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
+import com.S_Health.GenderHealthCare.dto.response.ScheduleCancelResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
@@ -17,16 +19,15 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@RequestMapping("/api")
 @RestController
-@SecurityRequirement(name = "api")
+@SecurityRequirement(name = "api/schedules")
 public class ScheduleAPI {
     @Autowired
     ScheduleService scheduleService;
     @Autowired
     ServiceSlotPoolService serviceSlotPoolService;
 
-    @GetMapping("/view-schedule")
+    @GetMapping("/view")
     public ResponseEntity getScheduleOfConsultant(
             @RequestParam(value = "consultant_id") long id,
             @RequestParam(value = "from", required = false) LocalDate from,
@@ -57,8 +58,12 @@ public class ScheduleAPI {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/register-schedule")
+    @PostMapping("/register")
     public ResponseEntity registerSchedule(@RequestBody ScheduleRegisterRequest request) {
         return ResponseEntity.ok(scheduleService.registerSchedule(request));
+    }
+    @PostMapping("/cancel")
+    public ResponseEntity cancelSchedule(@RequestBody ScheduleCancelRequest request) {
+        return ResponseEntity.ok(scheduleService.cancelSchedule(request));
     }
 }

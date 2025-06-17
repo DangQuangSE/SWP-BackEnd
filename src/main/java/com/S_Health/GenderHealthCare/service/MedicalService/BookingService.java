@@ -94,6 +94,7 @@ public class BookingService {
                 .details(appointmentDetailDTOS)
                 .build();
     }
+
     public User findAvailableConsultant(BookingRequest request, List<User> consultants) {
         for (User consultant : consultants) {
             boolean hasSchedule = consultant.getSchedules().stream()

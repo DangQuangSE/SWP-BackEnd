@@ -12,4 +12,5 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     List<Schedule> findByConsultantIdAndWorkDateBetween(Long consultantId, LocalDate from, LocalDate to);
     List<Schedule> findByConsultantIdInAndWorkDateBetween(List<Long> consultantIds, LocalDate from, LocalDate to);
     Boolean existsByConsultantIdAndWorkDateAndStartTime(long consultantId, LocalDate date, LocalTime start);
+    Schedule findByConsultantId(Long consultantId);
 }
