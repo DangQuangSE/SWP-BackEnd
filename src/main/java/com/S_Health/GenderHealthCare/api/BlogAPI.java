@@ -1,14 +1,12 @@
 package com.S_Health.GenderHealthCare.api;
 
+import com.S_Health.GenderHealthCare.dto.request.blog.BlogRequest;
 import com.S_Health.GenderHealthCare.entity.Blog;
 import com.S_Health.GenderHealthCare.service.blog.BlogService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @SecurityRequirement(name = "api/blog")
@@ -30,5 +28,8 @@ public class BlogAPI {
         return ResponseEntity.ok(blogService.getAllBlogSummaries());
     }
 
-
+    @PostMapping("/blog")
+    public ResponseEntity createBlog(@RequestBody BlogRequest request) {
+        return ResponseEntity.ok(blogService.createBlog(request));
+    }
 }
