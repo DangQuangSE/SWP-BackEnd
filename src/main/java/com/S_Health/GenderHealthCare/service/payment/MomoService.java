@@ -1,11 +1,10 @@
 package com.S_Health.GenderHealthCare.service.payment;
 
 import com.S_Health.GenderHealthCare.config.paymentConfig.MomoConfig;
-import com.S_Health.GenderHealthCare.dto.request.payment.MomoRequest;
+import com.S_Health.GenderHealthCare.dto.request.payment.MomoNotifiRequest;
 import com.S_Health.GenderHealthCare.dto.response.payment.MomoResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.Payment;
-
 import com.S_Health.GenderHealthCare.entity.Transaction;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
@@ -13,25 +12,23 @@ import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationExceptio
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.PaymentRepository;
 import com.S_Health.GenderHealthCare.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
+
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class MomoService {
 
     @Value("${momo.partner.code}")
@@ -46,10 +43,6 @@ public class MomoService {
     private String returnUrl;
     @Value("${momo.ipn.url}")
     private String ipnUrl;
-    @Value("${momo.notify.url}")
-    private String notifyUrl;
-
-    private String requestType = "captureWallet";
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -58,44 +51,28 @@ public class MomoService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    private final String requestType = "captureWallet";
 
-    public MomoResponse createMomoPaymentUrl(Long appointmentId) throws AuthenticationException {
+    public MomoResponse createMomoPaymentUrl(Long appointmentId) throws Exception {
         String orderId = UUID.randomUUID().toString();
         String requestId = UUID.randomUUID().toString();
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn này không tồn tại"));
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
 
-        Optional<Payment> existingPayment = paymentRepository
-                .findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
-
-        if (existingPayment.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn này đã được thanh toán thành công.");
-        }
+        Optional<Payment> existing = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
+        if (existing.isPresent()) throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
 
         BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
 
-        String orderInfo = "Thanh toán đơn hàng: " + appointment.getService().getName();
         long amount = price.longValue();// Số tiền thanh toán, ví dụ 10.000 VND
+        String orderInfo = "Thanh toán đơn hàng: " + appointment.getService().getName();
 
         String rawHash = String.format(
                 "accessKey=%s&amount=%d&extraData=%s&ipnUrl=%s&orderId=%s&orderInfo=%s&partnerCode=%s&redirectUrl=%s&requestId=%s&requestType=%s",
-                accessKey, amount, "", ipnUrl, orderId, orderInfo, partnerCode, returnUrl, requestId, requestType
-        );
+                accessKey, amount, "", ipnUrl, orderId, orderInfo, partnerCode, returnUrl, requestId, requestType);
 
-        String signature = "";
-        try {
-            signature = MomoConfig.signSHA256(rawHash, secretKey);
-        } catch (Exception e) {
-            log.error("Error signing Momo request:", e);
-            return null;
-        }
-
-        if(signature.isBlank()) {
-            log.error("Signature is blank, cannot create Momo payment URL");
-            return null;
-        }
-
+        String signature = MomoConfig.signSHA256(rawHash, secretKey);
 
         MomoRequest request = MomoRequest.builder()
                 .partnerCode(partnerCode)
@@ -113,15 +90,14 @@ public class MomoService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<MomoRequest> httpRequest = new HttpEntity<>(request, headers);
+        HttpEntity<MomoRequest> entity = new HttpEntity<>(request, headers);
 
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<MomoResponse> response = restTemplate.postForEntity(endpoint, httpRequest, MomoResponse.class);
+        ResponseEntity<MomoResponse> response = restTemplate.postForEntity(endpoint, entity, MomoResponse.class);
 
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-
             Payment payment = Payment.builder()
-                    .amount(price)
+                    .amount(BigDecimal.valueOf(amount))
                     .status(PaymentStatus.PENDING)
                     .method(PaymentMethod.MOMO)
                     .appointment(appointment)
@@ -130,21 +106,73 @@ public class MomoService {
             paymentRepository.save(payment);
 
             Transaction transaction = Transaction.builder()
-                    .orderId(response.getBody().getOrderId())
-                    .requestId(response.getBody().getRequestId())
-                    .responseMessage(response.getBody().getMessage())
-                    .payment(payment)
-                    .responseTime(LocalDateTime .now())
+                    .orderId(orderId)
+                    .requestId(requestId)
                     .payUrl(response.getBody().getPayUrl())
+                    .payment(payment)
                     .build();
             transactionRepository.save(transaction);
 
             return response.getBody();
-        } else {
-            log.error("Không nhận được phản hồi hợp lệ từ MoMo");
-            return null;
         }
 
+        throw new RuntimeException("Tạo thanh toán thất bại.");
+    }
 
+
+    public ResponseEntity<String> handleMomoNotify(MomoNotifiRequest notify) {
+        try {
+            String rawHash = String.format(
+                    "accessKey=%s&amount=%d&extraData=%s&message=%s&orderId=%s&orderInfo=%s&orderType=%s&partnerCode=%s&payType=%s&requestId=%s&responseTime=%s&resultCode=%d&transId=%s",
+                    accessKey,
+                    notify.getAmount(),
+                    notify.getExtraData(),
+                    notify.getMessage(),
+                    notify.getOrderId(),
+                    notify.getOrderInfo(),
+                    notify.getOrderType(),
+                    notify.getPartnerCode(),
+                    notify.getPayType(),
+                    notify.getRequestId(),
+                    notify.getResponseTime(),
+                    notify.getResultCode(),
+                    notify.getTransId()
+            );
+
+            String expectedSignature = MomoConfig.signSHA256(rawHash, secretKey);
+            if (!expectedSignature.equals(notify.getSignature())) {
+                return ResponseEntity.badRequest().body("Invalid signature");
+            }
+
+            if (notify.getResultCode() != 0) {
+                Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
+                        .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
+                Payment payment = transaction.getPayment();
+                payment.setStatus(PaymentStatus.FAILED);
+                payment.setPaidAt(LocalDateTime.now());
+                paymentRepository.save(payment);
+                return ResponseEntity.ok("Giao dịch thất bại");
+            }
+
+            Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
+
+            Payment payment = transaction.getPayment();
+            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setPaidAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            transaction.setTransactionCode(notify.getTransId());
+            transaction.setResultCode(notify.getResultCode());
+            transaction.setResponseMessage(notify.getMessage());
+            transaction.setResponseTime(LocalDateTime.now());
+            transactionRepository.save(transaction);
+
+            return ResponseEntity.ok("IPN OK");
+
+        } catch (Exception e) {
+            log.error("Lỗi xử lý IPN:", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("IPN Error");
+        }
     }
 }

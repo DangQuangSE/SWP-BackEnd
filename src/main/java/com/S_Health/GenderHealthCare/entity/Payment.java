@@ -46,4 +46,5 @@ public class Payment {
 
     @OneToOne(mappedBy = "payment", cascade = CascadeType.ALL)
     private Transaction transaction;
+
 }

@@ -1,13 +1,19 @@
 package com.S_Health.GenderHealthCare.api.paymentAPI;
 
+import com.S_Health.GenderHealthCare.dto.request.payment.MomoNotifiRequest;
 import com.S_Health.GenderHealthCare.dto.response.payment.MomoResponse;
+import com.S_Health.GenderHealthCare.repository.PaymentRepository;
+import com.S_Health.GenderHealthCare.repository.TransactionRepository;
 import com.S_Health.GenderHealthCare.service.payment.MomoService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/payment/momo")
 public class MomoAPI {
@@ -27,9 +33,7 @@ public class MomoAPI {
     }
 
     @PostMapping("/notify")
-    public ResponseEntity<String> handleNotify(@RequestBody Map<String, String> body) {
-        System.out.println("IPN từ MoMo gửi về: " + body);
-        // TODO: kiểm tra chữ ký và cập nhật trạng thái thanh toán
-        return ResponseEntity.ok("IPN OK");
+    public ResponseEntity<String> handleNotify(@RequestBody MomoNotifiRequest notify) {
+        return momoService.handleMomoNotify(notify);
     }
 }

@@ -2,24 +2,25 @@ package com.S_Health.GenderHealthCare.dto.request.payment;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.checkerframework.checker.units.qual.A;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MomoRequest {
+public class MomoNotifiRequest {
 
     String partnerCode;
+    String orderId;
     String requestId;
     Long amount;
-    String orderId;
     String orderInfo;
-    String redirectUrl;
-    String ipnUrl;
-    String requestType;
+    String orderType;
+    String transId;
+    int resultCode;
+    String message;
+    String payType;
+    Long responseTime;
     String extraData;
-    String lang;
     String signature;
 }
