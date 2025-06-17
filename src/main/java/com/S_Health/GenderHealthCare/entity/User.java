@@ -68,6 +68,11 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "consultant")
     List<AppointmentDetail> appointmentDetails;
 
+    @OneToMany(mappedBy = "author")
+    List<Blog> blogs;
+
+    @OneToMany(mappedBy = "commenter")
+    List<Comment> comments;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
@@ -85,4 +90,5 @@ public class User implements UserDetails {
     public long getId(){
         return this.id;
     }
+
 }

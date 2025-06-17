@@ -16,7 +16,7 @@ import com.S_Health.GenderHealthCare.enums.ScheduleStatus;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ScheduleRepository;
-import com.S_Health.GenderHealthCare.service.MedicalService.BookingService;
+import com.S_Health.GenderHealthCare.service.medicalService.BookingService;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,7 +149,7 @@ public class ScheduleService {
                 affectedResponseList.add(new ScheduleCancelResponse.AffectedAppointment(
                         detail.getAppointment().getCustomer(),
                         date,
-                        "ĐÃ CHUYỂN SANG: " + replacement.getFullname()
+                        "Đã chuyển sang: " + replacement.getFullname()
                 ));
             } else {
                 // Không có người thay thế

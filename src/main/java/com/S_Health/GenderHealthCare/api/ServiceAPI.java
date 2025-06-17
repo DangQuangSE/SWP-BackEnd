@@ -3,7 +3,7 @@ package com.S_Health.GenderHealthCare.api;
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
 import com.S_Health.GenderHealthCare.dto.request.service.ComboServiceRequest;
 import com.S_Health.GenderHealthCare.entity.Service;
-import com.S_Health.GenderHealthCare.service.MedicalService.ServiceManagementService;
+import com.S_Health.GenderHealthCare.service.medicalService.ServiceManagementService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

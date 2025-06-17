@@ -194,8 +194,6 @@ public class AuthenticationService implements UserDetailsService {
             throw new AuthenticationException("Đăng nhập Facebook: " + e.getMessage());
         }
     }
-
-
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return authenticationRepository.findUserByEmail(email);
