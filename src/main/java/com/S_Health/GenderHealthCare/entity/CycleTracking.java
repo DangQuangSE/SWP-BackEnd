@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.S_Health.GenderHealthCare.enums.Symptoms;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -27,7 +28,10 @@ public class CycleTracking {
     List<Notification> notifications;
 
     LocalDate startDate;
-    LocalDate endDate;
+    Boolean isPeriodStart;
+
+    @Enumerated(EnumType.STRING)
+    Symptoms symptoms;
 
     @Column(columnDefinition = "TEXT")
     String note;
