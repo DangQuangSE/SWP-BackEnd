@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.service.payment;
 
 import com.S_Health.GenderHealthCare.config.paymentConfig.MomoConfig;
 import com.S_Health.GenderHealthCare.dto.request.payment.MomoNotifiRequest;
+import com.S_Health.GenderHealthCare.dto.request.payment.MomoRequest;
 import com.S_Health.GenderHealthCare.dto.response.payment.MomoResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.Payment;
