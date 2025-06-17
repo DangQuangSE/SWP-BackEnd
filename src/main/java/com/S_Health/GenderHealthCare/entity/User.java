@@ -66,8 +66,13 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "customer")
     List<Appointment> appointments;
     @OneToMany(mappedBy = "consultant")
-    List<Appointment> listAppointment;
+    List<AppointmentDetail> appointmentDetails;
 
+    @OneToMany(mappedBy = "author")
+    List<Blog> blogs;
+
+    @OneToMany(mappedBy = "commenter")
+    List<Comment> comments;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
@@ -82,4 +87,8 @@ public class User implements UserDetails {
     public String getPassword() {
         return this.password;
     }
+    public long getId(){
+        return this.id;
+    }
+
 }

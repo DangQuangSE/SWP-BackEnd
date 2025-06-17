@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.S_Health.GenderHealthCare.enums.ScheduleStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,4 +26,6 @@ public class Schedule {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "consultant_id")
     User consultant;
+    @Enumerated(EnumType.STRING)
+    ScheduleStatus status;
 }
