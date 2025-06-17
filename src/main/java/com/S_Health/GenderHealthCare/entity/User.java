@@ -68,6 +68,12 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "consultant")
     List<Appointment> listAppointment;
 
+    @OneToMany(mappedBy = "user")
+    List<CycleTracking> cycleTrackings;
+
+    @OneToMany(mappedBy = "user")
+    List<Notification> notifications;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
