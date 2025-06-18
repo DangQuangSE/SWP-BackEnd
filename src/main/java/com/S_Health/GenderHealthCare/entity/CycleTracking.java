@@ -30,8 +30,9 @@ public class CycleTracking {
     LocalDate startDate;
     Boolean isPeriodStart;
 
-    @Enumerated(EnumType.STRING)
-    Symptoms symptoms;
+    @Column(columnDefinition = "TEXT")
+//    @Enumerated(EnumType.STRING)
+    String symptoms;
 
     @Column(columnDefinition = "TEXT")
     String note;

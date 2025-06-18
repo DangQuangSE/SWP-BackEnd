@@ -1,15 +1,15 @@
 package com.S_Health.GenderHealthCare.dto.request.service;
 
 import com.S_Health.GenderHealthCare.enums.Symptoms;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CycleTrackingRequest {
@@ -17,4 +17,5 @@ public class CycleTrackingRequest {
     LocalDate startDate;
     Boolean isPeriodStart;
     List<Symptoms> symptoms;
+    String node;
 }
