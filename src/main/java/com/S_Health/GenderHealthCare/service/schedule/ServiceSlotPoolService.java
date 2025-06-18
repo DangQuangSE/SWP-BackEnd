@@ -55,8 +55,8 @@ public class ServiceSlotPoolService {
             List<LocalTime> slotStarts = TimeSlotUtils.generateSlots(schedule.getStartTime(), schedule.getEndTime(), Duration.ofMinutes(90));
 
             for (LocalTime slotStart : slotStarts) {
-                LocalDateTime slotDateTime = LocalDateTime.of(date, slotStart);
-                int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultantId, slotDateTime);
+                LocalTime localTime =  slotStart;
+                int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultantId, localTime);
                 int available = Math.max(0, 6 - booked); // mỗi bác sĩ tối đa 6 slot
 
                 // Thêm hoặc cập nhật vào map
@@ -114,7 +114,7 @@ public class ServiceSlotPoolService {
     }
 
     public void updateAvailableBookingSlot(long service_id, LocalDate date, LocalTime start){
-        LocalDateTime slotTime = LocalDateTime.of(date, start);
+        LocalTime slotTime =  start;
         List<User> consultants = getConsultantInSpecialization(service_id);
         int maxBookingPer = 6;
         int availableTotal = 0;

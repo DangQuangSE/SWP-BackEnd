@@ -53,7 +53,7 @@ public class ScheduleAPI {
         LocalDate today = LocalDate.now();
         LocalDate start = from != null ? from : today;
         LocalDate end = to != null ? to : today.plusWeeks(2);
-        ScheduleServiceRequest request = new ScheduleServiceRequest(service_id, new RangeDate(from, to));
+        ScheduleServiceRequest request = new ScheduleServiceRequest(service_id, new RangeDate(start, end));
         ScheduleServiceResponse response = serviceSlotPoolService.getSlotFreeService(request);
         return ResponseEntity.ok(response);
     }

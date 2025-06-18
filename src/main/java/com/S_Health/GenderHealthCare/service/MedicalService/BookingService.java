@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.service.medicalService;
+package com.S_Health.GenderHealthCare.service.MedicalService;
 
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.response.AppointmentDetailDTO;
@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,7 +75,7 @@ public class BookingService {
             detail.setAppointment(appointment);
             detail.setConsultant(availableConsultant);
             detail.setService(sub);
-            detail.setSlotTime(request.getSlot()); // dùng chung slot cho tất cả
+            detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot())); // dùng chung slot cho tất cả
             appointmentDetailRepository.save(detail);
 
             appointmentDetailDTOS.add(AppointmentDetailDTO.builder()
@@ -102,7 +103,7 @@ public class BookingService {
                             !request.getSlot().isBefore(s.getStartTime()) &&
                             !request.getSlot().plusMinutes(90).isAfter(s.getEndTime()));
             if (!hasSchedule) continue;
-            LocalDateTime slotTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
+            LocalTime slotTime =  request.getSlot();
             int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultant.getId(), slotTime);
 
             if (booked < 6) {
