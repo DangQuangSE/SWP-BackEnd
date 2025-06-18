@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@SecurityRequirement(name = "api/schedules")
+@RequestMapping("/api/schedules")
 public class ScheduleAPI {
     @Autowired
     ScheduleService scheduleService;
