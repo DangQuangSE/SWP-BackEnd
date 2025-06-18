@@ -35,10 +35,13 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PUBLIC_API = List.of(
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
+            "POST:/api/**",
+            "PUT:/api/auth/**",
             "POST:/api/service/**",
             "PUT:/api/service/**",
             "DELETE:/api/service/**",
-            "PATCH:/api/service/**"
+            "PATCH:/api/service/**",
+            "POST:/api/payment/vnpay/**"
 
     );
 

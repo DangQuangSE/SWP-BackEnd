@@ -79,6 +79,10 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "commenter")
     List<Comment> comments;
+    @OneToMany(mappedBy = "paidBy")
+    List<Payment> payments;
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();

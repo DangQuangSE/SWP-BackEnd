@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -35,6 +36,14 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     User customer;
+    @ManyToOne
+    @JoinColumn(name = "consultant_id")
+    User consultant;
+
+    @OneToMany(mappedBy = "appointment")
+    List<Payment> payments;
+
+
 //    @ManyToOne
 //    @JoinColumn(name = "consultant_id")
 //    User consultant;
