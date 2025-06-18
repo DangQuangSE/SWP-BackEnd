@@ -26,7 +26,7 @@ public class CycleTrackingService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
-        CycleTracking log = cycleTrackingRepository.findByUserIdAndDate(request.getUserId(),
+        CycleTracking log = cycleTrackingRepository.findByUser_IdAndStartDate(request.getUserId(),
                         request.getStartDate())
                 .orElse(new CycleTracking());
 

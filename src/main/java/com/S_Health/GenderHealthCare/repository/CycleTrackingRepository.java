@@ -10,6 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface CycleTrackingRepository extends JpaRepository<CycleTracking, Long> {
-    Optional<CycleTracking> findByUserIdAndDate(Long userId, LocalDate   date);
+    Optional<CycleTracking> findByUser_IdAndStartDate(Long userId, LocalDate startDate);
     List<CycleTracking> findAllByUserId(Long userId);
 }
