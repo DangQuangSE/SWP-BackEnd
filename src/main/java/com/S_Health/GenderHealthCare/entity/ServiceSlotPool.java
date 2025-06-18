@@ -21,7 +21,7 @@ public class ServiceSlotPool {
     long id;
     @ManyToOne
     @JoinColumn(name = "service_id")
-    MedicalService service;
+    Service service;
     LocalDate date;
     LocalTime startTime;
     LocalTime endTime;

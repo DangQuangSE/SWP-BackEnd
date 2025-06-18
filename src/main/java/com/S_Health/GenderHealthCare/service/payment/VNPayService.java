@@ -1,17 +1,13 @@
 package com.S_Health.GenderHealthCare.service.payment;
 
 import com.S_Health.GenderHealthCare.config.paymentConfig.VNPayConfig;
-import com.S_Health.GenderHealthCare.entity.Appointment;
-import com.S_Health.GenderHealthCare.entity.MedicalService;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;

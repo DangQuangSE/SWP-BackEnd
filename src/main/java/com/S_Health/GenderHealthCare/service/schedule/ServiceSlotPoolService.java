@@ -6,7 +6,6 @@ import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.dto.TimeSlotDTO;
 import com.S_Health.GenderHealthCare.entity.*;
-import com.S_Health.GenderHealthCare.dto.response.TimeSlotDTO;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;

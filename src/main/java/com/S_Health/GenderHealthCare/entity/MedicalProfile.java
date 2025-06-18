@@ -24,7 +24,7 @@ public class MedicalProfile {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    MedicalService service;
+    Service service;
 
     @OneToMany(mappedBy = "medicalProfile", cascade = CascadeType.ALL)
     List<Appointment> appointments;
