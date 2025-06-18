@@ -68,6 +68,12 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "consultant")
     List<AppointmentDetail> appointmentDetails;
 
+    @OneToMany(mappedBy = "user")
+    List<CycleTracking> cycleTrackings;
+
+    @OneToMany(mappedBy = "user")
+    List<Notification> notifications;
+
     @OneToMany(mappedBy = "author")
     List<Blog> blogs;
 
