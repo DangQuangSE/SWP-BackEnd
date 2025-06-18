@@ -21,10 +21,8 @@ public class BookingAPI {
     BookingService bookingService;
     @PostMapping("/medicalService")
     public ResponseEntity bookAppointment(
-            @RequestBody BookingRequest request,
-            @AuthenticationPrincipal User user
+            @RequestBody BookingRequest request
     ) {
-        long customerId = user.getId(); // lấy ID từ token
-        return ResponseEntity.ok(bookingService.bookingService(request, customerId));
+        return ResponseEntity.ok(bookingService.bookingService(request));
     }
 }

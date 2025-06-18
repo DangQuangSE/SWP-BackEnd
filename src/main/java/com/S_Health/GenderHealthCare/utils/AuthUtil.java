@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AuthUtil {
-    public Long getCurrentUserId() {
+    public static Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new AuthenticationException("Bạn chưa đăng nhập");

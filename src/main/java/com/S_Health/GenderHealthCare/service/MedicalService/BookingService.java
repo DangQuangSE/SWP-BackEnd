@@ -13,7 +13,9 @@ import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceRepository;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
+import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,8 +36,8 @@ public class BookingService {
     AppointmentDetailRepository appointmentDetailRepository;
     @Autowired
     AppointmentRepository appointmentRepository;
-
-    public BookingResponse bookingService(BookingRequest request, long customerId) {
+    public BookingResponse bookingService(BookingRequest request) {
+        long customerId = AuthUtil.getCurrentUserId();
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dịch vụ!"));
 
@@ -53,7 +55,7 @@ public class BookingService {
         appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setCreated_at(LocalDateTime.now());
         appointment.setPreferredDate(request.getPreferredDate());
-
+        appointmentRepository.save(appointment);
         List<AppointmentDetailDTO> appointmentDetailDTOS = new ArrayList<>();
 
         List<com.S_Health.GenderHealthCare.entity.Service> subServices = service.getIsCombo()
@@ -81,6 +83,8 @@ public class BookingService {
             appointmentDetailDTOS.add(AppointmentDetailDTO.builder()
                     .serviceName(sub.getName())
                     .consultantName(availableConsultant.getFullname())
+                    .startTime(request.getSlot())
+                    .status(appointment.getStatus())
                     .build());
         }
         appointment.setPrice(totalPrice * (1 - service.getDiscountPercent()));
