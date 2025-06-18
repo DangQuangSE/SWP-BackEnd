@@ -55,7 +55,7 @@ public class ServiceSlotPoolService {
             List<LocalTime> slotStarts = TimeSlotUtils.generateSlots(schedule.getStartTime(), schedule.getEndTime(), Duration.ofMinutes(90));
 
             for (LocalTime slotStart : slotStarts) {
-                LocalTime localTime =  slotStart;
+                LocalDateTime localTime =  LocalDateTime.of(date, slotStart);
                 int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultantId, localTime);
                 int available = Math.max(0, 6 - booked); // mỗi bác sĩ tối đa 6 slot
 
@@ -113,25 +113,25 @@ public class ServiceSlotPoolService {
         return new ScheduleServiceResponse(serviceDTO, scheduleResponses);
     }
 
-    public void updateAvailableBookingSlot(long service_id, LocalDate date, LocalTime start){
-        LocalTime slotTime =  start;
-        List<User> consultants = getConsultantInSpecialization(service_id);
-        int maxBookingPer = 6;
-        int availableTotal = 0;
-        for(User consultant : consultants){
-            Boolean hasSchedule = scheduleRepository.existsByConsultantIdAndWorkDateAndStartTime(consultant.getId(), date, start);
-            if(!hasSchedule) continue;
-            int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultant.getId(), slotTime);
-            int available = Math.max(0, maxBookingPer - booked);
-            availableTotal += available;
-        }
-        Optional<ServiceSlotPool> serviceSlotPool = serviceSlotPoolRepository.findByService_idAndDateAndStartTime(service_id, date, start);
-        int finalAvailableTotal = availableTotal;
-        serviceSlotPool.ifPresent(pool ->{
-           pool.setAvailableBooking(finalAvailableTotal);
-           serviceSlotPoolRepository.save(pool);
-        });
-    }
+//    public void updateAvailableBookingSlot(long service_id, LocalDate date, LocalTime start){
+//        LocalTime slotTime =  start;
+//        List<User> consultants = getConsultantInSpecialization(service_id);
+//        int maxBookingPer = 6;
+//        int availableTotal = 0;
+//        for(User consultant : consultants){
+//            Boolean hasSchedule = scheduleRepository.existsByConsultantIdAndWorkDateAndStartTime(consultant.getId(), date, start);
+//            if(!hasSchedule) continue;
+//            int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultant.getId(), slotTime);
+//            int available = Math.max(0, maxBookingPer - booked);
+//            availableTotal += available;
+//        }
+//        Optional<ServiceSlotPool> serviceSlotPool = serviceSlotPoolRepository.findByService_idAndDateAndStartTime(service_id, date, start);
+//        int finalAvailableTotal = availableTotal;
+//        serviceSlotPool.ifPresent(pool ->{
+//           pool.setAvailableBooking(finalAvailableTotal);
+//           serviceSlotPoolRepository.save(pool);
+//        });
+//    }
     public List<User> getConsultantInSpecialization(long service_id){
         List<Specialization> specializations = specializationRepository.findByServiceId(service_id);
         List<Long> specializationIds = specializations.stream().map(Specialization::getId).toList();

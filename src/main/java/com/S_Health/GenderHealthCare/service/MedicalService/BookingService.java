@@ -103,7 +103,7 @@ public class BookingService {
                             !request.getSlot().isBefore(s.getStartTime()) &&
                             !request.getSlot().plusMinutes(90).isAfter(s.getEndTime()));
             if (!hasSchedule) continue;
-            LocalTime slotTime =  request.getSlot();
+            LocalDateTime slotTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
             int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultant.getId(), slotTime);
 
             if (booked < 6) {
