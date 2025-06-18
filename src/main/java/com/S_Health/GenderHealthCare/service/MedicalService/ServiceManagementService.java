@@ -1,11 +1,15 @@
-package com.S_Health.GenderHealthCare.service.testService;
+package com.S_Health.GenderHealthCare.service.medicalService;
 
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
+import com.S_Health.GenderHealthCare.dto.request.service.ComboServiceRequest;
+import com.S_Health.GenderHealthCare.entity.ComboItem;
 import com.S_Health.GenderHealthCare.entity.Service;
+import com.S_Health.GenderHealthCare.repository.ComboItemRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +20,8 @@ public class ServiceManagementService {
     private ServiceRepository serviceRepository;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private ComboItemRepository comboItemRepository;
 
     public List<ServiceDTO> getAllServices() {
         List<Service> services = serviceRepository.findAll();
@@ -65,4 +71,33 @@ public class ServiceManagementService {
         service.setIsActive(false);
         return serviceRepository.save(service);
     }
+
+    public ServiceDTO createComboService(ComboServiceRequest request) {
+        Service combo = new Service();
+        combo.setName(request.getName());
+        combo.setDescription(request.getDescription());
+        combo.setCreatedAt(LocalDateTime.now());
+        combo.setIsCombo(true);
+        combo.setIsActive(true);
+
+        serviceRepository.save(combo);
+
+        double totalPrice = 0;
+
+        for (Long subId : request.getSubServiceIds()) {
+            Service sub = serviceRepository.findById(subId)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ này!"));
+            ComboItem item = new ComboItem();
+            item.setComboService(combo);
+            item.setSubService(sub);
+            comboItemRepository.save(item);
+            totalPrice += sub.getPrice();
+        }
+        combo.setPrice(totalPrice * (1 - (request.getDiscountPercent() / 100.0)));
+        serviceRepository.save(combo);
+        ServiceDTO serviceDTO = modelMapper.map(combo, ServiceDTO.class);
+        return serviceDTO;
+
+    }
 }
+

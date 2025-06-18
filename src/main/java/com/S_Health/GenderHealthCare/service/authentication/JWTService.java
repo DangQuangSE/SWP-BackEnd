@@ -52,8 +52,6 @@ public class JWTService {
         String email = extractClaim(token, Claims::getSubject);
         return authenticationRepository.findUserByEmail(email);
     }
-
-
     public boolean isTokenExpired(String token){
         return extractExpiration(token).before(new Date());
     }
