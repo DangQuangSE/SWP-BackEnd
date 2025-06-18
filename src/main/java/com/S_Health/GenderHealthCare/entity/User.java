@@ -66,8 +66,19 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "customer")
     List<Appointment> appointments;
     @OneToMany(mappedBy = "consultant")
-    List<Appointment> listAppointment;
+    List<AppointmentDetail> appointmentDetails;
 
+    @OneToMany(mappedBy = "user")
+    List<CycleTracking> cycleTrackings;
+
+    @OneToMany(mappedBy = "user")
+    List<Notification> notifications;
+
+    @OneToMany(mappedBy = "author")
+    List<Blog> blogs;
+
+    @OneToMany(mappedBy = "commenter")
+    List<Comment> comments;
     @OneToMany(mappedBy = "paidBy")
     List<Payment> payments;
 
@@ -86,4 +97,8 @@ public class User implements UserDetails {
     public String getPassword() {
         return this.password;
     }
+    public long getId(){
+        return this.id;
+    }
+
 }

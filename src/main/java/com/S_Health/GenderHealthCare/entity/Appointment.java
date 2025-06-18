@@ -8,6 +8,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class Appointment {
 
     @ManyToOne
     @JoinColumn(name = "service_id")
-    MedicalService service;
+    Service service;
 
     @ManyToOne
     @JoinColumn(name = "medicalProfile_id")
@@ -43,10 +44,14 @@ public class Appointment {
     List<Payment> payments;
 
 
+//    @ManyToOne
+//    @JoinColumn(name = "consultant_id")
+//    User consultant;
+    Double price;
     String note;
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;
     @CreationTimestamp
     LocalDateTime created_at;
-
+    LocalDate preferredDate;
 }

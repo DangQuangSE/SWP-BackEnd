@@ -1,8 +1,11 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.RangeDate;
+import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
+import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
+import com.S_Health.GenderHealthCare.dto.response.ScheduleCancelResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
@@ -16,16 +19,15 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@RequestMapping("/api")
 @RestController
-@SecurityRequirement(name = "api")
+@RequestMapping("/api/schedules")
 public class ScheduleAPI {
     @Autowired
     ScheduleService scheduleService;
     @Autowired
     ServiceSlotPoolService serviceSlotPoolService;
 
-    @GetMapping("/view-schedule")
+    @GetMapping("/view")
     public ResponseEntity getScheduleOfConsultant(
             @RequestParam(value = "consultant_id") long id,
             @RequestParam(value = "from", required = false) LocalDate from,
@@ -33,10 +35,10 @@ public class ScheduleAPI {
         LocalDate today = LocalDate.now();
         LocalDate start = from != null ? from : today;
         LocalDate end = to != null ? to : today.plusWeeks(2);
+        RangeDate rangeDate = new RangeDate(start, end);
         ScheduleConsultantRequest scheduleRequest = ScheduleConsultantRequest.builder()
                 .consultant_id(id)
-                .from(start)
-                .to(end)
+                .rangeDate(rangeDate)
                 .build();
         List<ScheduleConsultantResponse> result = scheduleService.getScheduleOfConsultant(scheduleRequest);
         return ResponseEntity.ok(result);
@@ -54,5 +56,14 @@ public class ScheduleAPI {
         ScheduleServiceRequest request = new ScheduleServiceRequest(service_id, new RangeDate(from, to));
         ScheduleServiceResponse response = serviceSlotPoolService.getSlotFreeService(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity registerSchedule(@RequestBody ScheduleRegisterRequest request) {
+        return ResponseEntity.ok(scheduleService.registerSchedule(request));
+    }
+    @PostMapping("/cancel")
+    public ResponseEntity cancelSchedule(@RequestBody ScheduleCancelRequest request) {
+        return ResponseEntity.ok(scheduleService.cancelSchedule(request));
     }
 }

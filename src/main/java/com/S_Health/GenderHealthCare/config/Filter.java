@@ -36,6 +36,7 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
             "POST:/api/**",
+            "PUT:/api/auth/**",
             "POST:/api/service/**",
             "PUT:/api/service/**",
             "DELETE:/api/service/**",

@@ -27,6 +27,7 @@ public class ServiceSlotPool {
     LocalTime endTime;
     int maxBooking;
     int currentBooking;
+    int availableBooking;
     Boolean isActive;
 
     @OneToMany(mappedBy = "serviceSlotPool")
