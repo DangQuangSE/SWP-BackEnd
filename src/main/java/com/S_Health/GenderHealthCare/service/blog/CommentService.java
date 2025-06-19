@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.service.blog;
 
 import com.S_Health.GenderHealthCare.dto.request.blog.CommentRequest;
+import com.S_Health.GenderHealthCare.dto.response.CommentResponse;
 import com.S_Health.GenderHealthCare.entity.Blog;
 import com.S_Health.GenderHealthCare.entity.Comment;
 import com.S_Health.GenderHealthCare.entity.User;
@@ -24,22 +25,31 @@ public class CommentService {
     @Autowired
     private AuthUtil authUtil;
 
-    public Comment createComment(CommentRequest request) throws NotFoundException {
-        Blog blog = blogRepository.findById(request.getBogId())
-                .orElseThrow(()-> new NotFoundException("Không tim thấy blog hoặc không có blog"));
+        public CommentResponse createComment(CommentRequest request) throws NotFoundException {
+            Blog blog = blogRepository.findById(request.getBogId())
+                    .orElseThrow(()-> new NotFoundException("Không tim thấy blog hoặc không có blog"));
 
-        Long userId = authUtil.getCurrentUserId();
-        User commenter = new User();
-        commenter.setId(userId);
+            Long userId = authUtil.getCurrentUserId();
+            User commenter = new User();
+            commenter.setId(userId);
 
-        Comment comment = Comment.builder()
-                .blog(blog)
-                .commenter(commenter)
-                .description(request.getDescription())
-                .build();
+            Comment comment = Comment.builder()
+                    .blog(blog)
+                    .commenter(commenter)
+                    .description(request.getDescription())
+                    .build();
 
-        return commentRepository.save(comment);
-    }
+            commentRepository.save(comment);
+
+            Comment savedComment = commentRepository.save(comment);
+
+            return  CommentResponse.builder()
+                    .id(savedComment.getId())
+//                    .commenterName(commenterName)
+                    .description(savedComment.getDescription())
+                    .createAt(savedComment.getCreateAt())
+                    .build();
+        }
 
     public List<Comment> getCommentsByBlog(Long blogId){
         return commentRepository.findByBlogIdAndIsDeletedFalse(blogId);

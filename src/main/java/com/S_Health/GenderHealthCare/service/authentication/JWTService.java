@@ -47,9 +47,10 @@ public class JWTService {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-//    public Long extractUserId(String token) {
-//        return extractAllClaims(token).get("id", Long.class);
-//    }
+
+    public Long extractUserId(String token) {
+        return extractAllClaims(token).get("id", Long.class);
+    }
 
     public User extractAccount (String token){
         String email = extractClaim(token, Claims::getSubject);

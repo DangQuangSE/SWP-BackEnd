@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.request.blog.CommentRequest;
+import com.S_Health.GenderHealthCare.dto.response.CommentResponse;
 import com.S_Health.GenderHealthCare.entity.Comment;
 import com.S_Health.GenderHealthCare.service.blog.CommentService;
 import javassist.NotFoundException;
@@ -20,7 +21,7 @@ public class CommentsAPI {
     private CommentService commentService;
 
     @PostMapping
-    public ResponseEntity<Comment> createComment(@RequestBody CommentRequest request) throws NotFoundException {
+    public ResponseEntity<CommentResponse> createComment(@RequestBody CommentRequest request) throws NotFoundException {
         return ResponseEntity.ok(commentService.createComment(request));
     }
 
