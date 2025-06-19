@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Comment {
     @Id
@@ -26,4 +28,6 @@ public class Comment {
     User commenter;
     @CreationTimestamp
     LocalDateTime createAt;
+
+    Boolean isDeleted = false;
 }
