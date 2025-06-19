@@ -36,8 +36,11 @@ public class BookingService {
     AppointmentDetailRepository appointmentDetailRepository;
     @Autowired
     AppointmentRepository appointmentRepository;
+    @Autowired
+    AuthUtil authUtil;
     public BookingResponse bookingService(BookingRequest request) {
-        long customerId = AuthUtil.getCurrentUserId();
+
+        long customerId = authUtil.getCurrentUserId();
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dịch vụ!"));
 
@@ -54,6 +57,7 @@ public class BookingService {
         appointment.setNote(request.getNote());
         appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setCreated_at(LocalDateTime.now());
+        appointment.setService(service);
         appointment.setPreferredDate(request.getPreferredDate());
         appointmentRepository.save(appointment);
         List<AppointmentDetailDTO> appointmentDetailDTOS = new ArrayList<>();
