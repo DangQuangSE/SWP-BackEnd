@@ -64,6 +64,7 @@ public class MomoService {
         Optional<Payment> existing = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (existing.isPresent()) throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
 
+//        BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
         BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
 
         long amount = price.longValue();// Số tiền thanh toán, ví dụ 10.000 VND
