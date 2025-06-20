@@ -5,8 +5,7 @@ import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
-import com.S_Health.GenderHealthCare.dto.response.ScheduleCancelResponse;
-import com.S_Health.GenderHealthCare.dto.response.ScheduleConsultantResponse;
+import com.S_Health.GenderHealthCare.dto.response.WorkDateSlotResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.service.schedule.ScheduleService;
@@ -21,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/schedules")
+@SecurityRequirement(name = "api")
 public class ScheduleAPI {
     @Autowired
     ScheduleService scheduleService;
@@ -40,7 +40,7 @@ public class ScheduleAPI {
                 .consultant_id(id)
                 .rangeDate(rangeDate)
                 .build();
-        List<ScheduleConsultantResponse> result = scheduleService.getScheduleOfConsultant(scheduleRequest);
+        List<WorkDateSlotResponse> result = scheduleService.getScheduleOfConsultant(scheduleRequest);
         return ResponseEntity.ok(result);
     }
 

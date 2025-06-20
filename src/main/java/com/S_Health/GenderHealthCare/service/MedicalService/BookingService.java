@@ -3,23 +3,14 @@ package com.S_Health.GenderHealthCare.service.MedicalService;
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.response.AppointmentDetailDTO;
 import com.S_Health.GenderHealthCare.dto.response.BookingResponse;
-import com.S_Health.GenderHealthCare.entity.Appointment;
-import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
-import com.S_Health.GenderHealthCare.entity.ComboItem;
-import com.S_Health.GenderHealthCare.entity.User;
+import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
-import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
-import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
-import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
-import com.S_Health.GenderHealthCare.repository.ServiceRepository;
+import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,13 +28,17 @@ public class BookingService {
     @Autowired
     AppointmentRepository appointmentRepository;
     @Autowired
+    ServiceSlotPoolRepository serviceSlotPoolRepository;
+    @Autowired
     AuthUtil authUtil;
+
     public BookingResponse bookingService(BookingRequest request) {
 
         long customerId = authUtil.getCurrentUserId();
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dịch vụ!"));
-
+        ServiceSlotPool slotPool = serviceSlotPoolRepository.findById(request.getSlot_id())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khung giờ này!"));
         User customer = authenticationRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy khách hàng!"));
         LocalDateTime slotDateTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
@@ -58,6 +53,7 @@ public class BookingService {
         appointment.setStatus(AppointmentStatus.PENDING);
         appointment.setCreated_at(LocalDateTime.now());
         appointment.setService(service);
+        appointment.setServiceSlotPool(slotPool);
         appointment.setPreferredDate(request.getPreferredDate());
         appointmentRepository.save(appointment);
         List<AppointmentDetailDTO> appointmentDetailDTOS = new ArrayList<>();
@@ -113,7 +109,6 @@ public class BookingService {
             if (!hasSchedule) continue;
             LocalDateTime slotTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
             int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultant.getId(), slotTime);
-
             if (booked < 6) {
                 return consultant;
             }

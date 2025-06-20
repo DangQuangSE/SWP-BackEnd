@@ -13,9 +13,4 @@ import java.time.LocalTime;
 public class TimeSlotDTO {
     LocalTime startTime;
     LocalTime endTime;
-    int availableBooking;
-    public TimeSlotDTO(LocalTime start, LocalTime end){
-        this.startTime = start;
-        this.endTime = end;
-    }
 }

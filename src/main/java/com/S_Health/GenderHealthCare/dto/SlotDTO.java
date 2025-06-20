@@ -1,6 +1,5 @@
-package com.S_Health.GenderHealthCare.dto.response;
+package com.S_Health.GenderHealthCare.dto;
 
-import com.S_Health.GenderHealthCare.dto.TimeSlotDTO;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,13 +7,18 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ScheduleConsultantResponse {
-     LocalDate workDate;
-     List<TimeSlotDTO> timeSlotDTOs;
+public class SlotDTO {
+    Long slotId;
+    LocalDate date;
+    LocalTime startTime;
+    LocalTime endTime;
+    int maxBooking;
+    int currentBooking;
+    int availableBooking;
 }
