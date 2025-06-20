@@ -4,6 +4,7 @@ import com.S_Health.GenderHealthCare.dto.request.blog.CommentRequest;
 import com.S_Health.GenderHealthCare.dto.response.CommentResponse;
 import com.S_Health.GenderHealthCare.entity.Comment;
 import com.S_Health.GenderHealthCare.service.blog.CommentService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import javassist.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/comment")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "api")
 public class CommentsAPI {
 
     @Autowired
