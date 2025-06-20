@@ -61,6 +61,7 @@ public class User implements UserDetails {
     List<Specialization> specializations;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnore
     List<MedicalProfile> medicalProfiles;
 
     @OneToMany(mappedBy = "customer")
