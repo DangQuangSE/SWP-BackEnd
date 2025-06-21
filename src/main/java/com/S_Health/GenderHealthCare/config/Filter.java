@@ -10,6 +10,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.tomcat.util.net.jsse.JSSEUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,14 +36,12 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PUBLIC_API = List.of(
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
-            "POST:/api/**",
             "PUT:/api/auth/**",
             "POST:/api/service/**",
             "PUT:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
             "POST:/api/payment/vnpay/**"
-
     );
 
     public boolean isPulicApi(String uri, String method) {
@@ -62,10 +61,8 @@ public class Filter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-
         String uri = request.getRequestURI();
         String method = request.getMethod();
-
         if(isPulicApi(uri, method)) {
             filterChain.doFilter(request, response);
         }else{
@@ -94,7 +91,6 @@ public class Filter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
             authenToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenToken);
-            // token ok, cho vao`
             filterChain.doFilter(request, response);
         }
     }

@@ -12,6 +12,7 @@ import java.time.LocalTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BookingRequest {
     long service_id;
+    long slot_id;
     LocalDate preferredDate;
     LocalTime slot; //start
     String note;

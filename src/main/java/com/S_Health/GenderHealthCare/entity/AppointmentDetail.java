@@ -3,6 +3,9 @@ package com.S_Health.GenderHealthCare.entity;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -28,7 +31,10 @@ public class AppointmentDetail {
     @JoinColumn(name = "consultant_id")
     User consultant;
 
-    LocalTime slotTime;
+    LocalDateTime slotTime;
     @Enumerated(EnumType.STRING)
     AppointmentStatus status = AppointmentStatus.PENDING;
+
+    @OneToOne(mappedBy = "appointmentDetail")
+    MedicalResult medicalResult;
 }

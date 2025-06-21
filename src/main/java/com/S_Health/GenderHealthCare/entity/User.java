@@ -34,6 +34,7 @@ public class User implements UserDetails {
     LocalDate dateOfBirth;
     String password;
     String imageUrl;
+    String address;
     boolean isVerify;
     boolean isActive;
     @CreationTimestamp
@@ -67,7 +68,8 @@ public class User implements UserDetails {
     List<Appointment> appointments;
     @OneToMany(mappedBy = "consultant")
     List<AppointmentDetail> appointmentDetails;
-
+    @OneToMany(mappedBy = "consultant")
+    List<ConsultantSlot> consultantSlots;
     @OneToMany(mappedBy = "user")
     List<CycleTracking> cycleTrackings;
 
