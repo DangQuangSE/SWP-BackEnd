@@ -17,5 +17,5 @@ public class CycleTrackingRequest {
     LocalDate startDate;
     Boolean isPeriodStart;
     List<Symptoms> symptoms;
-    String node;
+    String note;
 }

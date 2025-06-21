@@ -6,6 +6,7 @@ import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.Symptoms;
 import com.S_Health.GenderHealthCare.repository.CycleTrackingRepository;
 import com.S_Health.GenderHealthCare.repository.UserRepository;
+import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +22,17 @@ public class CycleTrackingService {
     private CycleTrackingRepository cycleTrackingRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private AuthUtil authUtil;
 
     public void saveDailyLog(CycleTrackingRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
 
-        CycleTracking log = cycleTrackingRepository.findByUser_IdAndStartDate(request.getUserId(),
-                        request.getStartDate())
+
+        Long userId = authUtil.getCurrentUserId();
+        User userTracId = new User();
+        userTracId.setId(userId);
+
+        CycleTracking log = cycleTrackingRepository.findByUser_IdAndStartDate(userId, request.getStartDate())
                 .orElse(new CycleTracking());
 
         List<Symptoms> symptoms = Optional.ofNullable(request.getSymptoms()).orElse(List.of());
@@ -37,7 +42,7 @@ public class CycleTrackingService {
                 .collect(Collectors.joining(","));// lấy enum các triệu chứng
 
 
-        log.setUser(user);
+        log.setUser(userTracId);
         log.setStartDate(request.getStartDate());
         log.setIsPeriodStart(request.getIsPeriodStart());
         log.setSymptoms(sym);
