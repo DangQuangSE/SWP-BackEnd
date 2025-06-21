@@ -6,6 +6,7 @@ import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest
 import com.S_Health.GenderHealthCare.dto.response.WorkDateSlotResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.entity.*;
+import com.S_Health.GenderHealthCare.enums.SlotStatus;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
 import org.modelmapper.ModelMapper;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 public class ServiceSlotPoolService {
@@ -33,98 +35,69 @@ public class ServiceSlotPoolService {
     ServiceSlotPoolRepository serviceSlotPoolRepository;
     @Autowired
     AppointmentDetailRepository appointmentDetailRepository;
+    @Autowired
+    ConsultantSlotRepository consultantSlotRepository;
 
     public ScheduleServiceResponse getSlotFreeService(ScheduleServiceRequest request) {
-        List<User> consultants = getConsultantInSpecialization(request.getService_id());
-        List<Long> consultantIds = consultants.stream().map(User::getId).toList();
-
-        List<Schedule> schedules = scheduleRepository.findByConsultantIdInAndWorkDateBetween(
-                consultantIds, request.getRangeDate().getFrom(), request.getRangeDate().getTo()
-        );
-
         Service service = serviceRepository.findById(request.getService_id())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ!"));
+        //lấy ra các consultant liên quan tới chuyên môm đó
+        List<User> consultants = getConsultantInSpecialization(request.getService_id());
+        //lấy ra ConsultantSlot của tất cả consultant
+        List<ConsultantSlot> consultantSlots = consultantSlotRepository
+                .findByConsultantInAndDateBetweenAndStatus(consultants, request.getRangeDate().getFrom(), request.getRangeDate().getTo(), SlotStatus.ACTIVE);
+        //gom nhóm theo data và startTime
+        Map<LocalDateTime, List<ConsultantSlot>> slotMap = consultantSlots.stream()
+                .collect(Collectors.groupingBy(slot -> LocalDateTime.of(slot.getDate(), slot.getStartTime())));
+        Map<LocalDate, List<SlotDTO>> dailySlotMap = new HashMap<>();
+        for (Map.Entry<LocalDateTime, List<ConsultantSlot>> entry : slotMap.entrySet()) {
+            LocalDateTime dt = entry.getKey();
+            LocalDate date = dt.toLocalDate();
+            LocalTime start = dt.toLocalTime();
+            LocalTime end = start.plusMinutes(90);
+            List<ConsultantSlot> slots = entry.getValue();
+            // Tổng hợp thông tin booking
+            int max = slots.stream().mapToInt(ConsultantSlot::getMaxBooking).sum();
+            int current = slots.stream().mapToInt(ConsultantSlot::getCurrentBooking).sum();
+            int available = Math.max(0, max - current);
 
-        Map<LocalDate, List<SlotDTO>> dateTimeSlots = new HashMap<>();
-
-        for (Schedule schedule : schedules) {
-            LocalDate date = schedule.getWorkDate();
-            List<LocalTime> slotStarts = TimeSlotUtils.generateSlots(schedule.getStartTime(), schedule.getEndTime(), Duration.ofMinutes(90));
-
-            for (LocalTime slotStart : slotStarts) {
-                LocalTime slotEnd = slotStart.plusMinutes(90);
-
-                // kiểm tra xem slot đã tồn tại
-                Optional<ServiceSlotPool> existingSlotOpt = serviceSlotPoolRepository
-                        .findByService_idAndDateAndStartTime(service.getId(), date, slotStart);
-
-                ServiceSlotPool slotEntity;
-                if (existingSlotOpt.isPresent()) {
-                    slotEntity = existingSlotOpt.get();
-                } else {
-                    int booked = appointmentDetailRepository
-                            .countByServiceIdAndDateAndStartTime(service.getId(), LocalDateTime.of(date, slotStart));
-
-                    int max = consultants.size(); // mỗi bác sĩ có thể đảm nhận 1 ca trong cùng khung giờ
-                    int available = Math.max(0, max - booked);
-
-                    slotEntity = ServiceSlotPool.builder()
+            // 6. Tìm hoặc tạo ServiceSlotPool
+            ServiceSlotPool serviceSlotPool = serviceSlotPoolRepository
+                    .findByService_idAndDateAndStartTime(service.getId(), date, start)
+                    .orElseGet(() -> ServiceSlotPool.builder()
                             .service(service)
                             .date(date)
-                            .startTime(slotStart)
-                            .endTime(slotEnd)
-                            .maxBooking(max)
-                            .currentBooking(booked)
-                            .availableBooking(available)
+                            .startTime(start)
+                            .endTime(end)
                             .isActive(true)
-                            .build();
-
-                    serviceSlotPoolRepository.save(slotEntity);
-                }
-
-                SlotDTO dto = new SlotDTO(
-                        slotEntity.getId(),
-                        slotEntity.getDate(),
-                        slotEntity.getStartTime(),
-                        slotEntity.getEndTime(),
-                        slotEntity.getMaxBooking(),
-                        slotEntity.getCurrentBooking(),
-                        slotEntity.getAvailableBooking()
-                );
-
-                dateTimeSlots.computeIfAbsent(date, d -> new ArrayList<>()).add(dto);
-            }
+                            .slotStatus(SlotStatus.ACTIVE)
+                            .build());
+            serviceSlotPool.setMaxBooking(max);
+            serviceSlotPool.setCurrentBooking(current);
+            serviceSlotPool.setAvailableBooking(available);
+            serviceSlotPool.setIsActive(available > 0);
+            serviceSlotPoolRepository.save(serviceSlotPool);
+            // 7. Build DTO trả ra
+            SlotDTO slotDTO = new SlotDTO(
+                    serviceSlotPool.getId(),
+                    date,
+                    start,
+                    end,
+                    max,
+                    current,
+                    available
+            );
+            dailySlotMap.computeIfAbsent(date, d -> new ArrayList<>()).add(slotDTO);
         }
-
-        List<WorkDateSlotResponse> scheduleResponses = dateTimeSlots.entrySet().stream()
-                .map(entry -> new WorkDateSlotResponse(entry.getKey(), entry.getValue()))
+        // Chuyển về dạng ScheduleServiceResponse
+        List<WorkDateSlotResponse> schedule = dailySlotMap.entrySet().stream()
+                .map(e -> new WorkDateSlotResponse(e.getKey(), e.getValue()))
                 .sorted(Comparator.comparing(WorkDateSlotResponse::getWorkDate))
                 .toList();
-
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
-        return new ScheduleServiceResponse(serviceDTO, scheduleResponses);
+        return new ScheduleServiceResponse(serviceDTO, schedule);
     }
-
-//    public void updateAvailableBookingSlot(long service_id, LocalDate date, LocalTime start){
-//        LocalTime slotTime =  start;
-//        List<User> consultants = getConsultantInSpecialization(service_id);
-//        int maxBookingPer = 6;
-//        int availableTotal = 0;
-//        for(User consultant : consultants){
-//            Boolean hasSchedule = scheduleRepository.existsByConsultantIdAndWorkDateAndStartTime(consultant.getId(), date, start);
-//            if(!hasSchedule) continue;
-//            int booked = appointmentDetailRepository.countByConsultant_idAndSlotTime(consultant.getId(), slotTime);
-//            int available = Math.max(0, maxBookingPer - booked);
-//            availableTotal += available;
-//        }
-//        Optional<ServiceSlotPool> serviceSlotPool = serviceSlotPoolRepository.findByService_idAndDateAndStartTime(service_id, date, start);
-//        int finalAvailableTotal = availableTotal;
-//        serviceSlotPool.ifPresent(pool ->{
-//           pool.setAvailableBooking(finalAvailableTotal);
-//           serviceSlotPoolRepository.save(pool);
-//        });
-//    }
-    public List<User> getConsultantInSpecialization(long service_id){
+    public List<User> getConsultantInSpecialization(long service_id) {
         List<Specialization> specializations = specializationRepository.findByServiceId(service_id);
         List<Long> specializationIds = specializations.stream().map(Specialization::getId).toList();
         List<User> consultants = userRepository.findBySpecializations_IdIn(specializationIds);

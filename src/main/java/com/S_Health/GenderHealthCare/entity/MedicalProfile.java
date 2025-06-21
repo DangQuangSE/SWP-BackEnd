@@ -21,14 +21,11 @@ public class MedicalProfile {
     @ManyToOne
     @JoinColumn(name = "user_id")
     User customer;
-
     @ManyToOne
     @JoinColumn(name = "service_id")
     Service service;
-
     @OneToMany(mappedBy = "medicalProfile", cascade = CascadeType.ALL)
     List<Appointment> appointments;
-
     String result;
     String note;
     @CreationTimestamp

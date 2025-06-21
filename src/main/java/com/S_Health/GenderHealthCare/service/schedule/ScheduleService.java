@@ -15,7 +15,7 @@ import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ScheduleStatus;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantSlotRepository;
@@ -52,9 +52,9 @@ public class ScheduleService {
     AuthUtil authUtil;
 
     public List<WorkDateSlotResponse> getScheduleOfConsultant(ScheduleConsultantRequest request) {
-        List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDateBetween(request.getConsultant_id(),
+        List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDateBetweenAndStatus(request.getConsultant_id(),
                 request.getRangeDate().getFrom(),
-                request.getRangeDate().getTo());
+                request.getRangeDate().getTo(), SlotStatus.ACTIVE);
         Map<LocalDate, List<SlotDTO>> slotMap = new HashMap<>();
         for (ConsultantSlot slot : slots) {
             SlotDTO slotDTO = new SlotDTO(
@@ -76,7 +76,7 @@ public class ScheduleService {
 
     public ScheduleRegisterResponse registerSchedule(ScheduleRegisterRequest request) {
         User consultant = authenticationRepository.findById(authUtil.getCurrentUserId())
-                .orElseThrow(() -> new AuthenticationException("Không tìm thấy người tư vấn này!"));
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy người tư vấn này!"));
         List<ScheduleRegisterRequest.ScheduleItem> scheduleItems = request.getScheduleItems();
         for (ScheduleRegisterRequest.ScheduleItem item : scheduleItems) {
             if (!item.getWorkDate().isAfter(LocalDate.now())) {
@@ -91,6 +91,7 @@ public class ScheduleService {
         }
         List<Schedule> schedules = new ArrayList<>();
         List<ConsultantSlot> consultantSlots = new ArrayList<>();
+        List<ScheduleRegisterResponse.WorkDate> workDates = new ArrayList<>();
         for (ScheduleRegisterRequest.ScheduleItem item : scheduleItems) {
             Schedule schedule = new Schedule();
             schedule.setConsultant(consultant);
@@ -98,6 +99,7 @@ public class ScheduleService {
             schedule.setWorkDate(item.getWorkDate());
             schedule.setStartTime(item.getTimeSlotDTO().getStartTime());
             schedule.setEndTime(item.getTimeSlotDTO().getEndTime());
+            schedule.setStatus(ScheduleStatus.ACTIVE);
             schedules.add(schedule);
             List<LocalTime> slots = TimeSlotUtils.generateSlots(item.getTimeSlotDTO().getStartTime(), item.getTimeSlotDTO().getEndTime(), Duration.ofMinutes(90));
             for (LocalTime start : slots) {
@@ -114,22 +116,19 @@ public class ScheduleService {
                         .build();
                 consultantSlots.add(consultantSlot);
             }
+            ScheduleRegisterResponse.WorkDate workDate = new ScheduleRegisterResponse.WorkDate();
+            workDate.setDate(item.getWorkDate());
+            workDate.setStart(item.getTimeSlotDTO().getStartTime());
+            workDate.setEnd(item.getTimeSlotDTO().getEndTime());
+            workDates.add(workDate);
         }
         scheduleRepository.saveAll(schedules);
         consultantSlotRepository.saveAll(consultantSlots);
-        Map<LocalDate, List<SlotDTO>> slotMap = new HashMap<>();
-        for (ConsultantSlot slot : consultantSlots) {
-            SlotDTO slotDTO = modelMapper.map(slot, SlotDTO.class);
-            slotMap.computeIfAbsent(slot.getDate(), day -> new ArrayList<>()).add(slotDTO);
-        }
 
-        List<WorkDateSlotResponse> workDateSlotResponses = slotMap.entrySet().stream()
-                .map(entry -> new WorkDateSlotResponse(entry.getKey(), entry.getValue()))
-                .sorted(Comparator.comparing(WorkDateSlotResponse::getWorkDate))
-                .toList();
+
         ScheduleRegisterResponse response = new ScheduleRegisterResponse();
         response.setConsultant_id(consultant.getId());
-        response.setSchedules(workDateSlotResponses);
+        response.setSchedules(workDates);
         return response;
     }
 
@@ -185,7 +184,6 @@ public class ScheduleService {
                 // notificationService.notifyUser(...);
             }
         }
-
         return new ScheduleCancelResponse(
                 "Đã xử lý " + affectedResponseList.size() + " lịch hẹn.",
                 affectedResponseList

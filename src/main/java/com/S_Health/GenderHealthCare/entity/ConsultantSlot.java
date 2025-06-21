@@ -41,4 +41,5 @@ public class ConsultantSlot {
 
     @UpdateTimestamp
      LocalDateTime updatedAt;
+
 }
