@@ -83,7 +83,8 @@ public class User implements UserDetails {
     List<Comment> comments;
     @OneToMany(mappedBy = "paidBy")
     List<Payment> payments;
-
+    @OneToMany(mappedBy = "consultant")
+    List<MedicalResult> medicalResults;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -99,7 +100,8 @@ public class User implements UserDetails {
     public String getPassword() {
         return this.password;
     }
-    public long getId(){
+
+    public long getId() {
         return this.id;
     }
 

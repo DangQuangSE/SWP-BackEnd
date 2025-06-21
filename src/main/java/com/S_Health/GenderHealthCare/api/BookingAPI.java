@@ -19,7 +19,7 @@ public class BookingAPI {
     @PostMapping("/medicalService")
     public ResponseEntity bookAppointment(
             @RequestBody BookingRequest request,
-            @RequestParam long customerId
+            @PathVariable long customerId
     ) {
         return ResponseEntity.ok(bookingService.bookingService(request, customerId));
     }

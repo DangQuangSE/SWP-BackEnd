@@ -64,14 +64,11 @@ public class BookingService {
             AppointmentDetailData result = createAppointmentDetail(request, appointment, sub);
             appointmentDetails.add(result.dto());
             updatedSlots.add(result.slot());
-            totalPrice += sub.getPrice();
         }
 
         // 4. Cập nhật lại slot pool tổng
         updateServiceSlotPool(context.slotPool(), updatedSlots);
-
-        // 5. Set giá và save lại appointment
-        appointment.setPrice(totalPrice * (1 - (context.service().getDiscountPercent()/100)));
+        appointment.setPrice(context.service.getPrice());
         appointmentRepository.save(appointment);
         consultantSlotRepository.saveAll(updatedSlots);
 
@@ -106,11 +103,9 @@ public class BookingService {
         if (appointmentDetailRepository.existsByAppointment_Customer_IdAndSlotTime(customerId, slotTime)) {
             throw new BadRequestException("Bạn đã có lịch hẹn vào khung giờ này");
         }
-        System.out.println(service.getComboItems());
         List<com.S_Health.GenderHealthCare.entity.Service> services = service.getIsCombo()
                 ? service.getComboItems().stream().map(ComboItem::getSubService).toList()
                 : List.of(service);
-        System.out.println(services);
         return new BookingContext(service, slotPool, customer, services);
     }
 
@@ -125,9 +120,6 @@ public class BookingService {
     //tạo appointmentDetail và cập nhật consultantSlot
     private AppointmentDetailData createAppointmentDetail(BookingRequest request, Appointment appointment, com.S_Health.GenderHealthCare.entity.Service subService) {
         List<User> consultants = serviceSlotPoolService.getConsultantInSpecialization(subService.getId());
-        for (User item : consultants){
-            System.out.println(item.getFullname());
-        }
         User consultant = findAvailableConsultant(request, consultants);
         if (consultant == null) {
             throw new BadRequestException("Không có tư vấn viên rảnh cho dịch vụ: " + subService.getName());
