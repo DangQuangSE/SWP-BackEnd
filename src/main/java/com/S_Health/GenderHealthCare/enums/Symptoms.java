@@ -6,5 +6,7 @@ public enum Symptoms {
     HEADACHE,
     ACNE,
     MOOD_SWING,
+    BLOATING,
+    DIARRHEA,
     BREAST_TENDERNESS;
 }
