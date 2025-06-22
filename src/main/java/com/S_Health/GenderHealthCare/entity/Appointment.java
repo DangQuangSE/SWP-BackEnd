@@ -25,6 +25,8 @@ public class Appointment {
     @JoinColumn(name = "service_id")
     Service service;
 
+    @OneToMany(mappedBy = "appointment")
+    List<AppointmentDetail> appointmentDetails;
     @ManyToOne
     @JoinColumn(name = "medicalProfile_id")
     MedicalProfile medicalProfile;

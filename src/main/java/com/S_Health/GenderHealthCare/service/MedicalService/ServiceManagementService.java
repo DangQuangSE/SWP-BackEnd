@@ -1,17 +1,17 @@
-package com.S_Health.GenderHealthCare.service.medicalService;
+package com.S_Health.GenderHealthCare.service.MedicalService;
 
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
-import com.S_Health.GenderHealthCare.dto.request.service.ComboServiceRequest;
+import com.S_Health.GenderHealthCare.dto.request.service.ServiceRequest;
+import com.S_Health.GenderHealthCare.dto.response.ComboResponse;
 import com.S_Health.GenderHealthCare.entity.ComboItem;
 import com.S_Health.GenderHealthCare.entity.Service;
+import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.ComboItemRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @org.springframework.stereotype.Service
 public class ServiceManagementService {
@@ -72,32 +72,39 @@ public class ServiceManagementService {
         return serviceRepository.save(service);
     }
 
-    public ServiceDTO createComboService(ComboServiceRequest request) {
+    public ComboResponse createComboService(ServiceRequest request) {
         Service combo = new Service();
         combo.setName(request.getName());
         combo.setDescription(request.getDescription());
-        combo.setCreatedAt(LocalDateTime.now());
+        combo.setDiscountPercent(request.getDiscountPercent());
+        combo.setDuration(request.getDuration());
+        combo.setType(request.getType());
         combo.setIsCombo(true);
         combo.setIsActive(true);
-
         serviceRepository.save(combo);
-
-        double totalPrice = 0;
-
-        for (Long subId : request.getSubServiceIds()) {
-            Service sub = serviceRepository.findById(subId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy dịch vụ này!"));
-            ComboItem item = new ComboItem();
-            item.setComboService(combo);
-            item.setSubService(sub);
-            comboItemRepository.save(item);
+        List<Long> subServices = request.getSubServiceIds();
+        List<ComboItem> comboItems = new ArrayList<>();
+        List<ServiceDTO> serviceDTOS = new ArrayList<>();
+        Double totalPrice = 0D;
+        for (Long id : subServices) {
+            //lấy ra thông tin subservice và lưu vào comboItem
+            Service sub = serviceRepository.findById(id)
+                    .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ " + id));
+            ComboItem comboItem = ComboItem.builder()
+                    .comboService(combo)
+                    .subService(sub)
+                    .name(sub.getName())
+                    .build();
+            comboItems.add(comboItem);
+            ServiceDTO svDto = modelMapper.map(sub, ServiceDTO.class);
+            serviceDTOS.add(svDto);
             totalPrice += sub.getPrice();
         }
-        combo.setPrice(totalPrice * (1 - (request.getDiscountPercent() / 100.0)));
+        comboItemRepository.saveAll(comboItems);
+        combo.setPrice(totalPrice * (1 - (combo.getDiscountPercent() / 100)));
         serviceRepository.save(combo);
         ServiceDTO serviceDTO = modelMapper.map(combo, ServiceDTO.class);
-        return serviceDTO;
-
+        return new ComboResponse(serviceDTO, serviceDTOS);
     }
 }
 

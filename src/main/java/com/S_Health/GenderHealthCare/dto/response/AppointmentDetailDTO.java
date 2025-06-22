@@ -11,6 +11,7 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 public class AppointmentDetailDTO {
+    long id;
     String serviceName;
     String consultantName;
     LocalTime startTime;

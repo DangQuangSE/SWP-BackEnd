@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 
 public class ServiceResponse {
-
+    long id;
     String name;
     @Column(columnDefinition = "TEXT")
     String description;

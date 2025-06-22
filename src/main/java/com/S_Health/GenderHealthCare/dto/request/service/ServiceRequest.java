@@ -7,16 +7,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ServiceRequest {
-
-    String name;
+public class ServiceRequest { String name;
     @Column(columnDefinition = "TEXT")
     String description;
     Integer duration;
     ServiceType type;
     Double price;
     Boolean isActive;
+    Boolean isCombo;
+    Double discountPercent;
+    List<Long> subServiceIds;
 }

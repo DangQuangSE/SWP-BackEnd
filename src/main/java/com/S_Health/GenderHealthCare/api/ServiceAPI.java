@@ -1,9 +1,9 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
+import com.S_Health.GenderHealthCare.dto.request.service.ServiceRequest;
 import com.S_Health.GenderHealthCare.entity.Service;
-import com.S_Health.GenderHealthCare.service.medicalService.ServiceManagementService;
-import com.S_Health.GenderHealthCare.dto.request.service.ComboServiceRequest;
+import com.S_Health.GenderHealthCare.service.MedicalService.ServiceManagementService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -82,7 +82,7 @@ public class ServiceAPI {
         return ResponseEntity.ok(serviceDTO);
     }
     @PostMapping("/comboService")
-    public ResponseEntity createComboService(@RequestBody ComboServiceRequest request){
+    public ResponseEntity createComboService(@RequestBody ServiceRequest request){
         return ResponseEntity.ok(serviceManagementService.createComboService(request));
     }
 }
