@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.repository;
 
+import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
 import com.S_Health.GenderHealthCare.entity.MedicalResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,5 +12,5 @@ import java.util.Optional;
 public interface MedicalResultRepository extends JpaRepository<MedicalResult, Long> {
     Optional<MedicalResult> findByIdAndIsActiveTrue(Long id);
     List<MedicalResult> findAllByAppointmentDetailIdAndIsActiveTrue(Long appointmentDetailId);
-
+    Optional<MedicalResult> findByAppointmentDetail(AppointmentDetail appointmentDetail);
 }

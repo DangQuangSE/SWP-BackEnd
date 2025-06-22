@@ -23,4 +23,7 @@ public class AuthUtil {
         }
         throw new AuthenticationException("Không thể lấy userId từ token");
     }
+    public User getCurrentUser(){
+        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
 }

@@ -37,4 +37,7 @@ public class AppointmentDetail {
 
     @OneToOne(mappedBy = "appointmentDetail")
     MedicalResult medicalResult;
+    Boolean isActive = true;
+    LocalDateTime update_at;
+    LocalDateTime create_at;
 }
