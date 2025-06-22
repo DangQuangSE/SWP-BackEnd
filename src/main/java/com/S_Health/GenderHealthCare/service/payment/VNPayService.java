@@ -5,6 +5,7 @@ import com.S_Health.GenderHealthCare.dto.response.payment.VNPayResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.Payment;
 import com.S_Health.GenderHealthCare.entity.Transaction;
+import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
@@ -21,6 +22,8 @@ import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -65,7 +68,7 @@ public class VNPayService {
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        cld.add(Calendar.MINUTE, 5);
+        cld.add(Calendar.MINUTE, 1);
         String vnp_ExpireDate = formatter.format(cld.getTime());
 
         Map<String, String> params = new HashMap<>();
@@ -121,44 +124,87 @@ public class VNPayService {
         transactionRepository.save(transaction);
 
         return VNPayResponse.builder()
+                .amount(amount)
                 .URL(payUrl)
                 .build();
 
     }
 
-//    public int orderReturn(HttpServletRequest request){
-//        Map fields = new HashMap();
-//        for (Enumeration params = request.getParameterNames(); params.hasMoreElements();) {
-//            String fieldName = null;
-//            String fieldValue = null;
-//            try {
-//                fieldName = URLEncoder.encode((String) params.nextElement(), StandardCharsets.US_ASCII.toString());
-//                fieldValue = URLEncoder.encode(request.getParameter(fieldName), StandardCharsets.US_ASCII.toString());
-//            } catch (UnsupportedEncodingException e) {
-//                e.printStackTrace();
-//            }
-//            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-//                fields.put(fieldName, fieldValue);
-//            }
-//        }
-//
-//        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-//        if (fields.containsKey("vnp_SecureHashType")) {
-//            fields.remove("vnp_SecureHashType");
-//        }
-//        if (fields.containsKey("vnp_SecureHash")) {
-//            fields.remove("vnp_SecureHash");
-//        }
-//        String signValue = VNPayConfig.hashAllFields(fields);
-//        if (signValue.equals(vnp_SecureHash)) {
-//            if ("00".equals(request.getParameter("vnp_TransactionStatus"))) {
-//                return 1;
-//            } else {
-//                return 0;
-//            }
-//        } else {
-//            return -1;
-//        }
-//    }
+    public VNPayResponse processReturn(HttpServletRequest request) {
+        Map<String, String> params = new HashMap<>();
+        request.getParameterMap().forEach((key, values) -> {
+            if (!key.equals("vnp_SecureHash") && !key.equals("vnp_SecureHashType")) {
+                params.put(key, values[0]);
+            }
+        });
+
+        String receivedHash = request.getParameter("vnp_SecureHash");
+
+        List<String> sortedKeys = new ArrayList<>(params.keySet());
+        Collections.sort(sortedKeys);
+
+        StringBuilder hashData = new StringBuilder();
+        for (int i = 0; i < sortedKeys.size(); i++) {
+            String key = sortedKeys.get(i);
+            String value = params.get(key);
+            hashData.append(key).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII));
+            if (i < sortedKeys.size() - 1) hashData.append('&');
+        }
+
+        String calculatedHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+
+        if (!calculatedHash.equals(receivedHash)) {
+            throw new AuthenticationException("Chữ ký không hợp lệ.");
+        }
+
+        String vnp_ResponseCode = params.get("vnp_ResponseCode");
+        String vnp_TxnRef = params.get("vnp_TxnRef");
+        String vnp_TransactionNo = params.get("vnp_TransactionNo");
+        String vnp_Message = params.get("vnp_TransactionStatus"); // hoặc vnp_ResponseCode nếu không có message rõ
+        String vnp_PayDate = params.get("vnp_PayDate"); // yyyyMMddHHmmss
+
+        Transaction transaction = transactionRepository.findByOrderId(vnp_TxnRef)
+                .orElseThrow(() -> new AuthenticationException("Không tìm thấy giao dịch."));
+
+        Payment payment = transaction.getPayment();
+
+        LocalDateTime payTime = LocalDateTime.now();
+        if (vnp_PayDate != null && vnp_PayDate.matches("\\d{14}")) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+                payTime = LocalDateTime.parse(vnp_PayDate, formatter);
+            } catch (Exception ignored) {}
+        }
+
+        if ("00".equals(vnp_ResponseCode)) {
+            payment.setStatus(PaymentStatus.SUCCESS);
+            payment.setPaidAt(payTime);
+            Appointment appointment = payment.getAppointment();
+            appointment.setStatus(AppointmentStatus.CONFIRMED);
+            appointmentRepository.save(appointment);
+        } else {
+            payment.setStatus(PaymentStatus.FAILED);
+            payment.setPaidAt(LocalDateTime.now());
+            Appointment appointment = payment.getAppointment();
+            appointment.setStatus(AppointmentStatus.CANCELED);
+            appointmentRepository.save(appointment);
+        }
+
+        paymentRepository.save(payment);
+
+        transaction.setTransactionCode(vnp_TransactionNo);
+        transaction.setResultCode(Integer.parseInt(vnp_ResponseCode));
+        transaction.setResponseMessage(vnp_Message);
+        transaction.setResponseTime(LocalDateTime.now());
+        transactionRepository.save(transaction);
+
+        return VNPayResponse.builder()
+                .amount(payment.getAmount().longValue())
+                .URL(null)
+                .message(payment.getStatus() == PaymentStatus.SUCCESS ? "Thanh toán thành công" : "Thanh toán thất bại")
+                .build();
+    }
+
+
 
 }

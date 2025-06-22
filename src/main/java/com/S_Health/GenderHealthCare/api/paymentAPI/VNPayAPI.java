@@ -1,6 +1,8 @@
 package com.S_Health.GenderHealthCare.api.paymentAPI;
 
 import com.S_Health.GenderHealthCare.config.paymentConfig.VNPayConfig;
+import com.S_Health.GenderHealthCare.dto.response.payment.VNPayResponse;
+import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.service.payment.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,30 +23,28 @@ public class VNPayAPI {
     @Autowired
     private VNPayService vnPayService;
 
-    @PostMapping("/vn-pay")
-    public ResponseEntity<String> createPayment(@RequestParam long appointmentId,
-                                                HttpServletRequest request) throws Exception {
+    @GetMapping("/create")
+    public ResponseEntity<VNPayResponse> createPayment(@RequestParam long appointmentId,
+                                                       HttpServletRequest request) throws Exception {
         System.out.println(request.getRemoteAddr());
-        String paymentUrl = String.valueOf(vnPayService.createOrder(appointmentId));
-        return ResponseEntity.ok(paymentUrl);
+        VNPayResponse response = vnPayService.createOrder(appointmentId);
+        return ResponseEntity.ok(response);
     }
 
 
-//    @GetMapping("/vnpay-payment")
-//    public String GetMapping(HttpServletRequest request, Model model){
-//        int paymentStatus =vnPayService.orderReturn(request);
-//
-//        String orderInfo = request.getParameter("vnp_OrderInfo");
-//        String paymentTime = request.getParameter("vnp_PayDate");
-//        String transactionId = request.getParameter("vnp_TransactionNo");
-//        String totalPrice = request.getParameter("vnp_Amount");
-//
-//        model.addAttribute("orderId", orderInfo);
-//        model.addAttribute("totalPrice", totalPrice);
-//        model.addAttribute("paymentTime", paymentTime);
-//        model.addAttribute("transactionId", transactionId);
-//
-//        return paymentStatus == 1 ? "ordersuccess" : "orderfail";
-//    }
+    @GetMapping("/vnpay-return")
+    public ResponseEntity<VNPayResponse> handleReturn(HttpServletRequest request) {
+        try {
+            VNPayResponse response = vnPayService.processReturn(request);
+            return ResponseEntity.ok(response);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.badRequest()
+                    .body(VNPayResponse.builder().message(e.getMessage()).build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(VNPayResponse.builder().message("Lỗi xử lý thanh toán").build());
+        }
+    }
+
 
 }
