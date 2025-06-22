@@ -163,18 +163,6 @@ public class MomoService {
 
             Payment payment1 = transaction.getPayment();
 
-// ❌ Nếu đã FAILED → không xử lý nữa
-            if (payment1.getStatus() == PaymentStatus.FAILED) {
-                log.warn("⛔ IPN bị từ chối: Giao dịch đã hết hạn. PaymentId={}", payment1.getId());
-                return ResponseEntity.status(HttpStatus.GONE).body("Giao dịch đã hết hạn.");
-            }
-
-// ✅ Nếu đã SUCCESS → bỏ qua IPN lặp lại
-            if (payment1.getStatus() == PaymentStatus.SUCCESS) {
-                log.info("ℹ️ IPN đã xử lý trước đó. Bỏ qua. PaymentId={}", payment1.getId());
-                return ResponseEntity.ok("Đã xác nhận trước đó.");
-            }
-
             if (notify.getResultCode() != 0) {
                 Payment payment = transaction.getPayment();
                 payment.setStatus(PaymentStatus.FAILED);
