@@ -22,11 +22,10 @@ public class VNPayAPI {
     private VNPayService vnPayService;
 
     @PostMapping("/vn-pay")
-    public ResponseEntity<String> createPayment(@RequestParam long amount,
-                                                @RequestParam String orderInfo,
+    public ResponseEntity<String> createPayment(@RequestParam long appointmentId,
                                                 HttpServletRequest request) throws Exception {
         System.out.println(request.getRemoteAddr());
-        String paymentUrl = vnPayService.createOrder(amount,orderInfo);
+        String paymentUrl = String.valueOf(vnPayService.createOrder(appointmentId));
         return ResponseEntity.ok(paymentUrl);
     }
 

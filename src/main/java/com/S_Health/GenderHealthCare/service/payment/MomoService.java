@@ -121,7 +121,7 @@ public class MomoService {
             Transaction transaction = Transaction.builder()
                     .orderId(orderId)
                     .requestId(requestId)
-                    .payUrl(response.getBody().getPayUrl())
+//                    .payUrl(response.getBody().getPayUrl())
                     .payment(payment)
                     .build();
             transactionRepository.save(transaction);
