@@ -27,12 +27,12 @@ public class MomoAPI {
     }
 
 
-    @GetMapping("/return")
-    public ResponseEntity<String> handleReturn(@RequestParam Map<String, String> queryParams) {
-        return ResponseEntity.ok("Khách hàng đã thanh toán (returnUrl)");
-    }
+//    @GetMapping("/return")
+//    public ResponseEntity<String> handleReturn(@RequestParam Map<String, String> queryParams) {
+//        return ResponseEntity.ok("Khách hàng đã thanh toán (returnUrl)");
+//    }
 
-    @PostMapping("/notify")
+    @PostMapping("/return")
     public ResponseEntity<String> handleNotify(@RequestBody MomoNotifiRequest notify) {
         return momoService.handleMomoNotify(notify);
     }
