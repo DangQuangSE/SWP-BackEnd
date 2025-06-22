@@ -4,6 +4,7 @@ import com.S_Health.GenderHealthCare.enums.ServiceType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +31,7 @@ public class Service {
     Double price;
     Double discountPercent;
     Boolean isActive;
+    @CreationTimestamp
     LocalDateTime createdAt;
     Boolean isCombo;
     @OneToMany(mappedBy = "service")
@@ -46,8 +48,6 @@ public class Service {
 
     @OneToMany(mappedBy = "comboService")
     List<ComboItem> comboItems;
-    @OneToMany(mappedBy = "subService")
-    List<ComboItem> subServices;
     @OneToMany(mappedBy = "service")
     List<AppointmentDetail> appointmentDetails;
 }

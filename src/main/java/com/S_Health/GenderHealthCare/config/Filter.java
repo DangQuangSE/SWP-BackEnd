@@ -42,7 +42,8 @@ public class Filter extends OncePerRequestFilter {
             "PUT:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
-            "POST:/api/payment/**"
+            "POST:/api/payment/vnpay/**"
+
     );
 
     public boolean isPulicApi(String uri, String method) {

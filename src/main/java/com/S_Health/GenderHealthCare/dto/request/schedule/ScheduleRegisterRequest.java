@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ScheduleRegisterRequest {
-   long consultant_id;
    List<ScheduleItem> scheduleItems;
    @Data
    public static class ScheduleItem {

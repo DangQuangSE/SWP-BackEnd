@@ -1,20 +1,21 @@
 package com.S_Health.GenderHealthCare.dto.response;
 
-import com.S_Health.GenderHealthCare.dto.TimeSlotDTO;
+import com.S_Health.GenderHealthCare.dto.ServiceDTO;
+import com.S_Health.GenderHealthCare.entity.ComboItem;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ScheduleConsultantResponse {
-     LocalDate workDate;
-     List<TimeSlotDTO> timeSlotDTOs;
+public class ComboResponse {
+    //combo
+    ServiceDTO serviceDTO;
+    //các service có trong combo
+    List<ServiceDTO> subServices;
+
 }
