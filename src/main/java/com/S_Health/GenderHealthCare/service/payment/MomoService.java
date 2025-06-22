@@ -7,6 +7,7 @@ import com.S_Health.GenderHealthCare.dto.response.payment.MomoResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.Payment;
 import com.S_Health.GenderHealthCare.entity.Transaction;
+import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
@@ -61,8 +62,16 @@ public class MomoService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
 
-        Optional<Payment> existing = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
-        if (existing.isPresent()) throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+        Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
+        if (paid.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+        }
+
+        // Tìm giao dịch thanh toán thất bại
+        Optional<Payment> failed = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.FAILED);
+        if (failed.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn đã huỷ.");
+        }
 
 //        BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
         BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
@@ -146,18 +155,21 @@ public class MomoService {
                 return ResponseEntity.badRequest().body("Invalid signature");
             }
 
+            Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
+
             if (notify.getResultCode() != 0) {
-                Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
-                        .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
                 Payment payment = transaction.getPayment();
                 payment.setStatus(PaymentStatus.FAILED);
                 payment.setPaidAt(LocalDateTime.now());
                 paymentRepository.save(payment);
+
+                Appointment appointment = payment.getAppointment();
+                appointment.setStatus(AppointmentStatus.CANCELED);
+                appointmentRepository.save(appointment);
+
                 return ResponseEntity.ok("Giao dịch thất bại");
             }
-
-            Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
-                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
 
             Payment payment = transaction.getPayment();
             payment.setStatus(PaymentStatus.SUCCESS);
@@ -170,11 +182,15 @@ public class MomoService {
             transaction.setResponseTime(LocalDateTime.now());
             transactionRepository.save(transaction);
 
-            return ResponseEntity.ok("IPN OK");
+            Appointment appointment = payment.getAppointment();
+            appointment.setStatus(AppointmentStatus.CONFIRMED);
+            appointmentRepository.save(appointment);
+
+            return ResponseEntity.ok("Cập nhật thanh toán thành công");
 
         } catch (Exception e) {
             log.error("Lỗi xử lý IPN:", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("IPN Error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi xử lí");
         }
     }
 }

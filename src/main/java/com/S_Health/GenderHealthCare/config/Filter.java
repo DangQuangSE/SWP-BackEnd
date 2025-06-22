@@ -10,6 +10,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.tomcat.util.net.jsse.JSSEUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,8 +42,7 @@ public class Filter extends OncePerRequestFilter {
             "PUT:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
-            "POST:/api/payment/vnpay/**"
-
+            "POST:/api/payment/**"
     );
 
     public boolean isPulicApi(String uri, String method) {
