@@ -21,11 +21,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -53,6 +54,7 @@ public class MomoService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    private final ScheduledExecutorService scheduledExecutorService;
     private final String requestType = "captureWallet";
 
     public MomoResponse createMomoPaymentUrl(Long appointmentId) throws Exception {
@@ -123,6 +125,7 @@ public class MomoService {
                     .payment(payment)
                     .build();
             transactionRepository.save(transaction);
+            schedulePaymentTimeout(payment.getId());
 
             return response.getBody();
         }
@@ -158,6 +161,20 @@ public class MomoService {
             Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
                     .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
 
+            Payment payment1 = transaction.getPayment();
+
+// ❌ Nếu đã FAILED → không xử lý nữa
+            if (payment1.getStatus() == PaymentStatus.FAILED) {
+                log.warn("⛔ IPN bị từ chối: Giao dịch đã hết hạn. PaymentId={}", payment1.getId());
+                return ResponseEntity.status(HttpStatus.GONE).body("Giao dịch đã hết hạn.");
+            }
+
+// ✅ Nếu đã SUCCESS → bỏ qua IPN lặp lại
+            if (payment1.getStatus() == PaymentStatus.SUCCESS) {
+                log.info("ℹ️ IPN đã xử lý trước đó. Bỏ qua. PaymentId={}", payment1.getId());
+                return ResponseEntity.ok("Đã xác nhận trước đó.");
+            }
+
             if (notify.getResultCode() != 0) {
                 Payment payment = transaction.getPayment();
                 payment.setStatus(PaymentStatus.FAILED);
@@ -192,5 +209,25 @@ public class MomoService {
             log.error("Lỗi xử lý IPN:", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi xử lí");
         }
+    }
+
+    private void schedulePaymentTimeout(Long paymentId) {
+        scheduledExecutorService.schedule(() -> {
+            Optional<Payment> optionalPayment = paymentRepository.findById(paymentId);
+            if (optionalPayment.isPresent()) {
+                Payment payment = optionalPayment.get();
+                if (payment.getStatus() == PaymentStatus.PENDING) {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    payment.setPaidAt(LocalDateTime.now());
+
+                    Appointment appointment = payment.getAppointment();
+                    appointment.setStatus(AppointmentStatus.CANCELED);
+
+                    appointmentRepository.save(appointment);
+                    paymentRepository.save(payment);
+                    System.out.println("Payment " + paymentId + " bị huỷ do timeout sau 5 phút.");
+                }
+            }
+        }, 5, TimeUnit.MINUTES);
     }
 }
