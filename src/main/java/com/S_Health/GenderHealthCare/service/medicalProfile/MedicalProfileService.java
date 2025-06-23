@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,9 +33,9 @@ public class MedicalProfileService {
         // Tìm MedicalProfile đã tồn tại
         Optional<MedicalProfile> existingProfile = medicalProfileRepository
                 .findByCustomerAndServiceAndIsActiveTrue(user, service);
-
         MedicalProfile medicalProfile;
-
+        List<Appointment> appointments = new ArrayList<>();
+        appointments.add(appointment);
         if (existingProfile.isPresent()) {
             medicalProfile = existingProfile.get();
         } else {
@@ -42,19 +43,12 @@ public class MedicalProfileService {
             medicalProfile = new MedicalProfile();
             medicalProfile.setCustomer(user);
             medicalProfile.setService(service);
-
             medicalProfile = medicalProfileRepository.save(medicalProfile);
         }
-
         // Gán medicalProfile cho appointment và lưu
         appointment.setMedicalProfile(medicalProfile);
         appointmentRepository.save(appointment);
-
-        // Thêm vào list nếu cần cập nhật phía memory
-        if (medicalProfile.getAppointments() == null) {
-            medicalProfile.setAppointments(new ArrayList<>());
-        }
-        medicalProfile.getAppointments().add(appointment);
+        medicalProfile.setAppointments(appointments);
         medicalProfileRepository.save(medicalProfile);
     }
 }

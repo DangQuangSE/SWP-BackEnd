@@ -41,8 +41,9 @@ public class BookingService {
     AuthUtil authUtil;
 
     @Transactional
-    public BookingResponse bookingService(BookingRequest request, long customerId) {
+    public BookingResponse bookingService(BookingRequest request) {
         // 1. Validate & lấy dữ liệu cần thiết
+        Long customerId = authUtil.getCurrentUserId();
         BookingContext context = validateAndFetchBookingEntities(request, customerId);
 
         // 2. Tạo appointment
