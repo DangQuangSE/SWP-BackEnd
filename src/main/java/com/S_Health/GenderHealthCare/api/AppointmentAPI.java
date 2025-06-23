@@ -1,0 +1,39 @@
+package com.S_Health.GenderHealthCare.api;
+
+import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
+import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
+import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/appointment")
+@SecurityRequirement(name = "api")
+public class AppointmentAPI {
+    @Autowired
+    AppointmentService appointmentService;
+    @GetMapping("{id}")
+    public ResponseEntity getAppointmentById(@PathVariable Long id) {
+        return ResponseEntity.ok(appointmentService.getAppointmentById(id));
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity updateAppointmentById(@PathVariable Long id, @RequestBody UpdateAppointmentRequest request) {
+        return ResponseEntity.ok(appointmentService.updateAppointment(id, request));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity deleteAppointmentById(@PathVariable Long id) {
+        appointmentService.deleteAppointment(id);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/{id}/cancel")
+    public ResponseEntity cancelAppointment(@PathVariable Long id) {
+        appointmentService.cancelAppointment(id);
+        return ResponseEntity.noContent().build();
+    }
+}

@@ -1,25 +1,23 @@
 package com.S_Health.GenderHealthCare.service.MedicalService;
 
-import com.S_Health.GenderHealthCare.dto.SlotDTO;
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
-import com.S_Health.GenderHealthCare.dto.response.AppointmentDetailDTO;
+import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
 import com.S_Health.GenderHealthCare.dto.response.BookingResponse;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
+import com.S_Health.GenderHealthCare.service.medicalProfile.MedicalProfileService;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -38,11 +36,14 @@ public class BookingService {
     @Autowired
     ConsultantSlotRepository consultantSlotRepository;
     @Autowired
+    MedicalProfileService medicalProfileService;
+    @Autowired
     AuthUtil authUtil;
 
     @Transactional
-    public BookingResponse bookingService(BookingRequest request, long customerId) {
+    public BookingResponse bookingService(BookingRequest request) {
         // 1. Validate & lấy dữ liệu cần thiết
+        Long customerId = authUtil.getCurrentUserId();
         BookingContext context = validateAndFetchBookingEntities(request, customerId);
 
         // 2. Tạo appointment
@@ -54,27 +55,22 @@ public class BookingService {
         appointment.setServiceSlotPool(context.slotPool());
         appointment.setPreferredDate(request.getPreferredDate());
         appointmentRepository.save(appointment);
-
         // 3. Lặp các service con (nếu combo)
         List<AppointmentDetailDTO> appointmentDetails = new ArrayList<>();
         List<ConsultantSlot> updatedSlots = new ArrayList<>();
-        double totalPrice = 0;
-
         for (com.S_Health.GenderHealthCare.entity.Service sub : context.services()) {
             AppointmentDetailData result = createAppointmentDetail(request, appointment, sub);
             appointmentDetails.add(result.dto());
             updatedSlots.add(result.slot());
-            totalPrice += sub.getPrice();
         }
 
         // 4. Cập nhật lại slot pool tổng
         updateServiceSlotPool(context.slotPool(), updatedSlots);
-
-        // 5. Set giá và save lại appointment
-        appointment.setPrice(totalPrice * (1 - (context.service().getDiscountPercent()/100)));
+        appointment.setPrice(context.service.getPrice());
         appointmentRepository.save(appointment);
         consultantSlotRepository.saveAll(updatedSlots);
-
+        //6. Tạo medical profile theo service và add appointment vào.
+        medicalProfileService.createMedicalProfile(appointment);
         return BookingResponse.builder()
                 .appointmentId(appointment.getId())
                 .customerName(context.customer().getFullname())
@@ -87,7 +83,7 @@ public class BookingService {
     }
 
     //validate request
-    private BookingContext validateAndFetchBookingEntities(BookingRequest request, long customerId) {
+    public BookingContext validateAndFetchBookingEntities(BookingRequest request, long customerId) {
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ!"));
 
@@ -106,15 +102,13 @@ public class BookingService {
         if (appointmentDetailRepository.existsByAppointment_Customer_IdAndSlotTime(customerId, slotTime)) {
             throw new BadRequestException("Bạn đã có lịch hẹn vào khung giờ này");
         }
-        System.out.println(service.getComboItems());
         List<com.S_Health.GenderHealthCare.entity.Service> services = service.getIsCombo()
                 ? service.getComboItems().stream().map(ComboItem::getSubService).toList()
                 : List.of(service);
-        System.out.println(services);
         return new BookingContext(service, slotPool, customer, services);
     }
 
-    private record BookingContext(
+    public static record BookingContext(
             com.S_Health.GenderHealthCare.entity.Service service,
             ServiceSlotPool slotPool,
             User customer,
@@ -123,11 +117,8 @@ public class BookingService {
     }
 
     //tạo appointmentDetail và cập nhật consultantSlot
-    private AppointmentDetailData createAppointmentDetail(BookingRequest request, Appointment appointment, com.S_Health.GenderHealthCare.entity.Service subService) {
+    public AppointmentDetailData createAppointmentDetail(BookingRequest request, Appointment appointment, com.S_Health.GenderHealthCare.entity.Service subService) {
         List<User> consultants = serviceSlotPoolService.getConsultantInSpecialization(subService.getId());
-        for (User item : consultants){
-            System.out.println(item.getFullname());
-        }
         User consultant = findAvailableConsultant(request, consultants);
         if (consultant == null) {
             throw new BadRequestException("Không có tư vấn viên rảnh cho dịch vụ: " + subService.getName());
@@ -149,21 +140,22 @@ public class BookingService {
         detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot()));
         appointmentDetailRepository.save(detail);
 
-        AppointmentDetailDTO dto = AppointmentDetailDTO.builder()
-                .id(detail.getId())
-                .serviceName(subService.getName())
-                .consultantName(consultant.getFullname())
-                .startTime(request.getSlot())
-                .status(AppointmentStatus.PENDING)
-                .build();
+        AppointmentDetailDTO dto = new AppointmentDetailDTO(
+                detail.getId(),
+                subService.getId(),
+                subService.getName(),
+                consultant.getId(),
+                consultant.getFullname(),
+                detail.getSlotTime(),
+                AppointmentStatus.PENDING,
+                null // medicalResult sẽ cập nhật sau khi tư vấn/xét nghiệm
+        );
 
         return new AppointmentDetailData(dto, slot);
     }
-
-    private record AppointmentDetailData(AppointmentDetailDTO dto, ConsultantSlot slot) {
+    public static record AppointmentDetailData(AppointmentDetailDTO dto, ConsultantSlot slot) {
     }
-
-    private void updateServiceSlotPool(ServiceSlotPool slotPool, List<ConsultantSlot> slots) {
+    public void updateServiceSlotPool(ServiceSlotPool slotPool, List<ConsultantSlot> slots) {
         int max = slots.stream().mapToInt(ConsultantSlot::getMaxBooking).sum();
         int current = slots.stream().mapToInt(ConsultantSlot::getCurrentBooking).sum();
         int available = Math.max(0, max - current);
@@ -172,6 +164,7 @@ public class BookingService {
         slotPool.setCurrentBooking(current);
         slotPool.setAvailableBooking(available);
         slotPool.setIsActive(available > 0);
+        serviceSlotPoolRepository.save(slotPool);
     }
 
 //    @Transactional
@@ -274,5 +267,6 @@ public class BookingService {
         }
         throw new BadRequestException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
     }
+
 
 }

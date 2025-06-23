@@ -41,19 +41,16 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     User consultant;
-
+    //User updatedBy;
     @OneToMany(mappedBy = "appointment")
     List<Payment> payments;
-
-
-//    @ManyToOne
-//    @JoinColumn(name = "consultant_id")
-//    User consultant;
     Double price;
     String note;
     @Enumerated(EnumType.STRING)
     AppointmentStatus status;
     @CreationTimestamp
     LocalDateTime created_at;
+    LocalDateTime update_at;
     LocalDate preferredDate;
+    Boolean isActive = true;
 }
