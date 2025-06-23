@@ -1,0 +1,61 @@
+package com.S_Health.GenderHealthCare.service.medicalProfile;
+
+import com.S_Health.GenderHealthCare.dto.response.MedicalProfileDTO;
+import com.S_Health.GenderHealthCare.entity.Appointment;
+import com.S_Health.GenderHealthCare.entity.MedicalProfile;
+import com.S_Health.GenderHealthCare.entity.User;
+import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
+import com.S_Health.GenderHealthCare.repository.MedicalProfileRepository;
+import com.S_Health.GenderHealthCare.repository.ServiceRepository;
+import com.S_Health.GenderHealthCare.utils.AuthUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Optional;
+
+@Service
+public class MedicalProfileService {
+    @Autowired
+    MedicalProfileRepository medicalProfileRepository;
+    @Autowired
+    ServiceRepository serviceRepository;
+    @Autowired
+    AppointmentRepository appointmentRepository;
+    @Autowired
+    AuthUtil authUtil;
+
+    public void createMedicalProfile(Appointment appointment) {
+        User user = authUtil.getCurrentUser();
+        com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(appointment.getService().getId())
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+        // Tìm MedicalProfile đã tồn tại
+        Optional<MedicalProfile> existingProfile = medicalProfileRepository
+                .findByCustomerAndServiceAndIsActiveTrue(user, service);
+
+        MedicalProfile medicalProfile;
+
+        if (existingProfile.isPresent()) {
+            medicalProfile = existingProfile.get();
+        } else {
+            // Tạo mới nếu chưa tồn tại
+            medicalProfile = new MedicalProfile();
+            medicalProfile.setCustomer(user);
+            medicalProfile.setService(service);
+
+            medicalProfile = medicalProfileRepository.save(medicalProfile);
+        }
+
+        // Gán medicalProfile cho appointment và lưu
+        appointment.setMedicalProfile(medicalProfile);
+        appointmentRepository.save(appointment);
+
+        // Thêm vào list nếu cần cập nhật phía memory
+        if (medicalProfile.getAppointments() == null) {
+            medicalProfile.setAppointments(new ArrayList<>());
+        }
+        medicalProfile.getAppointments().add(appointment);
+        medicalProfileRepository.save(medicalProfile);
+    }
+}
+

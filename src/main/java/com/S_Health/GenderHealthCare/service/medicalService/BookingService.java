@@ -8,6 +8,7 @@ import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
+import com.S_Health.GenderHealthCare.service.medicalProfile.MedicalProfileService;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -34,6 +35,8 @@ public class BookingService {
     ServiceSlotPoolRepository serviceSlotPoolRepository;
     @Autowired
     ConsultantSlotRepository consultantSlotRepository;
+    @Autowired
+    MedicalProfileService medicalProfileService;
     @Autowired
     AuthUtil authUtil;
 
@@ -65,7 +68,8 @@ public class BookingService {
         appointment.setPrice(context.service.getPrice());
         appointmentRepository.save(appointment);
         consultantSlotRepository.saveAll(updatedSlots);
-
+        //6. Tạo medical profile theo service và add appointment vào.
+        medicalProfileService.createMedicalProfile(appointment);
         return BookingResponse.builder()
                 .appointmentId(appointment.getId())
                 .customerName(context.customer().getFullname())

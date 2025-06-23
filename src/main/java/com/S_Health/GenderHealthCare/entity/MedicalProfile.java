@@ -1,18 +1,16 @@
 package com.S_Health.GenderHealthCare.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MedicalProfile {
     @Id
@@ -26,8 +24,6 @@ public class MedicalProfile {
     Service service;
     @OneToMany(mappedBy = "medicalProfile", cascade = CascadeType.ALL)
     List<Appointment> appointments;
-    String result;
-    String note;
-    @CreationTimestamp
-    LocalDateTime create_at;
+   // String note;
+    Boolean isActive = true;
 }
