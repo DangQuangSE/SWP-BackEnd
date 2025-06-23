@@ -16,13 +16,6 @@ import java.util.List;
 public class AppointmentAPI {
     @Autowired
     AppointmentService appointmentService;
-
-    @GetMapping("/{id}/appointments")
-    public ResponseEntity getAppointmentsByMedicalProfile(@PathVariable Long medicalProfileId) {
-        List<AppointmentDTO> appointments = appointmentService.getAppointmentsByMedicalProfile(medicalProfileId);
-        return ResponseEntity.ok(appointments);
-    }
-
     @GetMapping("{id}")
     public ResponseEntity getAppointmentById(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.getAppointmentById(id));
@@ -36,6 +29,11 @@ public class AppointmentAPI {
     @DeleteMapping("{id}")
     public ResponseEntity deleteAppointmentById(@PathVariable Long id) {
         appointmentService.deleteAppointment(id);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/{id}/cancel")
+    public ResponseEntity cancelAppointment(@PathVariable Long id) {
+        appointmentService.cancelAppointment(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -36,16 +36,13 @@ public class AppointmentService {
     @Autowired
     AuthenticationRepository authenticationRepository;
     @Autowired
+    ConsultantSlotRepository consultantSlotRepository;
+    @Autowired
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
 
-    public List<AppointmentDTO> getAppointmentsByMedicalProfile(long medicalProfileId) {
-        List<Appointment> appointments = appointmentRepository.findByMedicalProfileId(medicalProfileId);
-        return appointments.stream()
-                .map(app -> getAppointmentById(app.getId()))
-                .collect(Collectors.toList());
-    }
+
 
     public AppointmentDTO getAppointmentById(long id) {
         Appointment appointment = appointmentRepository.findById(id)
@@ -145,6 +142,38 @@ public class AppointmentService {
         }
         appointmentDetailRepository.saveAll(details);
         appointment.setIsActive(false);
+        appointmentRepository.save(appointment);
+    }
+
+    public void cancelAppointment(Long id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
+
+        if (appointment.getStatus() == AppointmentStatus.CANCELED) {
+            throw new BadRequestException("Lịch hẹn đã bị hủy trước đó.");
+        }
+        // Đánh dấu các AppointmentDetail là không hoạt động
+        List<AppointmentDetail> details = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
+        for (AppointmentDetail detail : details) {
+            detail.setIsActive(false);
+            User consultant = detail.getConsultant();
+            ConsultantSlot consultantSlot = consultantSlotRepository
+                    .findByConsultantAndDateAndStartTimeAndIsActiveTrue(detail.getConsultant(), detail.getSlotTime().toLocalDate(), detail.getSlotTime().toLocalTime());
+            consultantSlot.setCurrentBooking(consultantSlot.getCurrentBooking() - 1);
+            consultantSlot.setAvailableBooking(consultantSlot.getAvailableBooking() + 1);
+            consultantSlotRepository.save(consultantSlot);
+        }
+        appointmentDetailRepository.saveAll(details);
+        // Cập nhật trạng thái lịch hẹn
+        appointment.setStatus(AppointmentStatus.CANCELED);
+        appointment.setIsActive(false);
+        // Hoàn slot: ServiceSlotPool
+        ServiceSlotPool slot = appointment.getServiceSlotPool();
+        if (slot != null) {
+            slot.setAvailableBooking(slot.getAvailableBooking() + 1);
+            slot.setCurrentBooking(slot.getCurrentBooking() - 1);
+            serviceSlotPoolRepository.save(slot);
+        }
         appointmentRepository.save(appointment);
     }
 }
