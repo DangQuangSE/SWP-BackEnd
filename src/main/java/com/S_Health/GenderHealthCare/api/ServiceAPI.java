@@ -4,6 +4,7 @@ import com.S_Health.GenderHealthCare.dto.ServiceDTO;
 import com.S_Health.GenderHealthCare.dto.request.service.ServiceRequest;
 import com.S_Health.GenderHealthCare.entity.Service;
 import com.S_Health.GenderHealthCare.service.MedicalService.ServiceManagementService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,7 @@ import java.util.List;
 
 @RequestMapping("/api/service")
 @RestController
-//@SecurityRequirement(name = "api")
+@SecurityRequirement(name = "api")
 public class ServiceAPI {
 
     @Autowired
@@ -57,17 +58,6 @@ public class ServiceAPI {
             return ResponseEntity.notFound().build();
         }
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceDTO> deleteService(@PathVariable long id) {
-        try {
-            serviceManagementService.deleteService(id);
-            return ResponseEntity.ok().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
     @PatchMapping("/{id}/activate")
     public ResponseEntity<ServiceDTO> activateService(@PathVariable Long id) {
         Service service = serviceManagementService.activateService(id);
@@ -75,7 +65,7 @@ public class ServiceAPI {
         return ResponseEntity.ok(serviceDTO);
     }
 
-    @PatchMapping("/{id}/deactivate")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ServiceDTO> deactivateService(@PathVariable Long id) {
         Service service = serviceManagementService.deactivateService(id);
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);

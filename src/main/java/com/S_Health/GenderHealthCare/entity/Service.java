@@ -30,7 +30,7 @@ public class Service {
     ServiceType type;
     Double price;
     Double discountPercent;
-    Boolean isActive;
+    Boolean isActive = true;
     @CreationTimestamp
     LocalDateTime createdAt;
     Boolean isCombo;
