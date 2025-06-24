@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface MedicalProfileRepository extends JpaRepository<MedicalProfile, Long> {
     Optional<MedicalProfile> findByCustomerAndIsActiveTrue(User currentUser);
     Optional<MedicalProfile> findByCustomerAndServiceAndIsActiveTrue(User currentUser, Service service);
+
 }
