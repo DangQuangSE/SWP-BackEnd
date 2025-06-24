@@ -83,5 +83,9 @@ public class MedicalProfileService {
                 .map(entry -> appointmentService.getAppointmentById(entry.getId()))
                 .collect(Collectors.toList());
     }
+
+    public MedicalProfileDTO getMedicalProfileForConsultant(Long customerId, Long serviceId) {
+        return null;
+    }
 }
 
