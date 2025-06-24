@@ -46,11 +46,22 @@ public class Filter extends OncePerRequestFilter {
 
     );
 
+    private final List<String> PROTECTED_GET_API = List.of(
+            "/api/cycle-track/logs"    // ví dụ route cần bảo vệ
+//            "/api/user/private/**"       // thêm wildcard nếu muốn
+    );
+
     public boolean isPulicApi(String uri, String method) {
         // URL http:localhost:8080/api/student
         // URI: api/student
-        if (method.equals("GET")) return true;
+
+//        if (method.equals("GET")) return true;
         AntPathMatcher matcher = new AntPathMatcher();
+        if (method.equalsIgnoreCase("GET")) {
+            boolean isProtected = PROTECTED_GET_API.stream()
+                    .anyMatch(pattern -> matcher.match(pattern, uri));
+            return !isProtected; // Nếu không bị bảo vệ → cho phép
+        }
         return PUBLIC_API.stream().anyMatch(pattern -> {
             String[] parts = pattern.split(":", 2);
             if (parts.length != 2) return false;
@@ -102,7 +113,9 @@ public class Filter extends OncePerRequestFilter {
 
     public String getToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
         return authHeader.substring(7);
     }
 }

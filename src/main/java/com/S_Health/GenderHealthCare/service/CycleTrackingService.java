@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.service;
 
 import com.S_Health.GenderHealthCare.dto.request.service.CycleTrackingRequest;
+import com.S_Health.GenderHealthCare.dto.response.CycleTrackingResponse;
 import com.S_Health.GenderHealthCare.entity.CycleTracking;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.Symptoms;
@@ -25,7 +26,7 @@ public class CycleTrackingService {
     @Autowired
     private AuthUtil authUtil;
 
-    public void saveDailyLog(CycleTrackingRequest request) {
+    public CycleTrackingResponse saveDailyLog(CycleTrackingRequest request) {
 
 
         Long userId = authUtil.getCurrentUserId();
@@ -46,9 +47,19 @@ public class CycleTrackingService {
         log.setStartDate(request.getStartDate());
         log.setIsPeriodStart(request.getIsPeriodStart());
         log.setSymptoms(sym);
+        log.setNote(request.getNote());
         log.setCreatedAt(LocalDateTime.now());
 
         cycleTrackingRepository.save(log);
+
+        CycleTrackingResponse response = CycleTrackingResponse.builder()
+                .id(userId)
+                .isPeriodStart(request.getIsPeriodStart())
+                .startDate(request.getStartDate())
+                .note(request.getNote())
+                .build();
+
+        return response;
     }
 
     public List<CycleTrackingRequest> getLogsByUser(Long userId) {
