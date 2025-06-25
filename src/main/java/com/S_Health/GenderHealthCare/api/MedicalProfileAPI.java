@@ -35,11 +35,11 @@ public class MedicalProfileAPI {
         return ResponseEntity.ok(medicalProfileService.getAppointmentByStatusAndMedicalProfile(profileId, status));
     }
     //lấy hồ sơ customer cho consultant xem
-    @GetMapping("/medical-profile/consultant-view")
+    @GetMapping("/consultant-view")
     public ResponseEntity viewMedicalProfileForConsultant(
             @RequestParam Long customerId,
             @RequestParam Long serviceId) {
-        return ResponseEntity.ok(  medicalProfileService
+        return ResponseEntity.ok(medicalProfileService
                 .getMedicalProfileForConsultant(customerId, serviceId));
     }
 }

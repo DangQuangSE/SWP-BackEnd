@@ -2,11 +2,14 @@ package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.request.blog.BlogRequest;
 import com.S_Health.GenderHealthCare.entity.Blog;
+import com.S_Health.GenderHealthCare.enums.BlogStatus;
 import com.S_Health.GenderHealthCare.service.blog.BlogService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
     
 @RestController
 @SecurityRequirement(name = "api/blog")
@@ -27,9 +30,23 @@ public class BlogAPI {
     public ResponseEntity getSummaryBlog(){
         return ResponseEntity.ok(blogService.getAllBlogSummaries());
     }
+    @PostMapping(value = "/blog", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity createBlogWithImage(
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam("status") String status,
+            @RequestParam("image") MultipartFile image) {
 
-    @PostMapping("/blog")
-    public ResponseEntity createBlog(@RequestBody BlogRequest request) {
+        BlogRequest request = new BlogRequest();
+        request.setTitle(title);
+        request.setContent(content);
+        request.setImg(image);
+        try {
+            request.setStatus(BlogStatus.valueOf(status));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Trạng thái blog không hợp lệ");
+        }
+
         return ResponseEntity.ok(blogService.createBlog(request));
     }
 }

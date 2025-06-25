@@ -24,6 +24,16 @@ public class AuthUtil {
         throw new AuthenticationException("Không thể lấy userId từ token");
     }
     public User getCurrentUser(){
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AuthenticationException("Bạn chưa đăng nhập");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
+
+        throw new AuthenticationException("Không thể xác thực người dùng hiện tại");
     }
 }

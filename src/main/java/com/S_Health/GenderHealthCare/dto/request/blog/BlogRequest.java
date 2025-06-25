@@ -4,13 +4,14 @@ import com.S_Health.GenderHealthCare.enums.BlogStatus;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BlogRequest {
-    long author_id;
     String title;
     String content;
+    MultipartFile img;
     String imgUrl;
     BlogStatus status;
     public void validate() {

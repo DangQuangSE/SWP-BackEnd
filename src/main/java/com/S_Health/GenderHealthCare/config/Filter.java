@@ -37,19 +37,32 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
             "PUT:/api/auth/**",
-            "POST:/api/service/**",
             "PUT:/api/service/**",
+            "POST:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
             "POST:/api/payment/vnpay/**"
+//            "POST:/api/swagger-ui/**",
+//            "POST:/api/v3/api-docs/**",
+//            "POST:/api/swagger-resources/**"
+            );
 
+    private final List<String> PROTECTED_GET_API = List.of(
+            "/api/cycle-track/logs"    // ví dụ route cần bảo vệ
+//            "/api/user/private/**"       // thêm wildcard nếu muốn
     );
 
     public boolean isPulicApi(String uri, String method) {
         // URL http:localhost:8080/api/student
         // URI: api/student
-        if (method.equals("GET")) return true;
+
+//        if (method.equals("GET")) return true;
         AntPathMatcher matcher = new AntPathMatcher();
+        if (method.equalsIgnoreCase("GET")) {
+            boolean isProtected = PROTECTED_GET_API.stream()
+                    .anyMatch(pattern -> matcher.match(pattern, uri));
+            return !isProtected; // Nếu không bị bảo vệ → cho phép
+        }
         return PUBLIC_API.stream().anyMatch(pattern -> {
             String[] parts = pattern.split(":", 2);
             if (parts.length != 2) return false;
@@ -66,12 +79,12 @@ public class Filter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
-        if(isPulicApi(uri, method)) {
+        if (isPulicApi(uri, method)) {
             filterChain.doFilter(request, response);
-        }else{
+        } else {
             //xát thực
             String token = getToken(request);
-            if(token == null) {
+            if (token == null) {
                 resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
                 });
             }
@@ -101,7 +114,9 @@ public class Filter extends OncePerRequestFilter {
 
     public String getToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
         return authHeader.substring(7);
     }
 }

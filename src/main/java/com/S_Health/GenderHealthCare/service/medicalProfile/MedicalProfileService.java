@@ -6,8 +6,11 @@ import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.MedicalProfile;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
+import com.S_Health.GenderHealthCare.enums.UserRole;
+import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
+import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.MedicalProfileRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceRepository;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
@@ -30,6 +33,8 @@ public class MedicalProfileService {
     ServiceRepository serviceRepository;
     @Autowired
     AppointmentRepository appointmentRepository;
+    @Autowired
+    AuthenticationRepository authenticationRepository;
     @Autowired
     AppointmentService appointmentService;
     @Autowired
@@ -85,7 +90,19 @@ public class MedicalProfileService {
     }
 
     public MedicalProfileDTO getMedicalProfileForConsultant(Long customerId, Long serviceId) {
-        return null;
+        // Find the user
+        User customer = authenticationRepository.findById(customerId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy khách hàng!"));
+
+        // Find the service
+        com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ!"));
+
+        // Find the medical profile
+        MedicalProfile medicalProfile = medicalProfileRepository.findByCustomerAndServiceAndIsActiveTrue(customer, service)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy hồ sơ khám bệnh!"));
+
+        return modelMapper.map(medicalProfile, MedicalProfileDTO.class);
     }
 }
 
