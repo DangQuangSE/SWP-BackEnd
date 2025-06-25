@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
+import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,9 @@ public class AppointmentAPI {
     //hiển thị cho bác sĩ theo status
     @GetMapping("/appointments/my-schedule")
     public ResponseEntity<List<AppointmentDTO>> getMySchedule(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<AppointmentDTO> appointments = appointmentService.getAppointmentsForDoctorOnDate(date);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) AppointmentStatus status) {
+        List<AppointmentDTO> appointments = appointmentService.getAppointmentsForDoctorOnDate(date, status);
         return ResponseEntity.ok(appointments);
     }
     @PostMapping("/{id}")

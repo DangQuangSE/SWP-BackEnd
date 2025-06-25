@@ -189,7 +189,43 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
     }
 
-    public List<AppointmentDTO> getAppointmentsForDoctorOnDate(LocalDate date) {
-        return null;
+    public List<AppointmentDTO> getAppointmentsForDoctorOnDate(LocalDate date, AppointmentStatus status) {
+        // Lấy thông tin bác sĩ hiện tại
+        User currentDoctor = authUtil.getCurrentUser();
+        
+        // Tìm tất cả các appointments theo ngày và bác sĩ
+        List<Appointment> appointments;
+        if (status != null) {
+            // Nếu có status, lọc theo cả ngày và status
+            appointments = appointmentRepository.findByPreferredDateAndConsultantAndStatusAndIsActiveTrue(
+                date, currentDoctor, status);
+        } else {
+            // Nếu không có status, chỉ lọc theo ngày
+            appointments = appointmentRepository.findByPreferredDateAndConsultantAndIsActiveTrue(
+                date, currentDoctor);
+        }
+
+        // Chuyển đổi sang DTO và trả về kết quả
+        return appointments.stream()
+            .map(appointment -> {
+                AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                // Lấy ra danh sách appointmentDetail
+                List<AppointmentDetail> details = appointmentDetailRepository
+                    .findByAppointmentAndIsActiveTrue(appointment);
+                List<AppointmentDetailDTO> detailDTOs = details.stream()
+                    .map(detail -> {
+                        AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
+                        // Lấy ra medical result nếu có
+                        medicalResultRepository.findByAppointmentDetail(detail)
+                            .ifPresent(result -> 
+                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
+                            );
+                        return detailDTO;
+                    })
+                    .collect(Collectors.toList());
+                dto.setAppointmentDetails(detailDTOs);
+                return dto;
+            })
+            .collect(Collectors.toList());
     }
 }
