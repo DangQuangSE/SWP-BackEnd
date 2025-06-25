@@ -3,6 +3,7 @@ import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,6 +31,14 @@ public class AppointmentAPI {
             @RequestParam(required = false) AppointmentStatus status) {
         List<AppointmentDTO> appointments = appointmentService.getAppointmentsForConsultantOnDate(date, status);
         return ResponseEntity.ok(appointments);
+    }
+
+    @GetMapping("/by-status")
+    @Operation(summary = "Lấy danh sách lịch hẹn theo trạng thái", 
+               description = "Trả về danh sách lịch hẹn theo trạng thái (PENDING, BOOKED, CHECKED, COMPLETED, CANCELED). Kết quả phụ thuộc vào vai trò người dùng: khách hàng chỉ xem được lịch hẹn của mình, bác sĩ xem được lịch hẹn của bệnh nhân của họ, admin/staff xem được tất cả.")
+    public ResponseEntity<List<AppointmentDTO>> getAppointmentsByStatus(
+            @RequestParam AppointmentStatus status) {
+        return ResponseEntity.ok(appointmentService.getAppointmentsByStatus(status));
     }
     @PostMapping("/{id}")
     public ResponseEntity updateAppointmentById(@PathVariable Long id, @RequestBody UpdateAppointmentRequest request) {

@@ -90,9 +90,6 @@ public class MedicalProfileService {
     }
 
     public MedicalProfileDTO getMedicalProfileForConsultant(Long customerId, Long serviceId) {
-        // Verify current user is a consultant
-        User consultant = authUtil.getCurrentUser();
-
         // Find the user
         User customer = authenticationRepository.findById(customerId)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy khách hàng!"));
