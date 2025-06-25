@@ -37,7 +37,7 @@ public class ScheduleAPI {
         LocalDate end = to != null ? to : today.plusWeeks(2);
         RangeDate rangeDate = new RangeDate(start, end);
         ScheduleConsultantRequest scheduleRequest = ScheduleConsultantRequest.builder()
-                .consultant_id(id)
+                    .consultant_id(id)
                 .rangeDate(rangeDate)
                 .build();
         List<WorkDateSlotResponse> result = scheduleService.getScheduleOfConsultant(scheduleRequest);

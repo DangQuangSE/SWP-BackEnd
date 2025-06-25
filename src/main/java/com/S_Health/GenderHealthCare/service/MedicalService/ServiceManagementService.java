@@ -47,17 +47,18 @@ public class ServiceManagementService {
         return modelMapper.map(saved, ServiceDTO.class);
     }
 
-    public void deleteService(Long id) {
-        serviceRepository.deleteById(id);
-    }
-
     public ServiceDTO updateService(Long id, ServiceDTO serviceDTO) {
-        return serviceRepository.findById(id).map(existing -> {
-            modelMapper.map(serviceDTO, existing); // Copy fields from dto to existing entity
-            Service updated = serviceRepository.save(existing);
-            return modelMapper.map(updated, ServiceDTO.class);
-        }).orElseThrow(() -> new RuntimeException("Không tìm thấy ID này: " + id));
-
+       Service service = serviceRepository.findById(id)
+               .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ này!"));
+       service.setDescription(serviceDTO.getDescription());
+       service.setName(service.getName());
+       service.setPrice(serviceDTO.getPrice());
+       service.setType(serviceDTO.getType());
+       service.setDuration(serviceDTO.getDuration());
+       service.setIsCombo(serviceDTO.getIsCombo());
+       serviceRepository.save(service);
+       ServiceDTO updated = modelMapper.map(service, ServiceDTO.class);
+       return updated;
     }
 
     public Service activateService(Long id) {

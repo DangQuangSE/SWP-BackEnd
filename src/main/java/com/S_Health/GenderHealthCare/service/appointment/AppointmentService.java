@@ -18,6 +18,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +42,6 @@ public class AppointmentService {
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
-
 
 
     public AppointmentDTO getAppointmentById(long id) {
@@ -175,5 +175,21 @@ public class AppointmentService {
             serviceSlotPoolRepository.save(slot);
         }
         appointmentRepository.save(appointment);
+    }
+
+    public void checkInAppointment(Long id) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
+        appointment.setStatus(AppointmentStatus.CHECKED);
+        List<AppointmentDetail> appointmentDetails = appointmentDetailRepository.findByAppointment(appointment);
+        for (AppointmentDetail appointmentDetail : appointmentDetails){
+            appointmentDetail.setStatus(AppointmentStatus.CHECKED);
+            appointmentDetailRepository.save(appointmentDetail);
+        }
+        appointmentRepository.save(appointment);
+    }
+
+    public List<AppointmentDTO> getAppointmentsForDoctorOnDate(LocalDate date) {
+        return null;
     }
 }

@@ -36,15 +36,16 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PUBLIC_API = List.of(
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
-//            "POST:/api/**",
             "PUT:/api/auth/**",
-            "POST:/api/service/**",
             "PUT:/api/service/**",
+            "POST:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
             "POST:/api/payment/vnpay/**"
-
-    );
+//            "POST:/api/swagger-ui/**",
+//            "POST:/api/v3/api-docs/**",
+//            "POST:/api/swagger-resources/**"
+            );
 
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs"    // ví dụ route cần bảo vệ
@@ -78,12 +79,12 @@ public class Filter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         String method = request.getMethod();
 
-        if(isPulicApi(uri, method)) {
+        if (isPulicApi(uri, method)) {
             filterChain.doFilter(request, response);
-        }else{
+        } else {
             //xát thực
             String token = getToken(request);
-            if(token == null) {
+            if (token == null) {
                 resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
                 });
             }
