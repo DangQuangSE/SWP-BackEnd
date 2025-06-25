@@ -2,16 +2,15 @@ package com.S_Health.GenderHealthCare.service.appointment;
 
 import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
 import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
+import com.S_Health.GenderHealthCare.dto.PatientHistoryDTO;
 import com.S_Health.GenderHealthCare.dto.ResultDTO;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
-import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
+import com.S_Health.GenderHealthCare.dto.response.MedicalProfileDTO;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
-import com.S_Health.GenderHealthCare.enums.PaymentStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
-import com.S_Health.GenderHealthCare.service.MedicalService.BookingService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -189,7 +188,7 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
     }
 
-    public List<AppointmentDTO> getAppointmentsForDoctorOnDate(LocalDate date, AppointmentStatus status) {
+    public List<AppointmentDTO> getAppointmentsForConsultantOnDate(LocalDate date, AppointmentStatus status) {
         // Lấy thông tin bác sĩ hiện tại
         User currentDoctor = authUtil.getCurrentUser();
         
@@ -227,5 +226,36 @@ public class AppointmentService {
                 return dto;
             })
             .collect(Collectors.toList());
+    }
+
+
+    public PatientHistoryDTO getPatientHistoryFromAppointment(Long appointmentId) {
+        // Verify the current user is a consultant
+        User consultant = authUtil.getCurrentUser();
+
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+        // Get the medical profile
+        MedicalProfile medicalProfile = appointment.getMedicalProfile();
+        if (medicalProfile == null) {
+            throw new BadRequestException("Lịch hẹn này không có hồ sơ y tế");
+        }
+
+        // Get past appointments for this patient with this service
+        List<Appointment> pastAppointments = appointmentRepository.findByMedicalProfileAndStatusAndIsActiveTrue(
+                medicalProfile, AppointmentStatus.COMPLETED);
+
+        // Convert to DTOs
+        List<AppointmentDTO> pastAppointmentDTOs = pastAppointments.stream()
+                .map(app -> getAppointmentById(app.getId()))
+                .collect(Collectors.toList());
+
+        // Create and return the history DTO
+        PatientHistoryDTO historyDTO = new com.S_Health.GenderHealthCare.dto.PatientHistoryDTO();
+        historyDTO.setMedicalProfile(modelMapper.map(medicalProfile, MedicalProfileDTO.class));
+        historyDTO.setPastAppointments(pastAppointmentDTOs);
+
+        return historyDTO;
     }
 }

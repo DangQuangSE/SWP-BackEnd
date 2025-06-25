@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.repository;
 
 import com.S_Health.GenderHealthCare.entity.Appointment;
+import com.S_Health.GenderHealthCare.entity.MedicalProfile;
 import com.S_Health.GenderHealthCare.entity.Payment;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
@@ -17,4 +18,5 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByMedicalProfileIdAndStatus(Long medicalProfileId, AppointmentStatus status);
     List<Appointment> findByPreferredDateAndConsultantAndStatusAndIsActiveTrue(LocalDate date, User consultant, AppointmentStatus status);
     List<Appointment> findByPreferredDateAndConsultantAndIsActiveTrue(LocalDate date, User consultant);
+    List<Appointment> findByMedicalProfileAndStatusAndIsActiveTrue(MedicalProfile medicalProfile, AppointmentStatus status);
 }

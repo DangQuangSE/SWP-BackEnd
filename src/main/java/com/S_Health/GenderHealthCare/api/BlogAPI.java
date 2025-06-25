@@ -30,12 +30,7 @@ public class BlogAPI {
     public ResponseEntity getSummaryBlog(){
         return ResponseEntity.ok(blogService.getAllBlogSummaries());
     }
-
-    @PostMapping("/blog")
-    public ResponseEntity createBlog(@RequestBody BlogRequest request) {
-        return ResponseEntity.ok(blogService.createBlog(request));
-    }
-    @PostMapping(value = "/blog/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/blog", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity createBlogWithImage(
             @RequestParam("title") String title,
             @RequestParam("content") String content,

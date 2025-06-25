@@ -28,7 +28,7 @@ public class AppointmentAPI {
     public ResponseEntity<List<AppointmentDTO>> getMySchedule(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) AppointmentStatus status) {
-        List<AppointmentDTO> appointments = appointmentService.getAppointmentsForDoctorOnDate(date, status);
+        List<AppointmentDTO> appointments = appointmentService.getAppointmentsForConsultantOnDate(date, status);
         return ResponseEntity.ok(appointments);
     }
     @PostMapping("/{id}")
@@ -51,6 +51,10 @@ public class AppointmentAPI {
     public ResponseEntity checkInAppointment(@PathVariable Long id){
         appointmentService.checkInAppointment(id);
         return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/{appointmentId}/patient-history")
+    public ResponseEntity getPatientHistory(@PathVariable Long appointmentId) {
+        return ResponseEntity.ok(appointmentService.getPatientHistoryFromAppointment(appointmentId));
     }
 
 }
