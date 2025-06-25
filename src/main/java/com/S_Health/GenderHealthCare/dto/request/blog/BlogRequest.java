@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class BlogRequest {
@@ -22,6 +24,8 @@ public class BlogRequest {
 
     MultipartFile img;
     String imgUrl;
+
+    List<String> tagNames; // Add tag names to process
 
     public void validate() {
         if (title == null || title.trim().length() < 10) {
