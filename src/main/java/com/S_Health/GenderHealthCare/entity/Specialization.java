@@ -24,5 +24,5 @@ public class Specialization {
     @ManyToOne
     @JoinColumn(name = "service_id")
     Service service;
-    boolean isActive = true;
+    Boolean isActive = true;
 }

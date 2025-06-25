@@ -155,7 +155,6 @@ public class AppointmentService {
         List<AppointmentDetail> details = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
         for (AppointmentDetail detail : details) {
             detail.setIsActive(false);
-            User consultant = detail.getConsultant();
             ConsultantSlot consultantSlot = consultantSlotRepository
                     .findByConsultantAndDateAndStartTimeAndIsActiveTrue(detail.getConsultant(), detail.getSlotTime().toLocalDate(), detail.getSlotTime().toLocalTime());
             consultantSlot.setCurrentBooking(consultantSlot.getCurrentBooking() - 1);
@@ -179,53 +178,63 @@ public class AppointmentService {
     public void checkInAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
-        appointment.setStatus(AppointmentStatus.CHECKED);
-        List<AppointmentDetail> appointmentDetails = appointmentDetailRepository.findByAppointment(appointment);
-        for (AppointmentDetail appointmentDetail : appointmentDetails){
-            appointmentDetail.setStatus(AppointmentStatus.CHECKED);
-            appointmentDetailRepository.save(appointmentDetail);
+        if (appointment.getStatus() == AppointmentStatus.CHECKED) {
+            throw new BadRequestException("Lịch hẹn này đã được check in!");
         }
-        appointmentRepository.save(appointment);
+        try {
+            appointment.setStatus(AppointmentStatus.CHECKED);
+            List<AppointmentDetail> appointmentDetails = appointmentDetailRepository.findByAppointment(appointment);
+
+            for (AppointmentDetail appointmentDetail : appointmentDetails) {
+                appointmentDetail.setStatus(AppointmentStatus.CHECKED);
+                appointmentDetailRepository.save(appointmentDetail);
+            }
+
+            appointmentRepository.save(appointment);
+        } catch (Exception e) {
+            throw new BadRequestException("Không thể cập nhật trạng thái lịch hẹn: " + e.getMessage());
+        }
+
     }
 
     public List<AppointmentDTO> getAppointmentsForConsultantOnDate(LocalDate date, AppointmentStatus status) {
         // Lấy thông tin bác sĩ hiện tại
         User currentDoctor = authUtil.getCurrentUser();
-        
+
         // Tìm tất cả các appointments theo ngày và bác sĩ
         List<Appointment> appointments;
         if (status != null) {
             // Nếu có status, lọc theo cả ngày và status
             appointments = appointmentRepository.findByPreferredDateAndConsultantAndStatusAndIsActiveTrue(
-                date, currentDoctor, status);
+                    date, currentDoctor, status);
         } else {
             // Nếu không có status, chỉ lọc theo ngày
             appointments = appointmentRepository.findByPreferredDateAndConsultantAndIsActiveTrue(
-                date, currentDoctor);
+                    date, currentDoctor);
         }
 
         // Chuyển đổi sang DTO và trả về kết quả
         return appointments.stream()
-            .map(appointment -> {
-                AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
-                // Lấy ra danh sách appointmentDetail
-                List<AppointmentDetail> details = appointmentDetailRepository
-                    .findByAppointmentAndIsActiveTrue(appointment);
-                List<AppointmentDetailDTO> detailDTOs = details.stream()
-                    .map(detail -> {
-                        AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
-                        // Lấy ra medical result nếu có
-                        medicalResultRepository.findByAppointmentDetail(detail)
-                            .ifPresent(result -> 
-                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
-                            );
-                        return detailDTO;
-                    })
-                    .collect(Collectors.toList());
-                dto.setAppointmentDetails(detailDTOs);
-                return dto;
-            })
-            .collect(Collectors.toList());
+                .map(appointment -> {
+                    AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    // Lấy ra danh sách appointmentDetail
+                    List<AppointmentDetail> details = appointmentDetailRepository
+                            .findByAppointmentAndIsActiveTrue(appointment);
+                    List<AppointmentDetailDTO> detailDTOs = details.stream()
+                            .map(detail -> {
+                                AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
+                                // Lấy ra medical result nếu có
+                                medicalResultRepository.findByAppointmentDetail(detail)
+                                        .ifPresent(result ->
+                                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
+                                        );
+                                return detailDTO;
+                            })
+                            .collect(Collectors.toList());
+                    dto.setAppointmentDetails(detailDTOs);
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
 
@@ -265,25 +274,25 @@ public class AppointmentService {
             appointments = appointmentRepository.findByStatusAndIsActiveTrue(status);
         }
         return appointments.stream()
-            .map(appointment -> {
-                AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
-                // Lấy ra danh sách appointmentDetail
-                List<AppointmentDetail> details = appointmentDetailRepository
-                    .findByAppointmentAndIsActiveTrue(appointment);
-                List<AppointmentDetailDTO> detailDTOs = details.stream()
-                    .map(detail -> {
-                        AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
-                        // Lấy ra medical result nếu có
-                        medicalResultRepository.findByAppointmentDetail(detail)
-                            .ifPresent(result -> 
-                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
-                            );
-                        return detailDTO;
-                    })
-                    .collect(Collectors.toList());
-                dto.setAppointmentDetails(detailDTOs);
-                return dto;
-            })
-            .collect(Collectors.toList());
+                .map(appointment -> {
+                    AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    // Lấy ra danh sách appointmentDetail
+                    List<AppointmentDetail> details = appointmentDetailRepository
+                            .findByAppointmentAndIsActiveTrue(appointment);
+                    List<AppointmentDetailDTO> detailDTOs = details.stream()
+                            .map(detail -> {
+                                AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
+                                // Lấy ra medical result nếu có
+                                medicalResultRepository.findByAppointmentDetail(detail)
+                                        .ifPresent(result ->
+                                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
+                                        );
+                                return detailDTO;
+                            })
+                            .collect(Collectors.toList());
+                    dto.setAppointmentDetails(detailDTOs);
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 }

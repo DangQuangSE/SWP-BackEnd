@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
     
 @RestController
-@SecurityRequirement(name = "api/blog")
+@RequestMapping("/api/blog")
+@SecurityRequirement(name = "api")
 public class BlogAPI {
     @Autowired
     BlogService blogService;
@@ -30,7 +31,7 @@ public class BlogAPI {
     public ResponseEntity getSummaryBlog(){
         return ResponseEntity.ok(blogService.getAllBlogSummaries());
     }
-    @PostMapping(value = "/blog", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity createBlogWithImage(
             @RequestParam("title") String title,
             @RequestParam("content") String content,

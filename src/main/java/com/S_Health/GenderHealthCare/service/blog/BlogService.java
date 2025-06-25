@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.service.blog;
 
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.blog.BlogRequest;
 import com.S_Health.GenderHealthCare.dto.response.BlogResponse;
 import com.S_Health.GenderHealthCare.dto.response.BlogSummaryDTO;
@@ -79,6 +80,7 @@ public class BlogService {
         blogRepository.save(blog);
         // 4. Lưu vào DB
         BlogResponse blogResponse = modelMapper.map(blog, BlogResponse.class);
+        blogResponse.setAuthor(modelMapper.map(author, UserDTO.class));
         return blogResponse;
     }
 }

@@ -65,5 +65,4 @@ public class AppointmentAPI {
     public ResponseEntity getPatientHistory(@PathVariable Long appointmentId) {
         return ResponseEntity.ok(appointmentService.getPatientHistoryFromAppointment(appointmentId));
     }
-
 }

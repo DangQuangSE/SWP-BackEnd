@@ -76,7 +76,7 @@ public class SpecializationService {
         if (specialization.getConsultants() != null && !specialization.getConsultants().isEmpty()) {
             throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các consultant");
         }
-        specialization.setActive(false);
+        specialization.setIsActive(false);
         specializationRepository.save(specialization);
     }
 }

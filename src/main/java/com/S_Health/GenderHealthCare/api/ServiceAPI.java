@@ -72,7 +72,7 @@ public class ServiceAPI {
         return ResponseEntity.ok(serviceDTO);
     }
     @PostMapping("/comboService")
-    public ResponseEntity createComboService(@RequestBody ServiceRequest request){
+    public ResponseEntity createComboService(@RequestBody ServiceDTO request){
         return ResponseEntity.ok(serviceManagementService.createComboService(request));
     }
 }

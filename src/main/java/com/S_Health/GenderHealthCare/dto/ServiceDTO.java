@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.modelmapper.internal.bytebuddy.asm.Advice;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,30 +30,5 @@ public class ServiceDTO {
     Boolean isCombo;
     LocalDateTime createdAt;
     List<Long> subServiceIds;
-    public ServiceDTO(long Id, String name, String description, Integer duration,
-                          ServiceType type, Double price, Boolean isActive) {
-        this.id = Id;
-        this.name = name;
-        this.description = description;
-        this.duration = duration;
-        this.type = type;
-        this.price = price;
-        this.isActive = isActive;
-        this.isCombo = false;
-        this.discountPercent = null;
-        this.subServiceIds = null;
-    }
-    public ServiceDTO(long Id, String name, String description, ServiceType type,
-                          Double price, Boolean isActive, Double discountPercent, List<Long> subServiceIds) {
-        this.id = Id;
-        this.name = name;
-        this.description = description;
-        this.duration = null; // combo không có thời lượng cụ thể
-        this.type = type;
-        this.price = price;
-        this.isActive = isActive;
-        this.isCombo = true;
-        this.discountPercent = discountPercent;
-        this.subServiceIds = subServiceIds;
-    }
+    private List<SpecializationDTO> specializations;
 }
