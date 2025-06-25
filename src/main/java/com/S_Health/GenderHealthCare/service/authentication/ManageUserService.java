@@ -33,27 +33,18 @@ public class ManageUserService {
     @Autowired
     ModelMapper modelMapper;
     public CreateUserResponse createStaffAccount(CreateUserRequest request) {
-        // Validate email uniqueness
         if (authenticationRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email đã tồn tại trong hệ thống");
         }
-
-        // Validate role
         validateRole(request.getRole());
-
-        // Validate specializations if role is CONSULTANT
         List<Specialization> specializations = null;
         if (request.getRole() == UserRole.CONSULTANT) {
             if (request.getSpecializationIds() == null || request.getSpecializationIds().isEmpty()) {
-                throw new BadRequestException("Consultant phải có ít nhất một chuyên môn");
+                throw new BadRequestException("Tư vấn viên phải có ít nhất một chuyên môn");
             }
             specializations = validateAndGetSpecializations(request.getSpecializationIds());
         }
-
-        // Generate random password
         String randomPassword = generateRandomPassword();
-
-        // Create user account
         User user = User.builder()
                 .fullname(request.getFullname())
                 .email(request.getEmail())
@@ -67,34 +58,27 @@ public class ManageUserService {
                 .isActive(true)
                 .isVerify(true)
                 .build();
-
-        // Set specializations for consultant
         if (request.getRole() == UserRole.CONSULTANT && specializations != null) {
             user.setSpecializations(specializations);
         }
 
         user = authenticationRepository.save(user);
-
-        // Gửi email chào mừng và thông tin đăng nhập
         emailService.sendWelcomeWithCredentials(user.getEmail(), randomPassword, user.getRole());
         CreateUserResponse response = modelMapper.map(user, CreateUserResponse.class);
         return response;
     }
-
     private void validateRole(UserRole role) {
         if (role == UserRole.CUSTOMER) {
-            throw new BadRequestException("Không thể tạo tài khoản CUSTOMER qua API này");
+            throw new BadRequestException("Không thể tạo tài khoản Khách hàng qua API này");
         }
     }
-
     private List<Specialization> validateAndGetSpecializations(Set<Long> specializationIds) {
         List<Specialization> specializations = specializationRepository.findAllById(specializationIds);
         if (specializations.size() != specializationIds.size()) {
-            throw new BadRequestException("Một hoặc nhiều specialization không tồn tại");
+            throw new BadRequestException("Một hoặc nhiều chuyên môn không tồn tại");
         }
         return specializations;
     }
-
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
         return new Random().ints(10, 0, chars.length())
