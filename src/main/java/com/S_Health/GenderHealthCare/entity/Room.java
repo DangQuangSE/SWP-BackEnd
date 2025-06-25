@@ -24,31 +24,19 @@ public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-
     String name;
     String description;
     String location;
-
-    // Room capacity
     int capacity;
-
-    // Equipment and facilities
     String facilities;
-
-    // Working hours
     LocalTime openTime;
     LocalTime closeTime;
-
-    // Specialization of the room
     @ManyToOne
     @JoinColumn(name = "specialization_id")
     Specialization specialization;
-    // Room status (active/inactive)
     boolean isActive = true;
-
     @CreationTimestamp
     LocalDateTime createdAt;
-
     @UpdateTimestamp
     LocalDateTime updatedAt;
 }

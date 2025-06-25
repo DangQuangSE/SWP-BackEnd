@@ -28,11 +28,6 @@ public class RoomConsultant {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     User consultant;
-
-    // Working days and hours for this consultant in this room
-    @Enumerated(EnumType.STRING)
-    DayOfWeek workingDay;
-
     LocalTime startTime;
     LocalTime endTime;
 
