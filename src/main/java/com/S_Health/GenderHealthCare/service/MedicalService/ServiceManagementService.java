@@ -1,27 +1,33 @@
 package com.S_Health.GenderHealthCare.service.MedicalService;
 
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
+import com.S_Health.GenderHealthCare.dto.SpecializationDTO;
 import com.S_Health.GenderHealthCare.dto.request.service.ServiceRequest;
 import com.S_Health.GenderHealthCare.dto.response.ComboResponse;
 import com.S_Health.GenderHealthCare.entity.ComboItem;
 import com.S_Health.GenderHealthCare.entity.Service;
+import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.ComboItemRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceRepository;
+import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
 public class ServiceManagementService {
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    ServiceRepository serviceRepository;
     @Autowired
-    private ModelMapper modelMapper;
+    ModelMapper modelMapper;
     @Autowired
-    private ComboItemRepository comboItemRepository;
+    ComboItemRepository comboItemRepository;
+    @Autowired
+    SpecializationRepository specializationRepository;
 
     public List<ServiceDTO> getAllServices() {
         List<Service> services = serviceRepository.findAll();
@@ -44,21 +50,69 @@ public class ServiceManagementService {
     public ServiceDTO createService(ServiceDTO serviceDTO) {
         Service service = modelMapper.map(serviceDTO, Service.class);
         Service saved = serviceRepository.save(service);
+        List<Specialization> specializations = new ArrayList<>();
+        if (serviceDTO.getSpecializations() != null && !serviceDTO.getSpecializations().isEmpty()) {
+            for (SpecializationDTO specializationDTO : serviceDTO.getSpecializations()) {
+                Specialization specialization = new Specialization();
+                specialization.setName(specializationDTO.getName());
+                specialization.setService(saved);
+                specialization.setIsActive(true);
+                specializations.add(specializationRepository.save(specialization));
+            }
+            // Cập nhật danh sách chuyên môn cho service
+            saved.setSpecializations(specializations);
+            saved = serviceRepository.save(saved);
+        }
         return modelMapper.map(saved, ServiceDTO.class);
     }
 
-    public void deleteService(Long id) {
-        serviceRepository.deleteById(id);
-    }
-
     public ServiceDTO updateService(Long id, ServiceDTO serviceDTO) {
-        return serviceRepository.findById(id).map(existing -> {
-            modelMapper.map(serviceDTO, existing); // Copy fields from dto to existing entity
-            Service updated = serviceRepository.save(existing);
-            return modelMapper.map(updated, ServiceDTO.class);
-        }).orElseThrow(() -> new RuntimeException("Không tìm thấy ID này: " + id));
+        Service service = serviceRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + id));
 
+        // Cập nhật các thông tin cơ bản
+        if (serviceDTO.getName() != null) {
+            service.setName(serviceDTO.getName());
+        }
+        if (serviceDTO.getDescription() != null) {
+            service.setDescription(serviceDTO.getDescription());
+        }
+        if (serviceDTO.getDuration() != null) {
+            service.setDuration(serviceDTO.getDuration());
+        }
+        if (serviceDTO.getType() != null) {
+            service.setType(serviceDTO.getType());
+        }
+        if (serviceDTO.getPrice() != null) {
+            service.setPrice(serviceDTO.getPrice());
+        }
+        if (serviceDTO.getDiscountPercent() != null) {
+            service.setDiscountPercent(serviceDTO.getDiscountPercent());
+        }
+        if (serviceDTO.getIsActive() != null) {
+            service.setIsActive(serviceDTO.getIsActive());
+        }
+
+        // Lưu service trước khi cập nhật specializations
+        Service saved = serviceRepository.save(service);
+        Service finalSaved = saved;
+        List<Specialization> newSpecializations = serviceDTO.getSpecializations().stream()
+                .map(specDTO -> {
+                    Specialization specialization = new Specialization();
+                    specialization.setName(specDTO.getName());
+                    specialization.setService(finalSaved);
+                    specialization.setIsActive(true);
+                    return specializationRepository.save(specialization);
+                })
+                .collect(Collectors.toList());
+
+        saved.setSpecializations(newSpecializations);
+        saved = serviceRepository.save(saved);
+
+
+        return modelMapper.map(saved, ServiceDTO.class);
     }
+
 
     public Service activateService(Long id) {
         Service service = serviceRepository.getById(id);
@@ -72,7 +126,7 @@ public class ServiceManagementService {
         return serviceRepository.save(service);
     }
 
-    public ComboResponse createComboService(ServiceRequest request) {
+    public ComboResponse createComboService(ServiceDTO request) {
         Service combo = new Service();
         combo.setName(request.getName());
         combo.setDescription(request.getDescription());
@@ -81,7 +135,21 @@ public class ServiceManagementService {
         combo.setType(request.getType());
         combo.setIsCombo(true);
         combo.setIsActive(true);
-        serviceRepository.save(combo);
+        Service saved = serviceRepository.save(combo);
+
+        List<Specialization> specializations = new ArrayList<>();
+        if (request.getSpecializations() != null && !request.getSpecializations().isEmpty()) {
+            for (SpecializationDTO specializationDTO : request.getSpecializations()) {
+                Specialization specialization = new Specialization();
+                specialization.setName(specializationDTO.getName());
+                specialization.setService(saved);
+                specialization.setIsActive(true);
+                specializations.add(specializationRepository.save(specialization));
+            }
+            // Cập nhật danh sách chuyên môn cho service
+            saved.setSpecializations(specializations);
+        }
+
         List<Long> subServices = request.getSubServiceIds();
         List<ComboItem> comboItems = new ArrayList<>();
         List<ServiceDTO> serviceDTOS = new ArrayList<>();
