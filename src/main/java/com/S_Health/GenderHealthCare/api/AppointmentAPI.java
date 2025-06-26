@@ -1,8 +1,10 @@
 package com.S_Health.GenderHealthCare.api;
 import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
+import com.S_Health.GenderHealthCare.entity.AppointmentAuditLog;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
+import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,8 @@ import java.util.List;
 public class AppointmentAPI {
     @Autowired
     AppointmentService appointmentService;
+    @Autowired
+    AppointmentAuditService auditService;
     @GetMapping("{id}")
     public ResponseEntity getAppointmentById(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.getAppointmentById(id));
@@ -64,5 +68,12 @@ public class AppointmentAPI {
     @GetMapping("/{appointmentId}/patient-history")
     public ResponseEntity getPatientHistory(@PathVariable Long appointmentId) {
         return ResponseEntity.ok(appointmentService.getPatientHistoryFromAppointment(appointmentId));
+    }
+
+    @GetMapping("/{id}/status-history")
+    @Operation(summary = "Lấy lịch sử thay đổi trạng thái của lịch hẹn", 
+               description = "Trả về danh sách các thay đổi trạng thái của lịch hẹn, bao gồm thông tin người thay đổi, thời gian và lý do")
+    public ResponseEntity<List<AppointmentAuditLog>> getAppointmentStatusHistory(@PathVariable Long id) {
+        return ResponseEntity.ok(auditService.getAuditLogsForAppointment(id));
     }
 }
