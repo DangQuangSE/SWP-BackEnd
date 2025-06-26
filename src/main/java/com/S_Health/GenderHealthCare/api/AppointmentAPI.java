@@ -39,7 +39,8 @@ public class AppointmentAPI {
 
     @GetMapping("/by-status")
     @Operation(summary = "Lấy danh sách lịch hẹn theo trạng thái", 
-               description = "Trả về danh sách lịch hẹn theo trạng thái (PENDING, BOOKED, CHECKED, COMPLETED, CANCELED). Kết quả phụ thuộc vào vai trò người dùng: khách hàng chỉ xem được lịch hẹn của mình, bác sĩ xem được lịch hẹn của bệnh nhân của họ, admin/staff xem được tất cả.")
+               description = "Trả về danh sách lịch hẹn theo trạng thái (PENDING, BOOKED, CHECKED, COMPLETED, CANCELED)." +
+                       " Kết quả phụ thuộc vào vai trò người dùng: khách hàng chỉ xem được lịch hẹn của mình, bác sĩ xem được lịch hẹn của bệnh nhân của họ, admin/staff xem được tất cả.")
     public ResponseEntity<List<AppointmentDTO>> getAppointmentsByStatus(
             @RequestParam AppointmentStatus status) {
         return ResponseEntity.ok(appointmentService.getAppointmentsByStatus(status));

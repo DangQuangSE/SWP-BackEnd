@@ -1,9 +1,6 @@
 package com.S_Health.GenderHealthCare.service.appointment;
 
-import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
-import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
-import com.S_Health.GenderHealthCare.dto.PatientHistoryDTO;
-import com.S_Health.GenderHealthCare.dto.ResultDTO;
+import com.S_Health.GenderHealthCare.dto.*;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
 import com.S_Health.GenderHealthCare.dto.response.MedicalProfileDTO;
 import com.S_Health.GenderHealthCare.entity.*;
@@ -20,8 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -343,4 +342,45 @@ public class AppointmentService {
                 })
                 .collect(Collectors.toList());
     }
+
+    public List<AppointmentDTO> getStaffAppointments(String status, Long doctorId, LocalDate date) {
+        List<Appointment> appointments = appointmentRepository.findByIsActiveTrue();
+
+        return appointments.stream()
+                .filter(a -> {
+                    if (status == null) return true;
+                    return a.getStatus() != null && a.getStatus().name().equals(status);
+                })
+                .filter(a -> {
+                    if (doctorId == null) return true;
+
+                    var consultant = a.getConsultant();
+                    if (consultant == null) return false;
+
+                    return doctorId.equals(consultant.getId());
+                })
+
+                .filter(a -> {
+                    if (date == null) return true;
+                    return a.getPreferredDate() != null && a.getPreferredDate().equals(date);
+                })
+                .map(a -> modelMapper.map(a, AppointmentDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    public AppointmentStatsDTO getAppointmentStats() {
+        List<Appointment> today = appointmentRepository.findByPreferredDate(LocalDate.now());
+
+        AppointmentStatsDTO stats = new AppointmentStatsDTO();
+        stats.setTotalToday(today.size());
+        stats.setPending((int) today.stream().filter(a -> a.getStatus() == AppointmentStatus.PENDING).count());
+        stats.setConfirmed((int) today.stream().filter(a -> a.getStatus() == AppointmentStatus.CONFIRMED).count());
+        stats.setCompleted((int) today.stream().filter(a -> a.getStatus() == AppointmentStatus.COMPLETED).count());
+        stats.setCanceled((int) today.stream().filter(a -> a.getStatus() == AppointmentStatus.CANCELED).count());
+        stats.setAbsent((int) today.stream().filter(a -> a.getStatus() == AppointmentStatus.ABSENT).count());
+
+        return stats;
+    }
+
+
 }

@@ -22,4 +22,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByCustomerAndStatusAndIsActiveTrue(User customer, AppointmentStatus status);
     List<Appointment> findByConsultantAndStatusAndIsActiveTrue(User customer, AppointmentStatus status);
     List<Appointment> findByStatusAndIsActiveTrue(AppointmentStatus status);
+    List<Appointment> findByIsActiveTrue();
+    List<Appointment> findByPreferredDate(LocalDate preferredDate);
+    List<Appointment> findByConsultantIdAndPreferredDateAndIsActiveTrue(Long consultantId, LocalDate preferredDate);
 }
