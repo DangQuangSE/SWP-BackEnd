@@ -1,78 +1,78 @@
 package com.S_Health.GenderHealthCare.api;
 
+
 import com.S_Health.GenderHealthCare.dto.ServiceDTO;
-import com.S_Health.GenderHealthCare.dto.request.service.ServiceRequest;
-import com.S_Health.GenderHealthCare.entity.Service;
+import com.S_Health.GenderHealthCare.dto.response.ComboResponse;
 import com.S_Health.GenderHealthCare.service.MedicalService.ServiceManagementService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.modelmapper.ModelMapper;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RequestMapping("/api/service")
 @RestController
+@RequestMapping("/api/services")
 @SecurityRequirement(name = "api")
 public class ServiceAPI {
-
     @Autowired
     ServiceManagementService serviceManagementService;
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @PostMapping
-    public ServiceDTO createService(@RequestBody ServiceDTO serviceDTO) {
-        return serviceManagementService.createService(serviceDTO);
-    }
 
     @GetMapping
-    public List<ServiceDTO> getAllServices() {
-        return serviceManagementService.getAllServices();
+    @Operation(summary = "Lấy danh sách dịch vụ", description = "Lấy danh sách tất cả các dịch vụ đang hoạt động")
+    public ResponseEntity<List<ServiceDTO>> getAllServices() {
+        return ResponseEntity.ok(serviceManagementService.getAllServices());
     }
 
-    @GetMapping("/id/{id}")
+    @GetMapping("/{id}")
+    @Operation(summary = "Lấy dịch vụ theo ID", description = "Lấy thông tin chi tiết của dịch vụ theo ID")
     public ResponseEntity<ServiceDTO> getServiceById(@PathVariable Long id) {
-        return serviceManagementService.getServiceById((long) id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-
+        return ResponseEntity.ok(serviceManagementService.getServiceById(id));
     }
 
-    @GetMapping("/name/{name}")
-    public ResponseEntity<List<ServiceDTO>> getServiceByName(@PathVariable String name) {
-        List<ServiceDTO> results = serviceManagementService.getServiceByName(name);
-        if (results.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(results);
+    @GetMapping("/search")
+    @Operation(summary = "Tìm kiếm dịch vụ theo tên", description = "Tìm kiếm dịch vụ theo tên (không phân biệt hoa thường)")
+    public ResponseEntity<List<ServiceDTO>> searchServicesByName(@RequestParam String name) {
+        return ResponseEntity.ok(serviceManagementService.searchServicesByName(name));
+    }
+
+    @GetMapping("/specialization/{specializationId}")
+    @Operation(summary = "Lấy dịch vụ theo chuyên môn", description = "Lấy danh sách dịch vụ theo ID chuyên môn")
+    public ResponseEntity<List<ServiceDTO>> getServicesBySpecialization(@PathVariable Long specializationId) {
+        return ResponseEntity.ok(serviceManagementService.getServicesBySpecialization(specializationId));
+    }
+
+    @PostMapping
+    @Operation(summary = "Tạo dịch vụ mới", description = "Tạo dịch vụ mới với các thông tin cơ bản và chuyên môn")
+    public ResponseEntity<ServiceDTO> createService(@Valid @RequestBody ServiceDTO serviceDTO) {
+        return ResponseEntity.ok(serviceManagementService.createService(serviceDTO));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ServiceDTO> updateService(@PathVariable long id, @RequestBody ServiceDTO serviceDTO) {
-        try{
-            ServiceDTO updated = serviceManagementService.updateService(id, serviceDTO);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<ServiceDTO> activateService(@PathVariable Long id) {
-        Service service = serviceManagementService.activateService(id);
-        ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
-        return ResponseEntity.ok(serviceDTO);
+    @Operation(summary = "Cập nhật dịch vụ", description = "Cập nhật thông tin dịch vụ")
+    public ResponseEntity<ServiceDTO> updateService(
+            @PathVariable Long id,
+            @Valid @RequestBody ServiceDTO serviceDTO) {
+        return ResponseEntity.ok(serviceManagementService.updateService(id, serviceDTO));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ServiceDTO> deactivateService(@PathVariable Long id) {
-        Service service = serviceManagementService.deactivateService(id);
-        ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
-        return ResponseEntity.ok(serviceDTO);
+    @PutMapping("/{id}/activate")
+    @Operation(summary = "Kích hoạt dịch vụ", description = "Kích hoạt dịch vụ đã bị vô hiệu hóa")
+    public ResponseEntity<ServiceDTO> activateService(@PathVariable Long id) {
+        return ResponseEntity.ok(serviceManagementService.activateService(id));
     }
-    @PostMapping("/comboService")
-    public ResponseEntity createComboService(@RequestBody ServiceRequest request){
-        return ResponseEntity.ok(serviceManagementService.createComboService(request));
+
+    @PutMapping("/{id}/deactivate")
+    @Operation(summary = "Vô hiệu hóa dịch vụ", description = "Vô hiệu hóa dịch vụ (soft delete)")
+    public ResponseEntity<ServiceDTO> deactivateService(@PathVariable Long id) {
+        return ResponseEntity.ok(serviceManagementService.deactivateService(id));
+    }
+
+    @PostMapping("/combo")
+    @Operation(summary = "Tạo gói dịch vụ", description = "Tạo gói dịch vụ kết hợp từ nhiều dịch vụ riêng lẻ")
+    public ResponseEntity<ComboResponse> createComboService(@Valid @RequestBody ServiceDTO serviceDTO) {
+        return ResponseEntity.ok(serviceManagementService.createComboService(serviceDTO));
     }
 }

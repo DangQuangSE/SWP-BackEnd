@@ -1,42 +1,41 @@
 package com.S_Health.GenderHealthCare.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 
 @Entity
 @Getter
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Room {
+public class RoomConsultant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id;
-    String name;
-    String description;
-    String location;
-    int capacity;
-    String facilities;
-    LocalTime openTime;
-    LocalTime closeTime;
+
     @ManyToOne
-    @JoinColumn(name = "specialization_id")
-    Specialization specialization;
+    @JoinColumn(name = "room_id")
+    Room room;
+
+    @ManyToOne
+    @JoinColumn(name = "consultant_id")
+    User consultant;
+    LocalTime startTime;
+    LocalTime endTime;
+
     boolean isActive = true;
+
     @CreationTimestamp
     LocalDateTime createdAt;
+
     @UpdateTimestamp
     LocalDateTime updatedAt;
 }

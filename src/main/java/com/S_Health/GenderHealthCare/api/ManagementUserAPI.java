@@ -19,7 +19,7 @@ public class ManagementUserAPI {
     @Autowired
     ManageUserService manageUserService;
     @PostMapping("/user")
-    public ResponseEntity createStaffAccount(
+    public ResponseEntity createAccount(
             @Valid @RequestBody CreateUserRequest request) {
         return ResponseEntity.ok(manageUserService.createStaffAccount(request));
     }

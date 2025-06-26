@@ -2,57 +2,60 @@ package com.S_Health.GenderHealthCare.service;
 
 import com.S_Health.GenderHealthCare.dto.SpecializationDTO;
 import com.S_Health.GenderHealthCare.dto.request.SpecializationRequest;
-import com.S_Health.GenderHealthCare.entity.Service;
 import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
-import com.S_Health.GenderHealthCare.repository.ServiceRepository;
 import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Service
-
 public class SpecializationService {
     @Autowired
     SpecializationRepository specializationRepository;
-    @Autowired
-    ServiceRepository serviceRepository;
+
     @Autowired
     ModelMapper modelMapper;
 
     public List<SpecializationDTO> getAllSpecializations() {
-        return specializationRepository.findAll().stream()
-                .map(entity -> modelMapper.map(entity, SpecializationDTO.class))
+        return specializationRepository.findByIsActiveTrue().stream()
+                .map(specialization -> modelMapper.map(specialization, SpecializationDTO.class))
                 .collect(Collectors.toList());
     }
 
     public SpecializationDTO getSpecializationById(Long id) {
-        return specializationRepository.findById(id)
-                .map(entity -> modelMapper.map(entity, SpecializationDTO.class))
+        Specialization specialization = specializationRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + id));
+
+        if (!specialization.getIsActive()) {
+            throw new BadRequestException("Chuyên môn không hoạt động");
+        }
+
+        return modelMapper.map(specialization, SpecializationDTO.class);
     }
 
-    public List<SpecializationDTO> getSpecializationsByServiceId(Long serviceId) {
-        return specializationRepository.findByServiceId(serviceId).stream()
-                .map(entity -> modelMapper.map(entity, SpecializationDTO.class))
+    public List<SpecializationDTO> searchSpecializationsByName(String name) {
+        return specializationRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(name).stream()
+                .map(specialization -> modelMapper.map(specialization, SpecializationDTO.class))
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public SpecializationDTO createSpecialization(SpecializationRequest request) {
-        Service service = serviceRepository.findById(request.getServiceId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + request.getServiceId()));
+        // Kiểm tra tên chuyên môn có bị trùng không
+        if (specializationRepository.existsByNameAndIsActiveTrue(request.getName().trim())) {
+            throw new BadRequestException("Tên chuyên môn đã tồn tại");
+        }
 
         Specialization specialization = new Specialization();
         specialization.setName(request.getName().trim());
-        specialization.setService(service);
+        specialization.setDescription(request.getDescription());
+        specialization.setIsActive(true);
 
-        return modelMapper.map(specializationRepository.save(specialization), SpecializationDTO.class);
+        Specialization savedSpecialization = specializationRepository.save(specialization);
+        return modelMapper.map(savedSpecialization, SpecializationDTO.class);
     }
 
     @Transactional
@@ -60,23 +63,48 @@ public class SpecializationService {
         Specialization specialization = specializationRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + id));
 
-        Service service = serviceRepository.findById(request.getServiceId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + request.getServiceId()));
+        if (!specialization.getIsActive()) {
+            throw new BadRequestException("Không thể cập nhật chuyên môn đã bị xóa");
+        }
+
+        // Kiểm tra xem tên chuyên môn mới có trùng với chuyên môn khác không
+        if (!specialization.getName().equalsIgnoreCase(request.getName().trim()) &&
+                specializationRepository.existsByNameAndIsActiveTrue(request.getName().trim())) {
+            throw new BadRequestException("Tên chuyên môn đã tồn tại");
+        }
 
         specialization.setName(request.getName().trim());
-        specialization.setService(service);
+        specialization.setDescription(request.getDescription());
 
-        return modelMapper.map(specializationRepository.save(specialization), SpecializationDTO.class);
+        Specialization updatedSpecialization = specializationRepository.save(specialization);
+        return modelMapper.map(updatedSpecialization, SpecializationDTO.class);
     }
+
     @Transactional
     public void deleteSpecialization(Long id) {
         Specialization specialization = specializationRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + id));
 
-        if (specialization.getConsultants() != null && !specialization.getConsultants().isEmpty()) {
-            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các consultant");
+        if (!specialization.getIsActive()) {
+            throw new BadRequestException("Chuyên môn đã bị xóa trước đó");
         }
-        specialization.setActive(false);
+
+        // Kiểm tra xem chuyên môn có được sử dụng không
+        if (!specialization.getServices().isEmpty()) {
+            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các dịch vụ");
+        }
+
+        if (!specialization.getConsultants().isEmpty()) {
+            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các bác sĩ");
+        }
+
+        if (!specialization.getRooms().isEmpty()) {
+            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các phòng");
+        }
+
+        specialization.setIsActive(false);
         specializationRepository.save(specialization);
     }
 }
+
+
