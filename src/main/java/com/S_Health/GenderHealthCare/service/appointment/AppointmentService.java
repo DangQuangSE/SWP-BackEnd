@@ -11,6 +11,7 @@ import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
+import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -41,6 +42,8 @@ public class AppointmentService {
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
+    @Autowired
+    AppointmentAuditService auditService;
 
 
     public AppointmentDTO getAppointmentById(long id) {
@@ -114,7 +117,18 @@ public class AppointmentService {
         //  Các thuộc tính chỉ có staff/admin được sửa
         if (isPrivileged) {
             if (request.getStatus() != null) {
-                appointment.setStatus(request.getStatus());
+                AppointmentStatus oldStatus = appointment.getStatus();
+                if (!oldStatus.equals(request.getStatus())) {
+                    // Ghi log thay đổi trạng thái
+                    auditService.logStatusChange(
+                        appointmentId,
+                        oldStatus,
+                        request.getStatus(),
+                        user,
+                        "Cập nhật trạng thái qua API updateAppointment"
+                    );
+                    appointment.setStatus(request.getStatus());
+                }
             }
             if (request.getConsultantId() != null) {
                 User consultant = authenticationRepository.findById(request.getConsultantId())
@@ -142,6 +156,15 @@ public class AppointmentService {
         appointmentDetailRepository.saveAll(details);
         appointment.setIsActive(false);
         appointmentRepository.save(appointment);
+        User currentUser = authUtil.getCurrentUser();
+        AppointmentStatus oldStatus = appointment.getStatus();
+        auditService.logStatusChange(
+                id,
+                oldStatus,
+                AppointmentStatus.DELETED,
+                currentUser,
+                "Xóa lịch hẹn"
+        );
     }
 
     public void cancelAppointment(Long id) {
@@ -151,6 +174,9 @@ public class AppointmentService {
         if (appointment.getStatus() == AppointmentStatus.CANCELED) {
             throw new BadRequestException("Lịch hẹn đã bị hủy trước đó.");
         }
+
+        AppointmentStatus oldStatus = appointment.getStatus();
+
         // Đánh dấu các AppointmentDetail là không hoạt động
         List<AppointmentDetail> details = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
         for (AppointmentDetail detail : details) {
@@ -165,6 +191,7 @@ public class AppointmentService {
         // Cập nhật trạng thái lịch hẹn
         appointment.setStatus(AppointmentStatus.CANCELED);
         appointment.setIsActive(false);
+        appointment.setUpdate_at(LocalDateTime.now());
         // Hoàn slot: ServiceSlotPool
         ServiceSlotPool slot = appointment.getServiceSlotPool();
         if (slot != null) {
@@ -173,6 +200,16 @@ public class AppointmentService {
             serviceSlotPoolRepository.save(slot);
         }
         appointmentRepository.save(appointment);
+
+        // Ghi log thay đổi trạng thái
+        User currentUser = authUtil.getCurrentUser();
+        auditService.logStatusChange(
+            id,
+            oldStatus,
+            AppointmentStatus.CANCELED,
+            currentUser,
+            "Hủy lịch hẹn"
+        );
     }
 
     public void checkInAppointment(Long id) {
@@ -182,7 +219,10 @@ public class AppointmentService {
             throw new BadRequestException("Lịch hẹn này đã được check in!");
         }
         try {
+            AppointmentStatus oldStatus = appointment.getStatus();
             appointment.setStatus(AppointmentStatus.CHECKED);
+            appointment.setUpdate_at(LocalDateTime.now());
+
             List<AppointmentDetail> appointmentDetails = appointmentDetailRepository.findByAppointment(appointment);
 
             for (AppointmentDetail appointmentDetail : appointmentDetails) {
@@ -191,6 +231,16 @@ public class AppointmentService {
             }
 
             appointmentRepository.save(appointment);
+
+            // Ghi log thay đổi trạng thái
+            User currentUser = authUtil.getCurrentUser();
+            auditService.logStatusChange(
+                id,
+                oldStatus,
+                AppointmentStatus.CHECKED,
+                currentUser,
+                "Check-in lịch hẹn"
+            );
         } catch (Exception e) {
             throw new BadRequestException("Không thể cập nhật trạng thái lịch hẹn: " + e.getMessage());
         }
