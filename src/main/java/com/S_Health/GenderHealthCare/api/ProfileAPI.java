@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ public class ProfileAPI {
     UserService userService;
 
     @PutMapping("/profile")
+    @Operation(summary = "Cập nhật thông tin cá nhân")
     public ResponseEntity<UserDTO> updateProfile(
             @Valid @RequestBody UserDTO request) {
         UserDTO updatedUser = userService.updateUserProfile(request);
