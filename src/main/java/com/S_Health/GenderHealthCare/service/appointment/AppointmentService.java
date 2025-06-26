@@ -180,7 +180,6 @@ public class AppointmentService {
         // Đánh dấu các AppointmentDetail là không hoạt động
         List<AppointmentDetail> details = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
         for (AppointmentDetail detail : details) {
-            detail.setIsActive(false);
             ConsultantSlot consultantSlot = consultantSlotRepository
                     .findByConsultantAndDateAndStartTimeAndIsActiveTrue(detail.getConsultant(), detail.getSlotTime().toLocalDate(), detail.getSlotTime().toLocalTime());
             consultantSlot.setCurrentBooking(consultantSlot.getCurrentBooking() - 1);
@@ -190,7 +189,6 @@ public class AppointmentService {
         appointmentDetailRepository.saveAll(details);
         // Cập nhật trạng thái lịch hẹn
         appointment.setStatus(AppointmentStatus.CANCELED);
-        appointment.setIsActive(false);
         appointment.setUpdate_at(LocalDateTime.now());
         // Hoàn slot: ServiceSlotPool
         ServiceSlotPool slot = appointment.getServiceSlotPool();
