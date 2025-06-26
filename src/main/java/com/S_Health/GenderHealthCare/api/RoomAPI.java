@@ -19,7 +19,7 @@ import java.util.List;
 @SecurityRequirement(name = "api")
 public class RoomAPI {
     @Autowired
-    private RoomService roomService;
+     RoomService roomService;
 
     @PostMapping
     @Operation(summary = "Tạo phòng mới", description = "Tạo phòng mới với chuyên môn cụ thể")
@@ -34,7 +34,7 @@ public class RoomAPI {
     }
 
     @GetMapping("/specialization/{specializationId}")
-    @Operation(summary = "Lấy phòng theo chuyên môn", description = "Lấy danh sách các phòng theo chuyên môn")
+    @Operation(summary = "Lấy phòng theo chuyên môn", description = "Lấy danh sách các phòng theo chuyên môn cụ thể")
     public ResponseEntity<List<RoomDTO>> getRoomsBySpecialization(@PathVariable Long specializationId) {
         return ResponseEntity.ok(roomService.getRoomsBySpecialization(specializationId));
     }

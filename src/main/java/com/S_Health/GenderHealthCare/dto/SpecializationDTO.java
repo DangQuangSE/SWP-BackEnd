@@ -1,17 +1,15 @@
 package com.S_Health.GenderHealthCare.dto;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SpecializationDTO {
-     long id;
-     String name;
-     Long serviceId;
-     String serviceName;
-     int consultantCount;
+    private Long id;
+    private String name;
+    private String description;
+    private Boolean isActive;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

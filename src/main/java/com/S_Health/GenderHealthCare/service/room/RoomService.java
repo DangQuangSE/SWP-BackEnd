@@ -193,8 +193,8 @@ public class RoomService {
         if (!hasSpecialization) {
             throw new BadRequestException("Bác sĩ không có chuyên môn phù hợp với phòng này");
         }
-        if (roomConsultantRepository.existsByRoomAndConsultantAndWorkingDayAndStartTimeAndEndTimeAndIsActiveTrue(
-                room, consultant, request.getWorkingDay(), request.getStartTime(), request.getEndTime())) {
+        if (roomConsultantRepository.existsByRoomAndConsultantAndStartTimeAndEndTimeAndIsActiveTrue(
+                room, consultant, request.getStartTime(), request.getEndTime())) {
             throw new BadRequestException("Lịch làm việc này đã tồn tại");
         }
         RoomConsultant roomConsultant = new RoomConsultant();

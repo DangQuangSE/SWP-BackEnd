@@ -2,30 +2,26 @@ package com.S_Health.GenderHealthCare.dto.request.room;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalTime;
 
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoomRequest {
     @NotBlank(message = "Room name is required")
-    private String name;
-
-    private String description;
-
+    String name;
+    String description;
     @NotBlank(message = "Room location is required")
-    private String location;
-
-    private int capacity;
-
-    private String facilities;
-
+    String location;
+    int capacity;
+    String facilities;
     @NotNull(message = "Open time is required")
-    private LocalTime openTime;
-
+    LocalTime openTime;
     @NotNull(message = "Close time is required")
-    private LocalTime closeTime;
-
-    @NotNull(message = "Specialization ID is required")
-    private Long specializationId;
+    LocalTime closeTime;
+    @NotNull(message = "ID chuyên môn không được để trống")
+    Long specializationId;
 }

@@ -97,8 +97,9 @@ public class ServiceSlotPoolService {
         ServiceDTO serviceDTO = modelMapper.map(service, ServiceDTO.class);
         return new ScheduleServiceResponse(serviceDTO, schedule);
     }
+
     public List<User> getConsultantInSpecialization(long service_id) {
-        List<Specialization> specializations = specializationRepository.findByServiceId(service_id);
+        List<Specialization> specializations = specializationRepository.findByServicesIdAndIsActiveTrue(service_id);
         List<Long> specializationIds = specializations.stream().map(Specialization::getId).toList();
         List<User> consultants = userRepository.findBySpecializations_IdIn(specializationIds);
         return consultants;
