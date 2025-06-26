@@ -51,10 +51,10 @@ public class AppointmentService {
         List<AppointmentDetailDTO> detailDTOS = new ArrayList<>();
         //lấy ra danh sách result
         for (AppointmentDetail appointmentDT : appointmentDetails) {
-            MedicalResult medicalResult = medicalResultRepository.findByAppointmentDetail(appointmentDT)
-                    .orElseThrow(() -> new BadRequestException("Không có kết quả!"));
+            //MedicalResult medicalResult = medicalResultRepository.findByAppointmentDetail(appointmentDT).orElseThrow();
+
             AppointmentDetailDTO detailDTO = modelMapper.map(appointmentDT, AppointmentDetailDTO.class);
-            detailDTO.setMedicalResult(modelMapper.map(medicalResult, ResultDTO.class));
+            //detailDTO.setMedicalResult(modelMapper.map(medicalResult, ResultDTO.class));
             detailDTOS.add(detailDTO);
         }
         AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
@@ -255,10 +255,9 @@ public class AppointmentService {
         User currentUser = authUtil.getCurrentUser();
         List<Appointment> appointments;
         if (currentUser.getRole() == UserRole.CONSULTANT) {
-            // Lấy các cuộc hẹn mà consultant này phụ trách
+            System.out.println(currentUser.getUsername());
             appointments = appointmentRepository.findByConsultantAndStatusAndIsActiveTrue(currentUser, status);
         } else if (currentUser.getRole() == UserRole.CUSTOMER) {
-            // Lấy các cuộc hẹn của khách hàng này
             appointments = appointmentRepository.findByCustomerAndStatusAndIsActiveTrue(currentUser, status);
         } else {
             // Admin hoặc Staff có thể xem tất cả
