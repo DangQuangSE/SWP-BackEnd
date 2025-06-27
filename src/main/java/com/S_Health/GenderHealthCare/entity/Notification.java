@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.S_Health.GenderHealthCare.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -38,8 +39,10 @@ public class Notification {
     private String content;
 
     @Column(name = "is_read")
-    private Boolean isRead;
+    private Boolean isRead = false;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    NotificationType type;
 }
