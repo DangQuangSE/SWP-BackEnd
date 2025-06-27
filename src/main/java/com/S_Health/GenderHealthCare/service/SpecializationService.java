@@ -97,11 +97,6 @@ public class SpecializationService {
         if (!specialization.getConsultants().isEmpty()) {
             throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các bác sĩ");
         }
-
-        if (!specialization.getRooms().isEmpty()) {
-            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các phòng");
-        }
-
         specialization.setIsActive(false);
         specializationRepository.save(specialization);
     }

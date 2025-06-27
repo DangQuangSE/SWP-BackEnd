@@ -34,8 +34,6 @@ public class ServiceSlotPoolService {
     @Autowired
     ServiceSlotPoolRepository serviceSlotPoolRepository;
     @Autowired
-    AppointmentDetailRepository appointmentDetailRepository;
-    @Autowired
     ConsultantSlotRepository consultantSlotRepository;
 
     public ScheduleServiceResponse getSlotFreeService(ScheduleServiceRequest request) {

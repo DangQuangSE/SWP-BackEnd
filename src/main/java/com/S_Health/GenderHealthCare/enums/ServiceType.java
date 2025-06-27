@@ -4,7 +4,7 @@ public enum ServiceType {
     CONSULTING,
     CONSULTING_ON,// Tư vấn
     TESTING_OFF,       // Xét nghiệm tại cơ sở
-    TESTING_ON,        // Xét nghiệm trực tuyến
+    //TESTING_ON,        // Xét nghiệm trực tuyến
     TREATMENT,         // Điều trị
     EXAMINATION,       // Khám bệnh
     DIAGNOSIS,         // Chẩn đoán
