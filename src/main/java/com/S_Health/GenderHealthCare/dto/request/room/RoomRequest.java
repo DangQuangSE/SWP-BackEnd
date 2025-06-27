@@ -16,12 +16,6 @@ public class RoomRequest {
     String description;
     @NotBlank(message = "Room location is required")
     String location;
-    int capacity;
-    String facilities;
-    @NotNull(message = "Open time is required")
-    LocalTime openTime;
-    @NotNull(message = "Close time is required")
-    LocalTime closeTime;
     @NotNull(message = "ID chuyên môn không được để trống")
     Long specializationId;
 }

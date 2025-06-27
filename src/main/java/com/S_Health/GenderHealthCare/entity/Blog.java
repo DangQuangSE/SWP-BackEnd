@@ -23,6 +23,8 @@ public class Blog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String title;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     String content;
     String imgUrl;
     int viewCount = 0;
