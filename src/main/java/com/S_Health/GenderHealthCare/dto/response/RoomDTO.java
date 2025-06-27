@@ -12,11 +12,6 @@ public class RoomDTO {
     private long id;
     private String name;
     private String description;
-    private String location;
-    private int capacity;
-    private String facilities;
-    private LocalTime openTime;
-    private LocalTime closeTime;
     private SpecializationDTO specialization;
     private List<RoomConsultantDTO> consultants;
     private boolean isActive;

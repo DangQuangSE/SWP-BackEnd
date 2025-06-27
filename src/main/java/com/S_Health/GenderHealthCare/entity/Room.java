@@ -26,7 +26,6 @@ public class Room {
     long id;
     String name;
     String description;
-    String location;
     @ManyToOne
     @JoinColumn(name = "specialization_id")
     Specialization specialization;
