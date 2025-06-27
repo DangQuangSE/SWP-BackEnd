@@ -52,20 +52,11 @@ public class RoomService {
             throw new BadRequestException("Phòng với tên này đã tồn tại");
         }
 
-        if (request.getOpenTime().isAfter(request.getCloseTime())) {
-            throw new BadRequestException("Giờ mở cửa phải trước giờ đóng cửa");
-        }
-
         Specialization specialization = specializationRepository.findById(request.getSpecializationId())
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn"));
         Room room = new Room();
         room.setName(request.getName());
         room.setDescription(request.getDescription());
-        room.setLocation(request.getLocation());
-        room.setCapacity(request.getCapacity());
-        room.setFacilities(request.getFacilities());
-        room.setOpenTime(request.getOpenTime());
-        room.setCloseTime(request.getCloseTime());
         room.setSpecialization(specialization);
         room.setActive(true);
 
@@ -113,11 +104,6 @@ public class RoomService {
                 roomRepository.existsByNameAndIsActiveTrue(request.getName())) {
             throw new BadRequestException("Phòng với tên này đã tồn tại");
         }
-
-        if (request.getOpenTime().isAfter(request.getCloseTime())) {
-            throw new BadRequestException("Giờ mở cửa phải trước giờ đóng cửa");
-        }
-
         // Get specialization if changed
         if (!(room.getSpecialization().getId() == (request.getSpecializationId()))) {
             Specialization specialization = specializationRepository.findById(request.getSpecializationId())
@@ -127,11 +113,6 @@ public class RoomService {
 
         room.setName(request.getName());
         room.setDescription(request.getDescription());
-        room.setLocation(request.getLocation());
-        room.setCapacity(request.getCapacity());
-        room.setFacilities(request.getFacilities());
-        room.setOpenTime(request.getOpenTime());
-        room.setCloseTime(request.getCloseTime());
         room.setUpdatedAt(LocalDateTime.now());
 
         Room updatedRoom = roomRepository.save(room);
@@ -174,12 +155,6 @@ public class RoomService {
         if (request.getStartTime().isAfter(request.getEndTime())) {
             throw new BadRequestException("Giờ bắt đầu phải trước giờ kết thúc");
         }
-
-        if (request.getStartTime().isBefore(room.getOpenTime()) ||
-                request.getEndTime().isAfter(room.getCloseTime())) {
-            throw new BadRequestException("Thời gian làm việc phải nằm trong giờ hoạt động của phòng");
-        }
-
         User consultant = authenticationRepository.findById(request.getConsultantId())
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy bác sĩ"));
 

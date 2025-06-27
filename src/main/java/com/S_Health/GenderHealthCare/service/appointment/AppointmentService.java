@@ -213,9 +213,6 @@ public class AppointmentService {
     public void checkInAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
-        if (appointment.getStatus() == AppointmentStatus.CHECKED) {
-            throw new BadRequestException("Lịch hẹn này đã được check in!");
-        }
         try {
             AppointmentStatus oldStatus = appointment.getStatus();
             appointment.setStatus(AppointmentStatus.CHECKED);

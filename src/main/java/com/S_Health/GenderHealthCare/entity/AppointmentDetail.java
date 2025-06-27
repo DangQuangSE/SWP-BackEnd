@@ -36,6 +36,9 @@ public class AppointmentDetail {
     @Column(length = 20)
     AppointmentStatus status = AppointmentStatus.PENDING;
 
+    String joinUrl;
+    String startUrl;
+
     @OneToOne(mappedBy = "appointmentDetail")
     MedicalResult medicalResult;
     Boolean isActive = true;

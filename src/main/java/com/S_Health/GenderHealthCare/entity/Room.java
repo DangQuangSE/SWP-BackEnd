@@ -26,11 +26,6 @@ public class Room {
     long id;
     String name;
     String description;
-    String location;
-    int capacity;
-    String facilities;
-    LocalTime openTime;
-    LocalTime closeTime;
     @ManyToOne
     @JoinColumn(name = "specialization_id")
     Specialization specialization;

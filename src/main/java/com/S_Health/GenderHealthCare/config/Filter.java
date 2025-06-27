@@ -41,7 +41,8 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
-            "POST:/api/payment/vnpay/**"
+            "POST:/api/payment/vnpay/**",
+            "POST:/api/zoom/**"
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
 //            "POST:/api/swagger-resources/**"
