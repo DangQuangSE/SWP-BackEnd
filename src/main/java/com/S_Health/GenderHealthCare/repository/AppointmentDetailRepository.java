@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AppointmentDetailRepository extends JpaRepository<AppointmentDetail, Long> {
@@ -21,4 +22,5 @@ public interface AppointmentDetailRepository extends JpaRepository<AppointmentDe
 //    int countByServiceIdAndDateAndStartTime(@Param("serviceId") Long serviceId, @Param("slotTime") LocalDateTime startTime);
     List<AppointmentDetail> findByAppointment(Appointment appointment);
     List<AppointmentDetail> findByAppointmentAndIsActiveTrue(Appointment appointment);
+    Optional<AppointmentDetail> findByAppointmentId(Long appointmentId);
 }

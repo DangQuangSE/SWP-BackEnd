@@ -108,4 +108,52 @@ public class EmailService {
         }
 
     }
+
+    public void sendUrlCurtomerZoom (String toEmail, String startTime, String joinUrl, String serviceName) {
+        try{
+
+            Context context = new Context();
+            context.setVariable("name", toEmail);
+            context.setVariable("startTime", startTime);
+            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("serviceName", serviceName);
+
+            String html = templateEngine.process("emailZoom", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[SHeathCare] Thông tin buổi tư vấn của bạn");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        }catch (Exception e){
+            System.out.println("Lỗi gửi email Zoom cho khách hàng: " + e.getMessage());
+        }
+    }
+
+    public void sendUrlConsultantZoom (String toEmail, String startTime, String joinUrl, String serviceName) {
+        try{
+
+            Context context = new Context();
+            context.setVariable("name", toEmail);
+            context.setVariable("startTime", startTime);
+            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("serviceName", serviceName);
+
+            String html = templateEngine.process("ConsultantZoom", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[SHeathCare] Thông tin buổi tư vấn của bạn");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        }catch (Exception e){
+            System.out.println("Lỗi gửi email Zoom cho bác sĩ: " + e.getMessage());
+        }
+    }
 }

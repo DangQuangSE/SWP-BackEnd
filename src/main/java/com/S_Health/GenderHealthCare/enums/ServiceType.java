@@ -1,7 +1,8 @@
 package com.S_Health.GenderHealthCare.enums;
 
 public enum ServiceType {
-    CONSULTING,        // Tư vấn
+    CONSULTING,
+    CONSULTING_ON,// Tư vấn
     TESTING_OFF,       // Xét nghiệm tại cơ sở
     TESTING_ON,        // Xét nghiệm trực tuyến
     TREATMENT,         // Điều trị
