@@ -33,7 +33,11 @@ public class AppointmentDetail {
 
     LocalDateTime slotTime;
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     AppointmentStatus status = AppointmentStatus.PENDING;
+
+    String joinUrl;
+    String startUrl;
 
     @OneToOne(mappedBy = "appointmentDetail")
     MedicalResult medicalResult;

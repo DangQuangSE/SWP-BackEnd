@@ -10,8 +10,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AuthUtil {
-    @Autowired
-    AuthenticationRepository authenticationRepository;
+
     public Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -24,6 +23,16 @@ public class AuthUtil {
         throw new AuthenticationException("Không thể lấy userId từ token");
     }
     public User getCurrentUser(){
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println(authentication);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AuthenticationException("Bạn chưa đăng nhập");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            System.out.println(user);
+            return user;
+        }
+        throw new AuthenticationException("Không thể xác thực người dùng hiện tại");
     }
 }

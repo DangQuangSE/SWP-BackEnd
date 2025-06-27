@@ -47,6 +47,7 @@ public class Appointment {
     Double price;
     String note;
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     AppointmentStatus status;
     @CreationTimestamp
     LocalDateTime created_at;
