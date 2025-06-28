@@ -180,15 +180,14 @@ public class AppointmentService {
         // Đánh dấu các AppointmentDetail là không hoạt động
         List<AppointmentDetail> details = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
         for (AppointmentDetail detail : details) {
-            // Add null check before using consultantSlot
+            detail.setStatus(AppointmentStatus.CANCELED);
             ConsultantSlot consultantSlot = consultantSlotRepository
                     .findByConsultantAndDateAndStartTimeAndIsActiveTrue(
                     detail.getConsultant(), 
                     detail.getSlotTime().toLocalDate(), 
                     detail.getSlotTime().toLocalTime()
                 );
-        
-        // Only update the slot if it's found
+
         if (consultantSlot != null) {
             consultantSlot.setCurrentBooking(consultantSlot.getCurrentBooking() - 1);
             consultantSlot.setAvailableBooking(consultantSlot.getAvailableBooking() + 1);
