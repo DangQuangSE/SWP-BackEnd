@@ -57,7 +57,7 @@ public class RoomService {
         Room room = new Room();
         room.setName(request.getName());
         room.setDescription(request.getDescription());
-        room.setLocation(request.getLocation());
+//        room.setLocation(request.getLocation());
         room.setSpecialization(specialization);
         room.setActive(true);
 
@@ -114,7 +114,7 @@ public class RoomService {
 
         room.setName(request.getName());
         room.setDescription(request.getDescription());
-        room.setLocation(request.getLocation());
+//        room.setLocation(request.getLocation());
         room.setUpdatedAt(LocalDateTime.now());
 
         Room updatedRoom = roomRepository.save(room);

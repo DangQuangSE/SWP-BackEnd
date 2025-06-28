@@ -51,7 +51,8 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
-            "/api/appointment/by-status"
+            "/api/appointment/by-status",
+            "/api/zoom/**"
     );
 
     public boolean isPulicApi(String uri, String method) {
