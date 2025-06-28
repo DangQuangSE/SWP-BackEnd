@@ -35,8 +35,9 @@ public class AppointmentDetail {
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     AppointmentStatus status = AppointmentStatus.PENDING;
-
+    @Column(columnDefinition = "TEXT")
     String joinUrl;
+    @Column(length = 1000)
     String startUrl;
 
     @OneToOne(mappedBy = "appointmentDetail")

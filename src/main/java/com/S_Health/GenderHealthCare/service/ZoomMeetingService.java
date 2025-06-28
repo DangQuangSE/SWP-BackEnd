@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class ZoomMeetingService {
@@ -47,8 +48,11 @@ public class ZoomMeetingService {
         }
 
         Long userId = authUtil.getCurrentUserId();
+        System.out.println(userId);
 
-        if(!appointment.getCustomer().equals(userId)) {
+        Long customerId = appointment.getCustomer().getId();
+
+        if(!(Objects.equals(userId, customerId))) {
             throw new AppException(" Bạn không có trong cuộc họp này");
         }
 
