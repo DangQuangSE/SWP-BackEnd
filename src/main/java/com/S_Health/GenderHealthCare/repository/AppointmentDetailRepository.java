@@ -13,13 +13,8 @@ import java.util.Optional;
 
 @Repository
 public interface AppointmentDetailRepository extends JpaRepository<AppointmentDetail, Long> {
-
-//    @Query("SELECT COUNT(a) FROM AppointmentDetail a WHERE a.consultant.id = :consultantId AND a.slotTime = :slotTime")
-//    int countByConsultant_idAndSlotTime(@Param("consultantId") Long consultantId, @Param("slotTime") LocalDateTime slotTime);
     boolean existsByAppointment_Customer_IdAndSlotTime(Long customerId, LocalDateTime slotTime );
     List<AppointmentDetail> findByConsultant_idAndSlotTime(Long customer_id, LocalDateTime slotTime);
-//    @Query("SELECT COUNT(a) FROM AppointmentDetail a WHERE a.service.id = :serviceId  AND a.slotTime = :slotTime")
-//    int countByServiceIdAndDateAndStartTime(@Param("serviceId") Long serviceId, @Param("slotTime") LocalDateTime startTime);
     List<AppointmentDetail> findByAppointment(Appointment appointment);
     List<AppointmentDetail> findByAppointmentAndIsActiveTrue(Appointment appointment);
     Optional<AppointmentDetail> findByAppointmentId(Long appointmentId);
