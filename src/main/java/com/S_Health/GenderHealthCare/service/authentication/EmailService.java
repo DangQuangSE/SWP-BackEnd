@@ -1,14 +1,21 @@
 package com.S_Health.GenderHealthCare.service.authentication;
 
+import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class EmailService {
@@ -18,6 +25,12 @@ public class EmailService {
 
     @Autowired
     private TemplateEngine templateEngine;
+
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
 
     public void sendOtp(String toEmail, String otp) {
@@ -154,6 +167,147 @@ public class EmailService {
             mailSender.send(message);
         }catch (Exception e){
             System.out.println("Lỗi gửi email Zoom cho bác sĩ: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Gửi email nhắc nhở lịch hẹn
+     */
+    public void sendAppointmentReminder(Appointment appointment) {
+        try {
+            if (appointment == null || appointment.getCustomer() == null || 
+                appointment.getCustomer().getEmail() == null) {
+                System.out.println("Không thể gửi email nhắc nhở: Thiếu thông tin lịch hẹn hoặc email khách hàng");
+                return;
+            }
+
+            String customerEmail = appointment.getCustomer().getEmail();
+            String customerName = appointment.getCustomer().getFullname();
+            String serviceName = appointment.getService() != null ? 
+                    appointment.getService().getName() : "Chưa xác định";
+
+            LocalDate appointmentDate = appointment.getPreferredDate();
+            LocalTime appointmentTime = appointment.getServiceSlotPool() != null ? 
+                    appointment.getServiceSlotPool().getStartTime() : LocalTime.of(0, 0);
+
+            String consultantName = appointment.getConsultant() != null ? 
+                    appointment.getConsultant().getFullname() : "Chưa xác định";
+
+            Context context = new Context();
+            context.setVariable("customerName", customerName);
+            context.setVariable("serviceName", serviceName);
+            context.setVariable("appointmentDate", appointmentDate.format(DATE_FORMATTER));
+            context.setVariable("appointmentTime", appointmentTime.format(TIME_FORMATTER));
+            context.setVariable("consultantName", consultantName);
+            context.setVariable("appointmentUrl", frontendUrl + "/appointments/" + appointment.getId());
+
+            String html = templateEngine.process("appointment-reminder", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(customerEmail);
+            helper.setSubject("[SHeathCare] Nhắc nhở lịch hẹn ngày mai");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+            System.out.println("Đã gửi email nhắc nhở lịch hẹn tới " + customerEmail);
+
+        } catch (Exception e) {
+            System.out.println("Lỗi gửi email nhắc nhở lịch hẹn: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Gửi email xác nhận lịch hẹn
+     */
+    public void sendAppointmentConfirmation(Appointment appointment) {
+        try {
+            if (appointment == null || appointment.getCustomer() == null || 
+                appointment.getCustomer().getEmail() == null) {
+                System.out.println("Không thể gửi email xác nhận: Thiếu thông tin lịch hẹn hoặc email khách hàng");
+                return;
+            }
+
+            String customerEmail = appointment.getCustomer().getEmail();
+            String customerName = appointment.getCustomer().getFullname();
+            String serviceName = appointment.getService() != null ? 
+                    appointment.getService().getName() : "Chưa xác định";
+
+            LocalDate appointmentDate = appointment.getPreferredDate();
+            LocalTime appointmentTime = appointment.getServiceSlotPool() != null ? 
+                    appointment.getServiceSlotPool().getStartTime() : LocalTime.of(0, 0);
+
+            String consultantName = appointment.getConsultant() != null ? 
+                    appointment.getConsultant().getFullname() : "Chưa xác định";
+
+            Context context = new Context();
+            context.setVariable("customerName", customerName);
+            context.setVariable("serviceName", serviceName);
+            context.setVariable("appointmentDate", appointmentDate.format(DATE_FORMATTER));
+            context.setVariable("appointmentTime", appointmentTime.format(TIME_FORMATTER));
+            context.setVariable("consultantName", consultantName);
+            context.setVariable("appointmentUrl", frontendUrl + "/appointments/" + appointment.getId());
+
+            String html = templateEngine.process("appointment-confirmation", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(customerEmail);
+            helper.setSubject("[SHeathCare] Xác nhận lịch hẹn");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+            System.out.println("Đã gửi email xác nhận lịch hẹn tới " + customerEmail);
+
+        } catch (Exception e) {
+            System.out.println("Lỗi gửi email xác nhận lịch hẹn: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Gửi email thông báo hủy lịch hẹn
+     */
+    public void sendAppointmentCancellation(Appointment appointment, String reason) {
+        try {
+            if (appointment == null || appointment.getCustomer() == null || 
+                appointment.getCustomer().getEmail() == null) {
+                System.out.println("Không thể gửi email hủy lịch: Thiếu thông tin lịch hẹn hoặc email khách hàng");
+                return;
+            }
+
+            String customerEmail = appointment.getCustomer().getEmail();
+            String customerName = appointment.getCustomer().getFullname();
+            String serviceName = appointment.getService() != null ? 
+                    appointment.getService().getName() : "Chưa xác định";
+
+            LocalDate appointmentDate = appointment.getPreferredDate();
+            LocalTime appointmentTime = appointment.getServiceSlotPool() != null ? 
+                    appointment.getServiceSlotPool().getStartTime() : LocalTime.of(0, 0);
+
+            Context context = new Context();
+            context.setVariable("customerName", customerName);
+            context.setVariable("serviceName", serviceName);
+            context.setVariable("appointmentDate", appointmentDate.format(DATE_FORMATTER));
+            context.setVariable("appointmentTime", appointmentTime.format(TIME_FORMATTER));
+            context.setVariable("reason", reason);
+            context.setVariable("bookingUrl", frontendUrl + "/booking");
+
+            String html = templateEngine.process("appointment-cancellation", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(customerEmail);
+            helper.setSubject("[SHeathCare] Thông báo hủy lịch hẹn");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+            System.out.println("Đã gửi email thông báo hủy lịch hẹn tới " + customerEmail);
+
+        } catch (Exception e) {
+            System.out.println("Lỗi gửi email hủy lịch hẹn: " + e.getMessage());
         }
     }
 }

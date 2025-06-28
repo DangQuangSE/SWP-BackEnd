@@ -12,6 +12,7 @@ import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
+import com.S_Health.GenderHealthCare.service.notification.NotificationService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -44,6 +45,8 @@ public class AppointmentService {
     AuthUtil authUtil;
     @Autowired
     AppointmentAuditService auditService;
+    @Autowired
+    NotificationService notificationService;
 
 
     public AppointmentDTO getAppointmentById(long id) {
@@ -128,6 +131,11 @@ public class AppointmentService {
                         "Cập nhật trạng thái qua API updateAppointment"
                     );
                     appointment.setStatus(request.getStatus());
+
+                    // Nếu trạng thái mới là BOOKED, gửi thông báo xác nhận
+                    if (request.getStatus() == AppointmentStatus.BOOKED) {
+                        notificationService.createAppointmentConfirmation(appointment);
+                    }
                 }
             }
             if (request.getConsultantId() != null) {
@@ -208,6 +216,9 @@ public class AppointmentService {
             currentUser,
             "Hủy lịch hẹn"
         );
+
+        // Gửi thông báo hủy lịch hẹn
+        notificationService.createAppointmentCancellation(appointment, "Lịch hẹn đã bị hủy bỏ");
     }
 
     public void checkInAppointment(Long id) {
