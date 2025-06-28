@@ -16,4 +16,5 @@ public interface ConsultantSlotRepository extends JpaRepository<ConsultantSlot, 
     List<ConsultantSlot> findByConsultantIdAndDateBetweenAndStatus(Long consultantId, LocalDate from, LocalDate to, SlotStatus status);
     Optional<ConsultantSlot> findByConsultantAndDateAndStartTimeAndStatus(User consultant, LocalDate date, LocalTime slot, SlotStatus status);
     List<ConsultantSlot> findByConsultantInAndDateBetweenAndStatus(List<User> consultants, LocalDate from, LocalDate to, SlotStatus status);
+    ConsultantSlot findByConsultantAndDateAndStartTimeAndIsActiveTrue(User consultant, LocalDate date, LocalTime slotTime);
 }

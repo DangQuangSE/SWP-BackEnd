@@ -7,6 +7,7 @@ import com.S_Health.GenderHealthCare.dto.response.payment.MomoResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.Payment;
 import com.S_Health.GenderHealthCare.entity.Transaction;
+import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
@@ -20,11 +21,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -52,6 +54,7 @@ public class MomoService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+    private final ScheduledExecutorService scheduledExecutorService;
     private final String requestType = "captureWallet";
 
     public MomoResponse createMomoPaymentUrl(Long appointmentId) throws Exception {
@@ -61,9 +64,18 @@ public class MomoService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
 
-        Optional<Payment> existing = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
-        if (existing.isPresent()) throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+        Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
+        if (paid.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+        }
 
+        // Tìm giao dịch thanh toán thất bại
+        Optional<Payment> failed = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.FAILED);
+        if (failed.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn đã huỷ.");
+        }
+
+//        BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
         BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
 
         long amount = price.longValue();// Số tiền thanh toán, ví dụ 10.000 VND
@@ -109,10 +121,11 @@ public class MomoService {
             Transaction transaction = Transaction.builder()
                     .orderId(orderId)
                     .requestId(requestId)
-                    .payUrl(response.getBody().getPayUrl())
+//                    .payUrl(response.getBody().getPayUrl())
                     .payment(payment)
                     .build();
             transactionRepository.save(transaction);
+            schedulePaymentTimeout(payment.getId());
 
             return response.getBody();
         }
@@ -145,18 +158,23 @@ public class MomoService {
                 return ResponseEntity.badRequest().body("Invalid signature");
             }
 
+            Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
+                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
+
+            Payment payment1 = transaction.getPayment();
+
             if (notify.getResultCode() != 0) {
-                Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
-                        .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
                 Payment payment = transaction.getPayment();
                 payment.setStatus(PaymentStatus.FAILED);
                 payment.setPaidAt(LocalDateTime.now());
                 paymentRepository.save(payment);
+
+                Appointment appointment = payment.getAppointment();
+                appointment.setStatus(AppointmentStatus.CANCELED);
+                appointmentRepository.save(appointment);
+
                 return ResponseEntity.ok("Giao dịch thất bại");
             }
-
-            Transaction transaction = transactionRepository.findByOrderId(notify.getOrderId())
-                    .orElseThrow(() -> new IllegalStateException("Không tìm thấy giao dịch"));
 
             Payment payment = transaction.getPayment();
             payment.setStatus(PaymentStatus.SUCCESS);
@@ -169,11 +187,35 @@ public class MomoService {
             transaction.setResponseTime(LocalDateTime.now());
             transactionRepository.save(transaction);
 
-            return ResponseEntity.ok("IPN OK");
+            Appointment appointment = payment.getAppointment();
+            appointment.setStatus(AppointmentStatus.CONFIRMED);
+            appointmentRepository.save(appointment);
+
+            return ResponseEntity.ok("Cập nhật thanh toán thành công");
 
         } catch (Exception e) {
             log.error("Lỗi xử lý IPN:", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("IPN Error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi xử lí");
         }
+    }
+
+    private void schedulePaymentTimeout(Long paymentId) {
+        scheduledExecutorService.schedule(() -> {
+            Optional<Payment> optionalPayment = paymentRepository.findById(paymentId);
+            if (optionalPayment.isPresent()) {
+                Payment payment = optionalPayment.get();
+                if (payment.getStatus() == PaymentStatus.PENDING) {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    payment.setPaidAt(LocalDateTime.now());
+
+                    Appointment appointment = payment.getAppointment();
+                    appointment.setStatus(AppointmentStatus.CANCELED);
+
+                    appointmentRepository.save(appointment);
+                    paymentRepository.save(payment);
+                    System.out.println("Payment " + paymentId + " bị huỷ do timeout sau 5 phút.");
+                }
+            }
+        }, 5, TimeUnit.MINUTES);
     }
 }

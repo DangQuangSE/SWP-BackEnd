@@ -23,6 +23,8 @@ public class Blog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String title;
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     String content;
     String imgUrl;
     int viewCount = 0;
@@ -38,4 +40,12 @@ public class Blog {
     LocalDateTime updatedAt;
     @OneToMany(mappedBy = "blog")
     List<Comment> comments;
+
+    @ManyToMany
+    @JoinTable(
+        name = "blog_tags",
+        joinColumns = @JoinColumn(name = "blog_id"),
+        inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    List<Tag> tags;
 }

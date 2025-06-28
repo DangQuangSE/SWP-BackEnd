@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.service.authentication;
 
+import com.S_Health.GenderHealthCare.enums.UserRole;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -86,4 +87,73 @@ public class EmailService {
         }
     }
 
+    public void sendWelcomeWithCredentials(String email, String randomPassword, UserRole role) {
+        try {
+            Context context = new Context();
+            context.setVariable("email", email);
+            context.setVariable("password", randomPassword);
+            context.setVariable("role", role.name());
+
+            String html = templateEngine.process("welcome-credentials", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(email);
+            helper.setSubject("Thông tin tài khoản " + role.name() + " - S-HealthCare");
+            helper.setText(html, true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.out.println("Lỗi gửi email: " + e.getMessage());
+        }
+
+    }
+
+    public void sendUrlCurtomerZoom (String toEmail, String startTime, String joinUrl, String serviceName) {
+        try{
+
+            Context context = new Context();
+            context.setVariable("name", toEmail);
+            context.setVariable("startTime", startTime);
+            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("serviceName", serviceName);
+
+            String html = templateEngine.process("emailZoom", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[SHeathCare] Thông tin buổi tư vấn của bạn");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        }catch (Exception e){
+            System.out.println("Lỗi gửi email Zoom cho khách hàng: " + e.getMessage());
+        }
+    }
+
+    public void sendUrlConsultantZoom (String toEmail, String startTime, String joinUrl, String serviceName) {
+        try{
+
+            Context context = new Context();
+            context.setVariable("name", toEmail);
+            context.setVariable("startTime", startTime);
+            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("serviceName", serviceName);
+
+            String html = templateEngine.process("ConsultantZoom", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("[SHeathCare] Thông tin buổi tư vấn của bạn");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+        }catch (Exception e){
+            System.out.println("Lỗi gửi email Zoom cho bác sĩ: " + e.getMessage());
+        }
+    }
 }

@@ -53,10 +53,12 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "consultant")
     @JsonIgnore
     List<Certification> certifications;
+
+    // Quan hệ nhiều-nhiều với Specialization (cho consultant)
     @ManyToMany
     @JoinTable(
-            name = "consultant_specialization",
-            joinColumns = @JoinColumn(name = "consultant_id"),
+            name = "user_specialization",
+            joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "specialization_id")
     )
     List<Specialization> specializations;
@@ -83,7 +85,11 @@ public class User implements UserDetails {
     List<Comment> comments;
     @OneToMany(mappedBy = "paidBy")
     List<Payment> payments;
+    @OneToMany(mappedBy = "consultant")
+    List<MedicalResult> medicalResults;
 
+    @OneToMany(mappedBy = "consultant")
+    List<RoomConsultant> roomAssignments;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -99,7 +105,8 @@ public class User implements UserDetails {
     public String getPassword() {
         return this.password;
     }
-    public long getId(){
+
+    public long getId() {
         return this.id;
     }
 

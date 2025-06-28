@@ -24,7 +24,8 @@ public class Transaction {
     String orderId;
     String responseMessage;
     int resultCode;
-    String payUrl;
+//    @Column(name = "pay_url", columnDefinition = "TEXT")
+//    String payUrl;
     LocalDateTime responseTime;
 
 

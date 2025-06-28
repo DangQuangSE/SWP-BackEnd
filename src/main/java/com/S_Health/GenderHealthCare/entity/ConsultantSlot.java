@@ -33,6 +33,7 @@ public class ConsultantSlot {
      int maxBooking;
      int currentBooking;
      int availableBooking;
+     Boolean isActive = true;
     @Enumerated(EnumType.STRING)
      SlotStatus status;
 

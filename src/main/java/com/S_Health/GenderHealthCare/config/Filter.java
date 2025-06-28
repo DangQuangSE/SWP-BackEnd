@@ -37,16 +37,22 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
             "PUT:/api/auth/**",
-            "POST:/api/service/**",
             "PUT:/api/service/**",
+            "POST:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
-            "POST:/api/payment/vnpay/**"
-    );
+            "POST:/api/payment/vnpay/**",
+            "POST:/api/zoom/**"
+//            "POST:/api/swagger-ui/**",
+//            "POST:/api/v3/api-docs/**",
+//            "POST:/api/swagger-resources/**"
+            );
 
     private final List<String> PROTECTED_GET_API = List.of(
-            "/api/cycle-track/logs"    // ví dụ route cần bảo vệ
+            "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
+            "/api/appointment/by-status",
+            "/api/zoom/**"
     );
 
     public boolean isPulicApi(String uri, String method) {
@@ -72,14 +78,16 @@ public class Filter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
         String uri = request.getRequestURI();
         String method = request.getMethod();
-        if(isPulicApi(uri, method)) {
+
+        if (isPulicApi(uri, method)) {
             filterChain.doFilter(request, response);
-        }else{
+        } else {
             //xát thực
             String token = getToken(request);
-            if(token == null) {
+            if (token == null) {
                 resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
                 });
             }
@@ -102,6 +110,7 @@ public class Filter extends OncePerRequestFilter {
                     new UsernamePasswordAuthenticationToken(user, token, user.getAuthorities());
             authenToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenToken);
+            // token ok, cho vao`
             filterChain.doFilter(request, response);
         }
     }

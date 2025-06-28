@@ -41,19 +41,20 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "consultant_id")
     User consultant;
-
+    //User updatedBy;
     @OneToMany(mappedBy = "appointment")
     List<Payment> payments;
-
-
-//    @ManyToOne
-//    @JoinColumn(name = "consultant_id")
-//    User consultant;
     Double price;
     String note;
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     AppointmentStatus status;
     @CreationTimestamp
     LocalDateTime created_at;
+    LocalDateTime update_at;
     LocalDate preferredDate;
+    Boolean isActive = true;
+
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ServiceFeedback> serviceFeedbacks;
 }
