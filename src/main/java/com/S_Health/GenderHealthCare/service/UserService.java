@@ -37,4 +37,19 @@ public class UserService {
                 .dateOfBirth(updated.getDateOfBirth())
                 .build();
     }
+
+    public UserDTO getUserProfile() {
+        Long userId = authUtil.getCurrentUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("Người dùng không tồn tại"));
+
+        return UserDTO.builder()
+                .id(user.getId())
+                .fullname(user.getFullname())
+                .phone(user.getPhone())
+                .address(user.getAddress())
+                .imageUrl(user.getImageUrl())
+                .dateOfBirth(user.getDateOfBirth())
+                .build();
+    }
 }

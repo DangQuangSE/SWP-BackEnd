@@ -41,8 +41,9 @@ public class Filter extends OncePerRequestFilter {
             "POST:/api/service/**",
             "DELETE:/api/service/**",
             "PATCH:/api/service/**",
-            "POST:/api/payment/vnpay/**"
-//            "POST:/api/zoom/**"
+            "POST:/api/payment/vnpay/**",
+            "POST:/api/zoom/**",
+            "POST:/api/me/profile"
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
 //            "POST:/api/swagger-resources/**"
@@ -52,7 +53,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
             "/api/appointment/by-status",
-            "/api/zoom/**"
+            "/api/zoom/**",
+            "/api/me"
     );
 
     public boolean isPulicApi(String uri, String method) {

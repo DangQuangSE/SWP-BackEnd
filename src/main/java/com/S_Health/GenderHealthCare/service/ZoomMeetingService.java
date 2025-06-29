@@ -48,9 +48,8 @@ public class ZoomMeetingService {
         }
 
         Long userId = authUtil.getCurrentUserId();
-        System.out.println(userId);
-
         Long customerId = appointment.getCustomer().getId();
+
 
         if(!(Objects.equals(userId, customerId))) {
             throw new AppException(" Bạn không có trong cuộc họp này");
@@ -103,7 +102,7 @@ public class ZoomMeetingService {
             String serviceName = appointment.getService().getName();
             emailService.sendUrlCurtomerZoom(emailCustomer,startTime,joinUrl,serviceName);
 
-            String emailConsultant = appointment.getConsultant().getEmail();
+            String emailConsultant = appointmentDetail.getConsultant().getEmail();
             emailService.sendUrlConsultantZoom(emailConsultant,startTime,startUrl,serviceName);
         }
 
