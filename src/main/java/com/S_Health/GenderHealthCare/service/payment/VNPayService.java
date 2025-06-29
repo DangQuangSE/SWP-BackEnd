@@ -3,12 +3,14 @@ package com.S_Health.GenderHealthCare.service.payment;
 import com.S_Health.GenderHealthCare.config.paymentConfig.VNPayConfig;
 import com.S_Health.GenderHealthCare.dto.response.payment.VNPayResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
+import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
 import com.S_Health.GenderHealthCare.entity.Payment;
 import com.S_Health.GenderHealthCare.entity.Transaction;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.PaymentRepository;
 import com.S_Health.GenderHealthCare.repository.TransactionRepository;
@@ -35,12 +37,17 @@ public class VNPayService {
     private PaymentRepository paymentRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    AppointmentDetailRepository appointmentDetailRepository;
 
 
     public VNPayResponse createOrder(Long appointmentId){
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
+
+        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
@@ -182,12 +189,22 @@ public class VNPayService {
             Appointment appointment = payment.getAppointment();
             appointment.setStatus(AppointmentStatus.CONFIRMED);
             appointmentRepository.save(appointment);
+
+            AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointment.getId())
+                    .orElseThrow(() -> new AuthenticationException("Không tìm thấy chi tiết cuộc hẹn."));
+            appointmentDetail.setStatus(AppointmentStatus.CONFIRMED);
+            appointmentDetailRepository.save(appointmentDetail);
         } else {
             payment.setStatus(PaymentStatus.FAILED);
             payment.setPaidAt(LocalDateTime.now());
             Appointment appointment = payment.getAppointment();
             appointment.setStatus(AppointmentStatus.CANCELED);
             appointmentRepository.save(appointment);
+
+            AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointment.getId())
+                    .orElseThrow(() -> new AuthenticationException("Không tìm thấy chi tiết cuộc hẹn."));
+            appointmentDetail.setStatus(AppointmentStatus.CANCELED);
+            appointmentDetailRepository.save(appointmentDetail);
         }
 
         paymentRepository.save(payment);
