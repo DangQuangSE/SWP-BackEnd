@@ -42,7 +42,7 @@ public class ZoomMeetingService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppException("Cuộc hẹn không tồn tại"));
         //check status
-        if (!appointment.getStatus().equals(AppointmentStatus.CONFIRMED) &&
+        if (!appointment.getStatus().equals(AppointmentStatus.CONFIRMED) ||
         !appointment.getService().getType().equals(ServiceType.CONSULTING_ON)) {
             throw new AppException("Cuộc hẹn chưa được xác nhận hoặc không phải cuộc hẹn tư vấn trực tuyến");
         }
