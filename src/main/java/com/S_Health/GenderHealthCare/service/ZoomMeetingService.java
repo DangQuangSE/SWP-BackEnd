@@ -102,7 +102,7 @@ public class ZoomMeetingService {
             String serviceName = appointment.getService().getName();
             emailService.sendUrlCurtomerZoom(emailCustomer,startTime,joinUrl,serviceName);
 
-            String emailConsultant = appointment.getConsultant().getEmail();
+            String emailConsultant = appointmentDetail.getConsultant().getEmail();
             emailService.sendUrlConsultantZoom(emailConsultant,startTime,startUrl,serviceName);
         }
 
