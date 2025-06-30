@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.repository;
 
 import com.S_Health.GenderHealthCare.dto.response.BlogSummaryDTO;
 import com.S_Health.GenderHealthCare.entity.Blog;
+import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.BlogStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,9 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     Page<Blog> findByTagId(Long tagId, Pageable pageable);
 
     Page<Blog> findByStatusOrderByCreatedAtDesc(BlogStatus status, Pageable pageable);
+    
+    Page<Blog> findByAuthorOrderByCreatedAtDesc(User author, Pageable pageable);
+    
+    // Thêm các method mới
+    Page<Blog> findByAuthorAndStatusOrderByCreatedAtDesc(User author, BlogStatus status, Pageable pageable);
 }

@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.service.authentication;
 
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.authentication.CreateUserRequest;
 import com.S_Health.GenderHealthCare.dto.response.CreateUserResponse;
 import com.S_Health.GenderHealthCare.entity.Specialization;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -32,6 +34,7 @@ public class ManageUserService {
     EmailService emailService;
     @Autowired
     ModelMapper modelMapper;
+
     public CreateUserResponse createStaffAccount(CreateUserRequest request) {
         if (authenticationRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email đã tồn tại trong hệ thống");
@@ -67,11 +70,13 @@ public class ManageUserService {
         CreateUserResponse response = modelMapper.map(user, CreateUserResponse.class);
         return response;
     }
+
     private void validateRole(UserRole role) {
         if (role == UserRole.CUSTOMER) {
             throw new BadRequestException("Không thể tạo tài khoản Khách hàng qua API này");
         }
     }
+
     private List<Specialization> validateAndGetSpecializations(Set<Long> specializationIds) {
         List<Specialization> specializations = specializationRepository.findAllById(specializationIds);
         if (specializations.size() != specializationIds.size()) {
@@ -79,10 +84,81 @@ public class ManageUserService {
         }
         return specializations;
     }
+
     private String generateRandomPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
         return new Random().ints(10, 0, chars.length())
                 .mapToObj(i -> String.valueOf(chars.charAt(i)))
                 .collect(Collectors.joining());
+    }
+
+    public User addSpecializationsToConsultant(Long userId, Set<Long> specializationIds) {
+        User consultant = authenticationRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+
+        if (consultant.getRole() != UserRole.CONSULTANT) {
+            throw new BadRequestException("Người dùng này không phải là tư vấn viên");
+        }
+        List<Specialization> specializationsToAdd = validateAndGetSpecializations(specializationIds);
+        if (consultant.getSpecializations() == null) {
+            consultant.setSpecializations(new ArrayList<>());
+        }
+        for (Specialization spec : specializationsToAdd) {
+            if (!consultant.getSpecializations().contains(spec)) {
+                consultant.getSpecializations().add(spec);
+            }
+        }
+        return authenticationRepository.save(consultant);
+    }
+
+    public void removeSpecializationFromConsultant(Long userId, Long specializationId) {
+        User consultant = authenticationRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+        // Kiểm tra xem người dùng có phải là tư vấn viên không
+        if (consultant.getRole() != UserRole.CONSULTANT) {
+            throw new BadRequestException("Người dùng này không phải là tư vấn viên");
+        }
+        // Kiểm tra xem chuyên môn có tồn tại không
+        Specialization specialization = specializationRepository.findById(specializationId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + specializationId));
+        // Kiểm tra xem tư vấn viên có chuyên môn này không
+        if (consultant.getSpecializations() == null || !consultant.getSpecializations().contains(specialization)) {
+            throw new BadRequestException("Tư vấn viên không có chuyên môn này");
+        }
+        // Đảm bảo tư vấn viên có ít nhất một chuyên môn sau khi xóa
+        if (consultant.getSpecializations().size() <= 1) {
+            throw new BadRequestException("Tư vấn viên phải có ít nhất một chuyên môn");
+        }
+        // Xóa chuyên môn
+        consultant.getSpecializations().remove(specialization);
+        authenticationRepository.save(consultant);
+    }
+
+    public List<Specialization> getConsultantSpecializations(Long userId) {
+        User consultant = authenticationRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+        // Kiểm tra xem người dùng có phải là tư vấn viên không
+        if (consultant.getRole() != UserRole.CONSULTANT) {
+            throw new BadRequestException("Người dùng này không phải là tư vấn viên");
+        }
+        return consultant.getSpecializations() != null ? consultant.getSpecializations() : new ArrayList<>();
+    }
+    public List<UserDTO> getUsersByRole(String role) {
+        UserRole userRole;
+        userRole = UserRole.valueOf(role.toUpperCase());
+        return authenticationRepository.findByRole(userRole).stream()
+                .map(this::convertToUserDTO)
+                .collect(Collectors.toList());
+    }
+    private UserDTO convertToUserDTO(User user) {
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        if (user.getSpecializations() != null && !user.getSpecializations().isEmpty()) {
+            List<Long> specializationIds = user.getSpecializations().stream()
+                    .map(Specialization::getId)
+                    .collect(Collectors.toList());
+            userDTO.setSpecializationIds(specializationIds);
+        }
+        return userDTO;
     }
 }
