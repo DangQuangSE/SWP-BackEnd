@@ -114,6 +114,7 @@ public class ScheduleService {
                         .maxBooking(6)
                         .currentBooking(0)
                         .status(SlotStatus.ACTIVE)
+                        .isActive(true)
                         .build();
                 consultantSlots.add(consultantSlot);
             }
@@ -135,60 +136,55 @@ public class ScheduleService {
 
     //bác sĩ hủy lịch làm
     public ScheduleCancelResponse cancelSchedule(ScheduleCancelRequest request) {
-        Long consultantId = request.getConsultant_id();
-        LocalDateTime affectedSlot = request.getDate();
-        // Lấy lịch làm việc bị ảnh hưởng
-        Schedule schedule = scheduleRepository.findByConsultantId(request.getConsultant_id());
-        schedule.setStatus(ScheduleStatus.CANCELLED);
-        scheduleRepository.save(schedule);
-        // Tìm các cuộc hẹn bị ảnh hưởng
-        List<AppointmentDetail> affectedAppointments = appointmentDetailRepository
-                .findByConsultant_idAndSlotTime(consultantId, request.getDate());
+        if (request.isCancelWholeDay() && request.getSlot() != null) {
+            throw new IllegalArgumentException("Không được truyền slot khi huỷ nguyên ngày.");
+        }
+        if (!request.isCancelWholeDay() && request.getSlot() == null) {
+            throw new IllegalArgumentException("Phải truyền slot khi không huỷ nguyên ngày.");
+        }
 
-        List<ScheduleCancelResponse.AffectedAppointment> affectedResponseList = new ArrayList<>();
+        Long consultantId = authUtil.getCurrentUserId();
+        LocalDate date = request.getDate();
+        List<AppointmentDetail> affectedAppointments;
 
-        for (AppointmentDetail detail : affectedAppointments) {
-            com.S_Health.GenderHealthCare.entity.Service service = detail.getService();
-            LocalDate date = affectedSlot.toLocalDate();
-            LocalTime time = affectedSlot.toLocalTime();
-            // Lấy danh sách tư vấn viên có thể làm dịch vụ này
-            List<User> consultants = serviceSlotPoolService.getConsultantInSpecialization(service.getId());
-            // Loại bỏ consultant hiện tại (người đang hủy)
-            consultants = consultants.stream()
-                    .filter(c -> !(c.getId() == consultantId))
-                    .toList();
-            // Tìm người thay thế
-            BookingRequest mockRequest = new BookingRequest();
-            mockRequest.setService_id(service.getId());
-            mockRequest.setPreferredDate(date);
-            mockRequest.setSlot(time);
-            User replacement = bookingService.findAvailableConsultant(mockRequest, consultants);
-            if (replacement != null) {
-                detail.setConsultant(replacement);
-                appointmentDetailRepository.save(detail);
-                affectedResponseList.add(new ScheduleCancelResponse.AffectedAppointment(
-                        detail.getAppointment().getCustomer(),
-                        date,
-                        "Đã chuyển sang: " + replacement.getFullname()
-                ));
+        if (request.isCancelWholeDay()) {
+            affectedAppointments = appointmentDetailRepository
+                    .findByConsultant_idAndSlotDate(consultantId, date);
+            List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDate(consultantId, date);
+            if (slots.isEmpty()) {
+                throw new BadRequestException("Không tìm thấy slots cần huỷ.");
+            }
+            for (ConsultantSlot slot : slots) {
+                slot.setIsActive(false);
+                slot.setStatus(SlotStatus.DEACTIVE);
+            }
+            consultantSlotRepository.saveAll(slots);
+        } else {
+            LocalDateTime slotTime = LocalDateTime.of(date, request.getSlot());
+            affectedAppointments = appointmentDetailRepository
+                    .findByConsultant_idAndSlotTime(consultantId, slotTime);
+            Optional<ConsultantSlot> slotOpt = consultantSlotRepository
+                    .findByConsultantIdAndDateAndStartTime(consultantId, date, request.getSlot());
+            if (slotOpt.isPresent()) {
+                ConsultantSlot slot = slotOpt.get();
+                slot.setIsActive(false);
+                slot.setStatus(SlotStatus.DEACTIVE);
+                consultantSlotRepository.save(slot);
             } else {
-                // Không có người thay thế
-                detail.setStatus(AppointmentStatus.CANCELED);
-                appointmentDetailRepository.save(detail);
-
-                affectedResponseList.add(new ScheduleCancelResponse.AffectedAppointment(
-                        detail.getAppointment().getCustomer(),
-                        date,
-                        AppointmentStatus.CANCELED.name()
-                ));
-                // Optional: gửi thông báo cho người dùng
-                // notificationService.notifyUser(...);
+                throw new BadRequestException("Không tìm thấy slot cần huỷ.");
             }
         }
+
         return new ScheduleCancelResponse(
-                "Đã xử lý " + affectedResponseList.size() + " lịch hẹn.",
-                affectedResponseList
+                "Đã huỷ lịch thành công",
+                affectedAppointments.stream().map(a -> new ScheduleCancelResponse.AffectedAppointment(
+                        a.getAppointment().getCustomer(),
+                        a.getSlotTime().toLocalDate(),
+                        "Đã huỷ"
+                )).toList()
         );
     }
+
+
 }
 
