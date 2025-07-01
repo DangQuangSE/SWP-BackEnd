@@ -52,7 +52,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
             "/api/appointment/by-status",
-            "/api/zoom/**"
+            "/api/zoom/**",
+            "/api/notifications"
     );
 
     public boolean isPulicApi(String uri, String method) {
