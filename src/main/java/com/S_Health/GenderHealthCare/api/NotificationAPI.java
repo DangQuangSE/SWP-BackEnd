@@ -52,8 +52,8 @@ public class NotificationAPI {
             summary = "Đánh dấu notification đã đọc",
             description = "Đánh dấu một notification của user đã được đọc."
     )
-    public ResponseEntity<Void> markRead(@PathVariable Long id, @RequestParam Long userId) {
-        notificationService.markAsRead(id, userId);
+    public ResponseEntity<Void> markRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
         return ResponseEntity.ok().build();
     }
 

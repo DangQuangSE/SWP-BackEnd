@@ -88,8 +88,9 @@ public class NotificationService {
 
 
     @Transactional
-    public void markAsRead(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+    public void markAsRead(Long notificationId) {
+        Long userId = authUtil.getCurrentUserId();
+        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> new AppException("Thông báo không tồn tại"));
         if (!notification.getIsRead()) {
             notification.setIsRead(true);
