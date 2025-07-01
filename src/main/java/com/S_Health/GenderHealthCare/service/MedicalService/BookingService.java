@@ -12,6 +12,7 @@ import com.S_Health.GenderHealthCare.service.medicalProfile.MedicalProfileServic
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,8 @@ public class BookingService {
     MedicalProfileService medicalProfileService;
     @Autowired
     AuthUtil authUtil;
+    @Autowired
+    private ModelMapper modelMapper;
 
     @Transactional
     public BookingResponse bookingService(BookingRequest request) {
@@ -140,16 +143,7 @@ public class BookingService {
         detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot()));
         appointmentDetailRepository.save(detail);
 
-        AppointmentDetailDTO dto = new AppointmentDetailDTO(
-                detail.getId(),
-                subService.getId(),
-                subService.getName(),
-                consultant.getId(),
-                consultant.getFullname(),
-                detail.getSlotTime(),
-                AppointmentStatus.PENDING,
-                null // medicalResult sẽ cập nhật sau khi tư vấn/xét nghiệm
-        );
+        AppointmentDetailDTO dto = modelMapper.map(detail, AppointmentDetailDTO.class);
 
         return new AppointmentDetailData(dto, slot);
     }

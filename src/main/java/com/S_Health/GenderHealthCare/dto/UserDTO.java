@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -20,4 +21,5 @@ public class UserDTO {
     String role;
     LocalDate dateOfBirth;
     String address;
+    List<Long> specializationIds;
 }
