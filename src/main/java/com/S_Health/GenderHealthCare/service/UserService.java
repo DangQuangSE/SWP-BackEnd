@@ -5,6 +5,7 @@ import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.UserRepository;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,8 @@ public class UserService {
     UserRepository userRepository;
     @Autowired
     AuthUtil authUtil;
+    @Autowired
+    ModelMapper modelMapper;
 
     public UserDTO updateUserProfile(UserDTO request) {
         Long userId = authUtil.getCurrentUserId();
@@ -43,13 +46,8 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("Người dùng không tồn tại"));
 
-        return UserDTO.builder()
-                .id(user.getId())
-                .fullname(user.getFullname())
-                .phone(user.getPhone())
-                .address(user.getAddress())
-                .imageUrl(user.getImageUrl())
-                .dateOfBirth(user.getDateOfBirth())
-                .build();
+        System.out.println(user.toString());
+
+        return modelMapper.map(user, UserDTO.class);
     }
 }
