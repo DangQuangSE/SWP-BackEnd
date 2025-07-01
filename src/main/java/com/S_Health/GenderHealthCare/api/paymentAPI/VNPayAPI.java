@@ -31,7 +31,7 @@ public class VNPayAPI {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/createOff")
+    @GetMapping("/create-off")
     public ResponseEntity<VNPayResponse> createPaymentOff(@RequestParam long appointmentId,
                                                        HttpServletRequest request) throws Exception {
         System.out.println(request.getRemoteAddr());
