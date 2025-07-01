@@ -53,7 +53,8 @@ public class Filter extends OncePerRequestFilter {
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
             "/api/appointment/by-status",
             "/api/zoom/**",
-            "/api/notifications"
+            "/api/notifications",
+            "/api/notifications/{notificationId}"
     );
 
     public boolean isPulicApi(String uri, String method) {

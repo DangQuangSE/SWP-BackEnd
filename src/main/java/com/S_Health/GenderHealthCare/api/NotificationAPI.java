@@ -37,14 +37,13 @@ public class NotificationAPI {
         return ResponseEntity.ok(notificationService.getNotificationsByUser());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{notificationId}")
     @Operation(
             summary = "Lấy chi tiết notification",
             description = "Lấy chi tiết thông tin một notification theo id và userId."
     )
-    public ResponseEntity<NotificationResponse> getById(@PathVariable Long id,
-                                                        @RequestParam Long userId) {
-        return ResponseEntity.ok(notificationService.getNotificationById(id, userId));
+    public ResponseEntity<NotificationResponse> getById(@PathVariable Long notificationId) {
+        return ResponseEntity.ok(notificationService.getNotificationById(notificationId));
     }
 
     @PatchMapping("/{id}/read")
@@ -76,13 +75,13 @@ public class NotificationAPI {
         return ResponseEntity.ok(notificationService.countUnread(userId));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{notificationId}")
     @Operation(
             summary = "Xóa notification",
             description = "Xóa một notification theo id và userId."
     )
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long userId) {
-        notificationService.deleteNotification(id, userId);
+    public ResponseEntity<Void> delete(@PathVariable Long notificationId) {
+        notificationService.deleteNotification(notificationId);
         return ResponseEntity.ok().build();
     }
 }

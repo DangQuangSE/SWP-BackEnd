@@ -47,4 +47,6 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     NotificationType type;
+
+    Boolean isActive = true;
 }

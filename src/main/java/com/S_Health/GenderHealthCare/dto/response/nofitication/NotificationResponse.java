@@ -15,9 +15,11 @@ public class NotificationResponse {
     String title;
     String content;
     Boolean isRead;
+    Boolean isActive;
     String type;
     LocalDateTime createdAt;
     LocalDateTime readAt;
     NotificationAppointmentResponse appointment;
     NotificationCycleTrackingResponse cycleTracking;
+
 }

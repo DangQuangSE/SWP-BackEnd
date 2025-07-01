@@ -80,8 +80,9 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    public NotificationResponse getNotificationById(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+    public NotificationResponse getNotificationById(Long notificationId) {
+        Long userId = authUtil.getCurrentUserId();
+        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> new AppException("Thông báo không tồn tại"));
         return mapToResponse(notification);
     }
@@ -117,10 +118,12 @@ public class NotificationService {
 
 
     @Transactional
-    public void deleteNotification(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+    public void deleteNotification(Long notificationId) {
+        Long userId = authUtil.getCurrentUserId();
+        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> new AppException("Thông báo không tồn tại"));
-        notificationRepository.delete(notification);
+        notification.setIsActive(false);
+        notificationRepository.save(notification);
     }
 
     private NotificationResponse mapToResponse(Notification notification) {
