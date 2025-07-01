@@ -137,6 +137,102 @@ public class VNPayService {
 
     }
 
+    public VNPayResponse createOrderOff(Long appointmentId){
+
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
+
+        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
+
+        Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
+        if (paid.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+        }
+
+        // Tìm giao dịch thanh toán thất bại
+        Optional<Payment> failed = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.FAILED);
+        if (failed.isPresent()) {
+            throw new AuthenticationException("Cuộc hẹn đã huỷ.");
+        }
+
+        BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
+
+        long amount = price.longValue();// Số tiền thanh toán, ví dụ 10.000 VND
+        String orderInfo = "Thanh toan don hang: " + appointment.getService().getName();
+
+        String vnp_Version = "2.1.0";
+        String vnp_Command = "pay";
+        String vnp_TxnRef =  UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+        String vnp_IpAddr = "127.0.0.1";
+        String vnp_TmnCode = VNPayConfig.vnp_TmnCode;
+        String orderType = "order-type";
+        String vnp_CreateDate = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        cld.add(Calendar.MINUTE, 1);
+        String vnp_ExpireDate = formatter.format(cld.getTime());
+
+        Map<String, String> params = new HashMap<>();
+//        params.put("vnp_BankCode", "NCB");
+        params.put("vnp_Version", vnp_Version);
+        params.put("vnp_Command", vnp_Command);
+        params.put("vnp_TmnCode", vnp_TmnCode);
+        params.put("vnp_Amount", String.valueOf(amount * 100 * 0.2));
+        params.put("vnp_CreateDate", vnp_CreateDate);
+        params.put("vnp_CurrCode", "VND");
+        params.put("vnp_IpAddr", vnp_IpAddr);
+        params.put("vnp_Locale", "vn");
+        params.put("vnp_OrderInfo", orderInfo);
+        params.put("vnp_OrderType", "other");
+        params.put("vnp_ReturnUrl", VNPayConfig.vnp_ReturnUrl);
+        params.put("vnp_ExpireDate", vnp_ExpireDate);
+        params.put("vnp_TxnRef", vnp_TxnRef);
+
+        List<String> fieldNames = new ArrayList<>(params.keySet());
+        Collections.sort(fieldNames);
+
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+        for (String field : fieldNames) {
+            String value = params.get(field);
+            hashData.append(field).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII)).append('&');
+            query.append(field).append('=').append(URLEncoder.encode(value, StandardCharsets.US_ASCII)).append('&');
+        }
+
+        hashData.setLength(hashData.length() - 1);
+        query.setLength(query.length() - 1);
+
+        String secureHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
+        query.append("&vnp_SecureHash=").append(secureHash);
+
+        String payUrl = VNPayConfig.vnp_PayUrl + "?" + query;
+
+        Payment payment = Payment.builder()
+                .amount(BigDecimal.valueOf(amount))
+                .status(PaymentStatus.PENDING)
+                .method(PaymentMethod.PAY_OFF)
+                .appointment(appointment)
+                .paidBy(appointment.getCustomer())
+                .build();
+        payment = paymentRepository.save(payment);
+
+        Transaction transaction = Transaction.builder()
+                .orderId(vnp_TxnRef)
+                .requestId(vnp_TxnRef) // VNPay không có requestId
+//                .payUrl(payUrl)
+                .payment(payment)
+                .build();
+        transactionRepository.save(transaction);
+
+        return VNPayResponse.builder()
+                .amount(amount)
+                .URL(payUrl)
+                .build();
+
+    }
+
     public VNPayResponse processReturn(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();
         request.getParameterMap().forEach((key, values) -> {
