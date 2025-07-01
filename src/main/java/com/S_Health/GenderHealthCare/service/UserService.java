@@ -31,14 +31,7 @@ public class UserService {
 
         User updated = userRepository.save(user);
 
-        return UserDTO.builder()
-                .id(updated.getId())
-                .fullname(updated.getFullname())
-                .phone(updated.getPhone())
-                .address(updated.getAddress())
-                .imageUrl(updated.getImageUrl())
-                .dateOfBirth(updated.getDateOfBirth())
-                .build();
+        return modelMapper.map(updated, UserDTO.class);
     }
 
     public UserDTO getUserProfile() {
