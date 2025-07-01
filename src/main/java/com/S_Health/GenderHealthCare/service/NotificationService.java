@@ -41,7 +41,9 @@ public class NotificationService {
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest request) {
-        User user = userRepository.findById(request.getUserId())
+        Long userId = authUtil.getCurrentUserId();
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng"));
 
         Appointment appointment = null;
