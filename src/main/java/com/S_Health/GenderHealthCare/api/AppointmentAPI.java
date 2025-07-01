@@ -29,10 +29,11 @@ public class AppointmentAPI {
         return ResponseEntity.ok(appointmentService.getAppointmentById(id));
     }
     //hiển thị cho bác sĩ theo status
-    @GetMapping("/appointments/my-schedule")
+    @GetMapping("/my-schedule")
     public ResponseEntity<List<AppointmentDTO>> getMySchedule(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) AppointmentStatus status) {
+        System.out.println("hihi");
         List<AppointmentDTO> appointments = appointmentService.getAppointmentsForConsultantOnDate(date, status);
         return ResponseEntity.ok(appointments);
     }

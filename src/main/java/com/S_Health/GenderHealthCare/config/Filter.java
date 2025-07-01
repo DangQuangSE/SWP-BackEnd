@@ -34,24 +34,41 @@ public class Filter extends OncePerRequestFilter {
     private JWTService jwtService;
 
     private final List<String> PUBLIC_API = List.of(
+            // Authentication APIs
             "POST:/api/auth/**",
             "PUT:/api/auth/**",
-            "PUT:/api/auth/**",
-            "PUT:/api/service/**",
-            "POST:/api/service/**",
-            "DELETE:/api/service/**",
-            "PATCH:/api/service/**",
+
+            // Public read-only APIs
+            "GET:/api/services/**",          // Service catalog
+            "GET:/api/specializations/**",   // Specializations
+            "GET:/api/rooms/**",             // Room information
+            "GET:/api/tags/**",              // Blog tags
+            "GET:/api/blog/**",              // Blog reading (except protected ones)
+
+            // Payment & External APIs
             "POST:/api/payment/vnpay/**",
-            "POST:/api/zoom/**"
-//            "POST:/api/swagger-ui/**",
-//            "POST:/api/v3/api-docs/**",
-//            "POST:/api/swagger-resources/**"
+            "POST:/api/zoom/**",
+
+            // Swagger UI endpoints
+            "GET:/swagger-ui/**",
+            "GET:/v3/api-docs/**",
+            "GET:/swagger-resources/**",
+            "GET:/webjars/**"
             );
 
     private final List<String> PROTECTED_GET_API = List.of(
-            "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
-//            "/api/user/private/**"       // thêm wildcard nếu muốn
-            "/api/appointment/by-status"
+            "/api/cycle-track/logs",
+            "/api/appointment/by-status",
+            "/api/appointment/my-schedule",
+            "/api/appointment/*",                // Appointment details by ID
+            "/api/appointment/*/patient-history", // Patient history
+            "/api/appointment/*/status-history",  // Status history
+            "/api/me/**",                        // User profile APIs
+            "/api/medical-profile/**",           // Medical profile APIs
+            "/api/medical-result/**",            // Medical results
+            "/api/payment/history/**",           // Payment history
+            "/api/blog/my-blogs",                // User's own blogs
+            "/api/blog/detail/*"                 // Blog details for editing (specific ID)
     );
 
     public boolean isPulicApi(String uri, String method) {

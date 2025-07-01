@@ -257,30 +257,47 @@ public class AppointmentService {
 
     public List<AppointmentDTO> getAppointmentsForConsultantOnDate(LocalDate date, AppointmentStatus status) {
         // Lấy thông tin bác sĩ hiện tại
+        System.out.println("do");
         User currentDoctor = authUtil.getCurrentUser();
 
-        // Tìm tất cả các appointments theo ngày và bác sĩ
-        List<Appointment> appointments;
+        // Tìm tất cả AppointmentDetail theo bác sĩ và ngày (sử dụng DATE() function để extract ngày từ slotTime)
+        List<AppointmentDetail> appointmentDetails;
         if (status != null) {
-            // Nếu có status, lọc theo cả ngày và status
-            appointments = appointmentRepository.findByPreferredDateAndConsultantAndStatusAndIsActiveTrue(
-                    date, currentDoctor, status);
+            // Nếu có status, sử dụng query có filter status
+            appointmentDetails = appointmentDetailRepository
+                    .findByConsultant_idAndSlotDateAndStatus(currentDoctor.getId(), date, status);
         } else {
-            // Nếu không có status, chỉ lọc theo ngày
-            appointments = appointmentRepository.findByPreferredDateAndConsultantAndIsActiveTrue(
-                    date, currentDoctor);
+            // Nếu không có status, lấy tất cả
+            appointmentDetails = appointmentDetailRepository
+                    .findByConsultant_idAndSlotDate(currentDoctor.getId(), date);
         }
+
+        // Lấy danh sách Appointment từ AppointmentDetail (loại bỏ trùng lặp)
+        List<Appointment> appointments = appointmentDetails.stream()
+                .map(AppointmentDetail::getAppointment)
+                .filter(appointment -> appointment.getIsActive()) // Chỉ lấy appointment active
+                .distinct()
+                .collect(Collectors.toList());
 
         // Chuyển đổi sang DTO và trả về kết quả
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
-                    // Lấy ra danh sách appointmentDetail
+                    dto.setCustomerName(appointment.getCustomer().getFullname());
+                    dto.setServiceName(appointment.getService().getName());
+
+                    // Lấy ra danh sách appointmentDetail của bác sĩ hiện tại cho appointment này
                     List<AppointmentDetail> details = appointmentDetailRepository
-                            .findByAppointmentAndIsActiveTrue(appointment);
+                            .findByAppointmentAndIsActiveTrue(appointment).stream()
+                            .filter(detail -> detail.getConsultant().getId() == currentDoctor.getId())
+                            .collect(Collectors.toList());
+
                     List<AppointmentDetailDTO> detailDTOs = details.stream()
                             .map(detail -> {
                                 AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
+                                detailDTO.setConsultantName(detail.getConsultant().getFullname());
+                                detailDTO.setServiceName(detail.getService().getName());
+
                                 // Lấy ra medical result nếu có
                                 medicalResultRepository.findByAppointmentDetail(detail)
                                         .ifPresent(result ->
@@ -289,6 +306,7 @@ public class AppointmentService {
                                 return detailDTO;
                             })
                             .collect(Collectors.toList());
+
                     dto.setAppointmentDetails(detailDTOs);
                     return dto;
                 })
@@ -331,6 +349,9 @@ public class AppointmentService {
             // Admin hoặc Staff có thể xem tất cả
             appointments = appointmentRepository.findByStatusAndIsActiveTrue(status);
         }
+       return convertDTO(appointments);
+    }
+    public List<AppointmentDTO> convertDTO(List<Appointment> appointments) {
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
