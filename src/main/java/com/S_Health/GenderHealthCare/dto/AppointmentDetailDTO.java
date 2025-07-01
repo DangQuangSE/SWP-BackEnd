@@ -18,6 +18,8 @@ public class AppointmentDetailDTO {
     long consultantId;
     String consultantName;
     LocalDateTime slotTime;
+    String joinUrl;
+    String startUrl;
     AppointmentStatus status;
     ResultDTO medicalResult;
 }

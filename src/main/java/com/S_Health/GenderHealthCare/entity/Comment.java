@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,6 +22,7 @@ public class Comment {
     long id;
     String description;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
     @JoinColumn(name = "blog_id")
     Blog blog;
     @ManyToOne(fetch = FetchType.LAZY)

@@ -50,4 +50,10 @@ public class ManagementUserAPI {
     public ResponseEntity getConsultantSpecializations(@PathVariable Long userId) {
         return ResponseEntity.ok(manageUserService.getConsultantSpecializations(userId));
     }
+    @GetMapping("/users")
+    @Operation(summary = "Lấy danh sách người dùng theo vai trò",
+            description = "Lấy danh sách tất cả người dùng theo vai trò (ADMIN, STAFF, CONSULTANT, etc.)")
+    public ResponseEntity getUsersByRole(@RequestParam String role) {
+        return ResponseEntity.ok(manageUserService.getUsersByRole(role));
+    }
 }

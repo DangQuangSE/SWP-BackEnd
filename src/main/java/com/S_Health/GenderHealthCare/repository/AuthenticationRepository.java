@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.repository;
 
 import com.S_Health.GenderHealthCare.entity.User;
+import com.S_Health.GenderHealthCare.enums.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,5 @@ public interface AuthenticationRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     User findUserByEmail(String email);
     List<User> findBySpecializations_IdIn(List<Long> specializations);
+    List<User> findByRole(UserRole role);
 }

@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.BlogStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -39,13 +40,14 @@ public class Blog {
     @UpdateTimestamp
     LocalDateTime updatedAt;
     @OneToMany(mappedBy = "blog")
+    @JsonIgnore
     List<Comment> comments;
 
     @ManyToMany
     @JoinTable(
-        name = "blog_tags",
-        joinColumns = @JoinColumn(name = "blog_id"),
-        inverseJoinColumns = @JoinColumn(name = "tag_id")
+            name = "blog_tags",
+            joinColumns = @JoinColumn(name = "blog_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     List<Tag> tags;
 }

@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.service.authentication;
 
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.authentication.CreateUserRequest;
 import com.S_Health.GenderHealthCare.dto.response.CreateUserResponse;
 import com.S_Health.GenderHealthCare.entity.Specialization;
@@ -141,5 +142,23 @@ public class ManageUserService {
             throw new BadRequestException("Người dùng này không phải là tư vấn viên");
         }
         return consultant.getSpecializations() != null ? consultant.getSpecializations() : new ArrayList<>();
+    }
+    public List<UserDTO> getUsersByRole(String role) {
+        UserRole userRole;
+        userRole = UserRole.valueOf(role.toUpperCase());
+        return authenticationRepository.findByRole(userRole).stream()
+                .map(this::convertToUserDTO)
+                .collect(Collectors.toList());
+    }
+    private UserDTO convertToUserDTO(User user) {
+        UserDTO userDTO = modelMapper.map(user, UserDTO.class);
+
+        if (user.getSpecializations() != null && !user.getSpecializations().isEmpty()) {
+            List<Long> specializationIds = user.getSpecializations().stream()
+                    .map(Specialization::getId)
+                    .collect(Collectors.toList());
+            userDTO.setSpecializationIds(specializationIds);
+        }
+        return userDTO;
     }
 }
