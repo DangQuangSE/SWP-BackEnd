@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -258,26 +259,6 @@ public class AppointmentService {
 
     }
 
-    public List<AppointmentDTO> getAppointmentsForConsultantOnDate(LocalDate date, AppointmentStatus status) {
-        // Lấy thông tin bác sĩ hiện tại
-        User currentDoctor = authUtil.getCurrentUser();
-
-        // Tìm tất cả AppointmentDetail theo bác sĩ và ngày (sử dụng DATE() function để extract ngày từ slotTime)
-        List<AppointmentDetail> appointmentDetails = (status == null)
-                ? appointmentDetailRepository.findByConsultant_idAndSlotDate(currentDoctor.getId(), date)
-                : appointmentDetailRepository.findByConsultant_idAndSlotDateAndStatus(currentDoctor.getId(), date, status) ;
-        // Lấy danh sách Appointment từ AppointmentDetail (loại bỏ trùng lặp)
-        List<Appointment> appointments = appointmentDetails.stream()
-                .map(AppointmentDetail::getAppointment)
-                .filter(appointment -> appointment.getIsActive()) // Chỉ lấy appointment active
-                .distinct()
-                .collect(Collectors.toList());
-
-        // Chuyển đổi sang DTO và trả về kết quả
-        return convertDTO(appointments);
-    }
-
-
     public PatientHistoryDTO getPatientHistoryFromAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
@@ -378,6 +359,64 @@ public class AppointmentService {
         }
        return convertDTO(appointments);
     }
+
+    /**
+     * Lấy danh sách appointment cho bác sĩ theo ngày và trạng thái của AppointmentDetail
+     * CHỈ trả về những detail có đúng status được filter
+     */
+    public List<AppointmentDTO> getAppointmentsForConsultantOnDateByDetailStatus(LocalDate date, AppointmentStatus detailStatus) {
+        // Lấy thông tin bác sĩ hiện tại
+        User currentDoctor = authUtil.getCurrentUser();
+
+        // Tìm tất cả AppointmentDetail theo bác sĩ, ngày và trạng thái detail
+        List<AppointmentDetail> filteredDetails;
+        if (detailStatus != null) {
+            // Filter theo cả ngày và detail status
+            filteredDetails = appointmentDetailRepository
+                    .findByConsultant_idAndSlotDateAndStatus(currentDoctor.getId(), date, detailStatus);
+        } else {
+            // Nếu không có status, lấy tất cả detail của bác sĩ trong ngày
+            filteredDetails = appointmentDetailRepository
+                    .findByConsultant_idAndSlotDate(currentDoctor.getId(), date);
+        }
+
+        // Group details theo appointment
+        Map<Appointment, List<AppointmentDetail>> appointmentDetailsMap = filteredDetails.stream()
+                .filter(detail -> detail.getAppointment().getIsActive())
+                .collect(Collectors.groupingBy(AppointmentDetail::getAppointment));
+
+        // Chuyển đổi sang DTO
+        return appointmentDetailsMap.entrySet().stream()
+                .map(entry -> {
+                    Appointment appointment = entry.getKey();
+                    List<AppointmentDetail> details = entry.getValue();
+
+                    AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    dto.setCustomerName(appointment.getCustomer().getFullname());
+                    dto.setServiceName(appointment.getService().getName());
+
+                    // CHỈ map những detail đã được filter
+                    List<AppointmentDetailDTO> detailDTOs = details.stream()
+                            .map(detail -> {
+                                AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
+                                detailDTO.setConsultantName(detail.getConsultant().getFullname());
+                                detailDTO.setServiceName(detail.getService().getName());
+
+                                // Lấy ra medical result nếu có
+                                medicalResultRepository.findByAppointmentDetail(detail)
+                                        .ifPresent(result ->
+                                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
+                                        );
+                                return detailDTO;
+                            })
+                            .collect(Collectors.toList());
+
+                    dto.setAppointmentDetails(detailDTOs);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
     public List<AppointmentDTO> convertDTO(List<Appointment> appointments) {
         return appointments.stream()
                 .map(appointment -> {

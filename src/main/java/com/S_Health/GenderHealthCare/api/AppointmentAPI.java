@@ -37,7 +37,7 @@ public class AppointmentAPI {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) @Parameter(description = "Trạng thái của appointment detail (không phải appointment)")
             AppointmentStatus status) {
-        List<AppointmentDTO> appointments = appointmentService.getAppointmentsForConsultantOnDate(date, status);
+        List<AppointmentDTO> appointments = appointmentService.getAppointmentsForConsultantOnDateByDetailStatus(date, status);
         return ResponseEntity.ok(appointments);
     }
 
