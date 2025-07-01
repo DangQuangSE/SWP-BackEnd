@@ -27,6 +27,7 @@ public class NotificationAPI {
         return ResponseEntity.status(201).body(notificationService.createNotification(request));
     }
 
+    // hoàn thành ở frondend
     @GetMapping
     @Operation(
             summary = "Lấy danh sách notification",
