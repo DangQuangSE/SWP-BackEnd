@@ -71,17 +71,30 @@ public class Filter extends OncePerRequestFilter {
             "/api/blog/detail/*"                 // Blog details for editing (specific ID)
     );
 
-    public boolean isPulicApi(String uri, String method) {
-        // URL http:localhost:8080/api/student
-        // URI: api/student
+    private final List<String> PROTECTED_PATCH_API = List.of(
+            "/api/appointment/*/status",         // Update appointment status
+            "/api/appointment/detail/*/status"   // Update appointment detail status
+    );
 
-//        if (method.equals("GET")) return true;
+    public boolean isPulicApi(String uri, String method) {
         AntPathMatcher matcher = new AntPathMatcher();
+
+        // Xử lý GET requests
         if (method.equalsIgnoreCase("GET")) {
             boolean isProtected = PROTECTED_GET_API.stream()
                     .anyMatch(pattern -> matcher.match(pattern, uri));
             return !isProtected; // Nếu không bị bảo vệ → cho phép
         }
+
+        // Xử lý PATCH requests
+        if (method.equalsIgnoreCase("PATCH")) {
+            boolean isProtected = PROTECTED_PATCH_API.stream()
+                    .anyMatch(pattern -> matcher.match(pattern, uri));
+            return !isProtected; // Nếu không bị bảo vệ → cho phép (nhưng hầu hết PATCH đều protected)
+        }
+
+        // Xử lý các method khác (POST, PUT, DELETE)
+        // Tất cả đều cần token trừ những API trong PUBLIC_API
         return PUBLIC_API.stream().anyMatch(pattern -> {
             String[] parts = pattern.split(":", 2);
             if (parts.length != 2) return false;

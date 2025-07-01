@@ -12,6 +12,7 @@ import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
+import com.S_Health.GenderHealthCare.service.appointment.AppointmentStatusCalculator;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -44,6 +45,8 @@ public class AppointmentService {
     AuthUtil authUtil;
     @Autowired
     AppointmentAuditService auditService;
+    @Autowired
+    AppointmentStatusCalculator statusCalculator;
 
 
     public AppointmentDTO getAppointmentById(long id) {
@@ -257,21 +260,12 @@ public class AppointmentService {
 
     public List<AppointmentDTO> getAppointmentsForConsultantOnDate(LocalDate date, AppointmentStatus status) {
         // Lấy thông tin bác sĩ hiện tại
-        System.out.println("do");
         User currentDoctor = authUtil.getCurrentUser();
 
         // Tìm tất cả AppointmentDetail theo bác sĩ và ngày (sử dụng DATE() function để extract ngày từ slotTime)
-        List<AppointmentDetail> appointmentDetails;
-        if (status != null) {
-            // Nếu có status, sử dụng query có filter status
-            appointmentDetails = appointmentDetailRepository
-                    .findByConsultant_idAndSlotDateAndStatus(currentDoctor.getId(), date, status);
-        } else {
-            // Nếu không có status, lấy tất cả
-            appointmentDetails = appointmentDetailRepository
-                    .findByConsultant_idAndSlotDate(currentDoctor.getId(), date);
-        }
-
+        List<AppointmentDetail> appointmentDetails = (status == null)
+                ? appointmentDetailRepository.findByConsultant_idAndSlotDate(currentDoctor.getId(), date)
+                : appointmentDetailRepository.findByConsultant_idAndSlotDateAndStatus(currentDoctor.getId(), date, status) ;
         // Lấy danh sách Appointment từ AppointmentDetail (loại bỏ trùng lặp)
         List<Appointment> appointments = appointmentDetails.stream()
                 .map(AppointmentDetail::getAppointment)
@@ -280,37 +274,7 @@ public class AppointmentService {
                 .collect(Collectors.toList());
 
         // Chuyển đổi sang DTO và trả về kết quả
-        return appointments.stream()
-                .map(appointment -> {
-                    AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
-                    dto.setCustomerName(appointment.getCustomer().getFullname());
-                    dto.setServiceName(appointment.getService().getName());
-
-                    // Lấy ra danh sách appointmentDetail của bác sĩ hiện tại cho appointment này
-                    List<AppointmentDetail> details = appointmentDetailRepository
-                            .findByAppointmentAndIsActiveTrue(appointment).stream()
-                            .filter(detail -> detail.getConsultant().getId() == currentDoctor.getId())
-                            .collect(Collectors.toList());
-
-                    List<AppointmentDetailDTO> detailDTOs = details.stream()
-                            .map(detail -> {
-                                AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
-                                detailDTO.setConsultantName(detail.getConsultant().getFullname());
-                                detailDTO.setServiceName(detail.getService().getName());
-
-                                // Lấy ra medical result nếu có
-                                medicalResultRepository.findByAppointmentDetail(detail)
-                                        .ifPresent(result ->
-                                                detailDTO.setMedicalResult(modelMapper.map(result, ResultDTO.class))
-                                        );
-                                return detailDTO;
-                            })
-                            .collect(Collectors.toList());
-
-                    dto.setAppointmentDetails(detailDTOs);
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        return convertDTO(appointments);
     }
 
 
@@ -335,6 +299,69 @@ public class AppointmentService {
         historyDTO.setPastAppointments(pastAppointmentDTOs);
         return historyDTO;
     }
+
+
+
+    /**
+     * Cập nhật trạng thái cho AppointmentDetail cụ thể và tự động tính lại Appointment status
+     */
+    public void updateAppointmentDetailStatus(Long detailId, AppointmentStatus status) {
+        // Lấy appointmentDetail
+        AppointmentDetail detail = appointmentDetailRepository.findById(detailId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy chi tiết cuộc hẹn"));
+
+        // Kiểm tra quyền: chỉ bác sĩ phụ trách được cập nhật
+        User currentUser = authUtil.getCurrentUser();
+        if (detail.getConsultant().getId() != currentUser.getId()) {
+            throw new BadRequestException("Bạn chỉ có thể cập nhật dịch vụ mà bạn phụ trách");
+        }
+
+        // Kiểm tra trạng thái hợp lệ
+        if (status != AppointmentStatus.IN_PROGRESS &&
+            status != AppointmentStatus.WAITING_RESULT &&
+            status != AppointmentStatus.COMPLETED) {
+            throw new BadRequestException("Chỉ có thể cập nhật trạng thái IN_PROGRESS, WAITING_RESULT hoặc COMPLETED");
+        }
+
+        try {
+            // Cập nhật status cho detail
+            AppointmentStatus oldDetailStatus = detail.getStatus();
+            detail.setStatus(status);
+            detail.setUpdate_at(LocalDateTime.now());
+            appointmentDetailRepository.save(detail);
+
+            // Tính toán lại status cho Appointment
+            Appointment appointment = detail.getAppointment();
+            List<AppointmentDetail> allDetails = appointmentDetailRepository
+                    .findByAppointmentAndIsActiveTrue(appointment);
+
+            AppointmentStatus oldAppointmentStatus = appointment.getStatus();
+            AppointmentStatus newAppointmentStatus = statusCalculator.calculateStatus(allDetails);
+
+            // Chỉ cập nhật nếu status thay đổi
+            if (oldAppointmentStatus != newAppointmentStatus) {
+                appointment.setStatus(newAppointmentStatus);
+                appointment.setUpdate_at(LocalDateTime.now());
+                appointmentRepository.save(appointment);
+
+                // Log thay đổi appointment
+                String reason = String.format("Tự động cập nhật từ dịch vụ '%s' (%s → %s)",
+                    detail.getService().getName(), oldDetailStatus, status);
+
+                auditService.logStatusChange(
+                    appointment.getId(),
+                    oldAppointmentStatus,
+                    newAppointmentStatus,
+                    currentUser,
+                    reason
+                );
+            }
+
+        } catch (Exception e) {
+            throw new BadRequestException("Lỗi khi cập nhật trạng thái: " + e.getMessage());
+        }
+    }
+
 
     public List<AppointmentDTO> getAppointmentsByStatus(AppointmentStatus status) {
         User currentUser = authUtil.getCurrentUser();
