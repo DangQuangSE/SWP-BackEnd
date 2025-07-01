@@ -334,12 +334,14 @@ public class AppointmentService {
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    dto.setCustomerName(appointment.getCustomer().getFullname());
                     // Lấy ra danh sách appointmentDetail
                     List<AppointmentDetail> details = appointmentDetailRepository
                             .findByAppointmentAndIsActiveTrue(appointment);
                     List<AppointmentDetailDTO> detailDTOs = details.stream()
                             .map(detail -> {
                                 AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
+                                detailDTO.setConsultantName(detail.getConsultant().getFullname());
                                 // Lấy ra medical result nếu có
                                 medicalResultRepository.findByAppointmentDetail(detail)
                                         .ifPresent(result ->
