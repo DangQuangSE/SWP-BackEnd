@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.repository;
 
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
+import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
