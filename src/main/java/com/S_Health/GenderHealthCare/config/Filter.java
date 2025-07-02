@@ -53,7 +53,7 @@ public class Filter extends OncePerRequestFilter {
             "GET:/swagger-ui/**",
             "GET:/v3/api-docs/**",
             "GET:/swagger-resources/**",
-            "GET:/webjars/**"
+            "GET:/webjars/**",
             "POST:/api/zoom/**",
             "POST:/api/me/profile"
 //            "POST:/api/swagger-ui/**",
@@ -78,7 +78,7 @@ public class Filter extends OncePerRequestFilter {
 
     private final List<String> PROTECTED_PATCH_API = List.of(
             "/api/appointment/*/status",         // Update appointment status
-            "/api/appointment/detail/*/status"   // Update appointment detail status
+            "/api/appointment/detail/*/status",   // Update appointment detail status
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
             "/api/appointment/by-status",
