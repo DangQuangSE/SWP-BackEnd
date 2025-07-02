@@ -38,9 +38,6 @@ public class UserService {
         Long userId = authUtil.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BadRequestException("Người dùng không tồn tại"));
-
-        System.out.println(user.toString());
-
         return modelMapper.map(user, UserDTO.class);
     }
 }
