@@ -25,7 +25,7 @@ public class BlogRequest {
     MultipartFile img;
     String imgUrl;
 
-    List<String> tagNames; // Add tag names to process
+    List<String> tagNames;
 
     public void validate() {
         if (title == null || title.trim().length() < 10) {
