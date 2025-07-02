@@ -69,7 +69,7 @@ public class Filter extends OncePerRequestFilter {
             "/api/appointment/*/patient-history", // Patient history
             "/api/appointment/*/status-history",  // Status history
             "/api/me/**",                        // User profile APIs
-            "/api/medical-profile/**",           // Medical profile APIs
+            "/api/medical-profile/**",           // Medical profile APIs (bao gồm patient history)
             "/api/medical-result/**",            // Medical results
             "/api/payment/history/**",           // Payment history
             "/api/blog/my-blogs",                // User's own blogs

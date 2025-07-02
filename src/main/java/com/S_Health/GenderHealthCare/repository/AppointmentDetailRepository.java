@@ -29,4 +29,8 @@ public interface AppointmentDetailRepository extends JpaRepository<AppointmentDe
     List<AppointmentDetail> findByConsultant_idAndSlotDateAndStatus(@Param("consultantId") Long consultantId,
                                                                    @Param("date") LocalDate date,
                                                                    @Param("status") AppointmentStatus status);
+
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM AppointmentDetail a WHERE a.consultant.id = :consultantId AND a.appointment.customer.id = :customerId AND a.isActive = true")
+    boolean existsByConsultantIdAndAppointmentCustomerId(@Param("consultantId") Long consultantId,
+                                                        @Param("customerId") Long customerId);
 }
