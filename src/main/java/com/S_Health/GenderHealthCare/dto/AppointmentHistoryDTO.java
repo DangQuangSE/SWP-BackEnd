@@ -23,10 +23,13 @@ public class AppointmentHistoryDTO {
     
     @Schema(description = "Bác sĩ")
     String doctor;
-    
+
+    @Schema(description = "Phòng khám")
+    String room;
+
     @Schema(description = "Trạng thái")
     String status;
-    
+
     @Schema(description = "Chẩn đoán")
     String diagnosis;
 }

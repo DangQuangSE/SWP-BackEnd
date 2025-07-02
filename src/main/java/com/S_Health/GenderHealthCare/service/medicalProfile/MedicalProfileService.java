@@ -6,6 +6,7 @@ import com.S_Health.GenderHealthCare.dto.response.MedicalProfileDTO;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ResultType;
+import com.S_Health.GenderHealthCare.enums.ServiceType;
 import com.S_Health.GenderHealthCare.enums.TestStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
@@ -162,12 +163,16 @@ public class MedicalProfileService {
 
     private Page<AppointmentHistoryDTO> buildAppointmentHistory(Page<Appointment> appointmentPage) {
         return appointmentPage.map(appointment -> {
-            // Lấy AppointmentDetail đầu tiên để lấy doctor name
-            String doctorName = appointment.getAppointmentDetails().stream()
+            // Lấy AppointmentDetail đầu tiên để lấy thông tin
+            AppointmentDetail firstDetail = appointment.getAppointmentDetails().stream()
                     .filter(detail -> detail.getIsActive())
                     .findFirst()
-                    .map(detail -> detail.getConsultant().getFullname())
-                    .orElse("Chưa phân công");
+                    .orElse(null);
+
+            String doctorName = firstDetail != null ?
+                    firstDetail.getConsultant().getFullname() : "Chưa phân công";
+
+            String roomName = getRoomDisplayName(firstDetail);
 
             // Lấy diagnosis từ MedicalResult nếu có
             String diagnosis = appointment.getAppointmentDetails().stream()
@@ -184,6 +189,7 @@ public class MedicalProfileService {
                     .date(appointment.getPreferredDate())
                     .service(appointment.getService().getName())
                     .doctor(doctorName)
+                    .room(roomName)
                     .status(appointment.getStatus().toString())
                     .diagnosis(diagnosis)
                     .build();
@@ -289,6 +295,28 @@ public class MedicalProfileService {
         return medicalProfileRepository
                 .findByCustomerAndServiceAndIsActiveTrue(customer, service)
                 .orElse(null); // Trả về null nếu chưa có thông tin
+    }
+
+    /**
+     * Lấy tên phòng để hiển thị, xử lý trường hợp consulting online
+     */
+    private String getRoomDisplayName(AppointmentDetail appointmentDetail) {
+        if (appointmentDetail == null) {
+            return "Chưa phân công";
+        }
+
+        // Kiểm tra nếu là consulting online
+        if (appointmentDetail.getService() != null &&
+            appointmentDetail.getService().getType() == ServiceType.CONSULTING_ON) {
+            return "Tư vấn trực tuyến";
+        }
+
+        // Trường hợp khác, hiển thị tên phòng
+        if (appointmentDetail.getRoom() != null) {
+            return appointmentDetail.getRoom().getName();
+        }
+
+        return "Chưa phân phòng";
     }
 }
 
