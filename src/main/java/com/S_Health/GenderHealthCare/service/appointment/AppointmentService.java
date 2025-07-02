@@ -180,35 +180,48 @@ public class AppointmentService {
         // Đánh dấu các AppointmentDetail là không hoạt động
         List<AppointmentDetail> details = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
         for (AppointmentDetail detail : details) {
+            detail.setStatus(AppointmentStatus.CANCELED);
             ConsultantSlot consultantSlot = consultantSlotRepository
-                    .findByConsultantAndDateAndStartTimeAndIsActiveTrue(detail.getConsultant(), detail.getSlotTime().toLocalDate(), detail.getSlotTime().toLocalTime());
+                    .findByConsultantAndDateAndStartTimeAndIsActiveTrue(
+                    detail.getConsultant(), 
+                    detail.getSlotTime().toLocalDate(), 
+                    detail.getSlotTime().toLocalTime()
+                );
+
+        if (consultantSlot != null) {
             consultantSlot.setCurrentBooking(consultantSlot.getCurrentBooking() - 1);
             consultantSlot.setAvailableBooking(consultantSlot.getAvailableBooking() + 1);
             consultantSlotRepository.save(consultantSlot);
+        } else {
+            // Optionally log this situation for debugging
+            System.out.println("Warning: ConsultantSlot not found for detail ID: " + detail.getId());
         }
-        appointmentDetailRepository.saveAll(details);
-        // Cập nhật trạng thái lịch hẹn
-        appointment.setStatus(AppointmentStatus.CANCELED);
-        appointment.setUpdate_at(LocalDateTime.now());
-        // Hoàn slot: ServiceSlotPool
-        ServiceSlotPool slot = appointment.getServiceSlotPool();
-        if (slot != null) {
-            slot.setAvailableBooking(slot.getAvailableBooking() + 1);
-            slot.setCurrentBooking(slot.getCurrentBooking() - 1);
-            serviceSlotPoolRepository.save(slot);
-        }
-        appointmentRepository.save(appointment);
-
-        // Ghi log thay đổi trạng thái
-        User currentUser = authUtil.getCurrentUser();
-        auditService.logStatusChange(
-            id,
-            oldStatus,
-            AppointmentStatus.CANCELED,
-            currentUser,
-            "Hủy lịch hẹn"
-        );
     }
+    appointmentDetailRepository.saveAll(details);
+    
+    // Cập nhật trạng thái lịch hẹn
+    appointment.setStatus(AppointmentStatus.CANCELED);
+    appointment.setUpdate_at(LocalDateTime.now());
+    
+    // Hoàn slot: ServiceSlotPool
+    ServiceSlotPool slot = appointment.getServiceSlotPool();
+    if (slot != null) {
+        slot.setAvailableBooking(slot.getAvailableBooking() + 1);
+        slot.setCurrentBooking(slot.getCurrentBooking() - 1);
+        serviceSlotPoolRepository.save(slot);
+    }
+    appointmentRepository.save(appointment);
+
+    // Ghi log thay đổi trạng thái
+    User currentUser = authUtil.getCurrentUser();
+    auditService.logStatusChange(
+        id,
+        oldStatus,
+        AppointmentStatus.CANCELED,
+        currentUser,
+        "Hủy lịch hẹn"
+    );
+}
 
     public void checkInAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)

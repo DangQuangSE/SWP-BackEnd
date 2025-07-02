@@ -11,7 +11,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -69,13 +71,43 @@ public class TagService {
         tagRepository.save(tag);
     }
 
-    public Tag getOrCreateTag(String name) {
+    // Method mới: chỉ lấy tag đã tồn tại, không tạo mới
+    public Optional<Tag> getExistingTag(String name) {
         String normalizedName = name.trim().toLowerCase();
-        return tagRepository.findByNameAndIsActiveTrue(normalizedName)
-                .orElseGet(() -> {
-                    Tag newTag = new Tag();
-                    newTag.setName(normalizedName);
-                    return tagRepository.save(newTag);
-                });
+        return tagRepository.findByNameAndIsActiveTrue(normalizedName);
     }
+
+    // Method mới: lấy nhiều tag đã tồn tại
+    public List<Tag> getExistingTags(List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Tag> existingTags = new ArrayList<>();
+        for (String tagName : tagNames) {
+            String normalizedName = tagName.trim().toLowerCase();
+            Optional<Tag> tag = tagRepository.findByNameAndIsActiveTrue(normalizedName);
+            if (tag.isPresent()) {
+                existingTags.add(tag.get());
+            }
+        }
+        return existingTags;
+    }
+
+    // Method mới: kiểm tra danh sách tag có tồn tại không
+    public List<String> validateTagNames(List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> invalidTags = new ArrayList<>();
+        for (String tagName : tagNames) {
+            String normalizedName = tagName.trim().toLowerCase();
+            if (!tagRepository.findByNameAndIsActiveTrue(normalizedName).isPresent()) {
+                invalidTags.add(tagName);
+            }
+        }
+        return invalidTags;
+    }
+
 }

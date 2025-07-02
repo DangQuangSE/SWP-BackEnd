@@ -4,6 +4,7 @@ import com.S_Health.GenderHealthCare.dto.request.blog.BlogRequest;
 import com.S_Health.GenderHealthCare.dto.response.BlogResponse;
 import com.S_Health.GenderHealthCare.entity.Blog;
 import com.S_Health.GenderHealthCare.enums.BlogStatus;
+import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.service.blog.BlogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -14,8 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
-    
+
 @RestController
 @RequestMapping("/api/blog")
 @SecurityRequirement(name = "api")
@@ -39,7 +41,7 @@ public class BlogAPI {
 
     @GetMapping("/summary")
     @Operation(summary = "Lấy tóm tắt blog", description = "Lấy danh sách tóm tắt tất cả các blog đã xuất bản")
-    public ResponseEntity getSummaryBlog(){
+    public ResponseEntity getSummaryBlog() {
         return ResponseEntity.ok(blogService.getAllBlogSummaries());
     }
 
@@ -79,7 +81,114 @@ public class BlogAPI {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Trạng thái blog không hợp lệ");
         }
-
         return ResponseEntity.ok(blogService.createBlog(request));
+    }
+
+    // API mới cho tác giả
+    @GetMapping("/my-blogs")
+    @Operation(summary = "Lấy blog của tôi", description = "Lấy tất cả blog của tác giả hiện tại")
+    public ResponseEntity<Page<BlogResponse>> getMyBlogs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getMyBlogs(page, size));
+    }
+
+    @GetMapping("/detail/{id}")
+    @Operation(summary = "Lấy chi tiết blog", description = "Lấy chi tiết blog không tăng view count")
+    public ResponseEntity<BlogResponse> getBlogDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(blogService.getBlogById(id));
+    }
+
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Cập nhật blog", description = "Cập nhật blog của tác giả")
+    public ResponseEntity updateBlog(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam("status") String status,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "tags", required = false) List<String> tags) {
+
+        BlogRequest request = new BlogRequest();
+        request.setTitle(title);
+        request.setContent(content);
+        if (image != null && !image.isEmpty()) {
+            request.setImg(image);
+        }
+        request.setTagNames(tags);
+
+        try {
+            request.setStatus(BlogStatus.valueOf(status));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Trạng thái blog không hợp lệ");
+        }
+
+        try {
+            BlogResponse response = blogService.updateBlog(id, request);
+            return ResponseEntity.ok(response);
+        } catch (BadRequestException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Xóa blog", description = "Xóa blog của tác giả")
+    public ResponseEntity<String> deleteBlog(@PathVariable Long id) {
+        try {
+            blogService.deleteBlog(id);
+            return ResponseEntity.ok("Đã xóa bài viết thành công");
+        } catch (BadRequestException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // API cho admin xem blog theo status
+    @GetMapping("/admin/by-status")
+    @Operation(summary = "Lấy blog theo trạng thái", description = "Admin xem blog theo trạng thái cụ thể")
+    public ResponseEntity<Page<BlogResponse>> getBlogsByStatus(
+            @RequestParam BlogStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getBlogsByStatus(status, page, size));
+    }
+
+    // API admin duyệt blog
+    @PostMapping("/admin/{id}/approve")
+    @Operation(summary = "Duyệt blog", description = "Admin duyệt blog")
+    public ResponseEntity<BlogResponse> approveBlog(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(blogService.approveBlog(id));
+    }
+
+    // API admin từ chối blog
+    @PostMapping("/admin/{id}/reject")
+    @Operation(summary = "Từ chối blog", description = "Admin từ chối blog")
+    public ResponseEntity<BlogResponse> rejectBlog(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(blogService.rejectBlog(id));
+    }
+
+    // API admin đăng blog
+    @PostMapping("/admin/{id}/publish")
+    @Operation(summary = "Đăng blog", description = "Admin đăng blog đã duyệt")
+    public ResponseEntity<BlogResponse> publishBlog(@PathVariable Long id) {
+        return ResponseEntity.ok(blogService.publishBlog(id));
+    }
+
+    // API author gửi blog để duyệt
+    @PostMapping("/{id}/submit")
+    @Operation(summary = "Gửi blog để duyệt", description = "Author gửi blog để admin duyệt")
+    public ResponseEntity<BlogResponse> submitBlogForReview(@PathVariable Long id) {
+        return ResponseEntity.ok(blogService.submitBlogForReview(id));
+    }
+
+    // API author xem blog của mình theo status
+    @GetMapping("/my-blogs/by-status")
+    @Operation(summary = "Lấy blog của tôi theo trạng thái", description = "Author xem blog của mình theo trạng thái")
+    public ResponseEntity<Page<BlogResponse>> getMyBlogsByStatus(
+            @RequestParam BlogStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getMyBlogsByStatus(status, page, size));
     }
 }
