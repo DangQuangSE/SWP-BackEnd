@@ -21,6 +21,7 @@ public class AppointmentDTO {
     LocalDate preferredDate;
     LocalDateTime created_at;
     AppointmentStatus status;
+    Long customerId;
     String customerName;
     String serviceName;
     Boolean isPaid;

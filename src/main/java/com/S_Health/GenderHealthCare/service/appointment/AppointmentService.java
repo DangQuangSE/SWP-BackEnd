@@ -65,6 +65,9 @@ public class AppointmentService {
             detailDTOS.add(detailDTO);
         }
         AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
+        appointmentDTO.setCustomerId(appointment.getCustomer().getId());
+        appointmentDTO.setCustomerName(appointment.getCustomer().getFullname());
+        appointmentDTO.setServiceName(appointment.getService().getName());
         appointmentDTO.setAppointmentDetails(detailDTOS);
         return appointmentDTO;
     }
@@ -388,6 +391,7 @@ public class AppointmentService {
                     List<AppointmentDetail> details = entry.getValue();
 
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    dto.setCustomerId(appointment.getCustomer().getId());
                     dto.setCustomerName(appointment.getCustomer().getFullname());
                     dto.setServiceName(appointment.getService().getName());
 
@@ -417,6 +421,7 @@ public class AppointmentService {
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    dto.setCustomerId(appointment.getCustomer().getId());
                     dto.setCustomerName(appointment.getCustomer().getFullname());
                     // Lấy ra danh sách appointmentDetail
                     List<AppointmentDetail> details = appointmentDetailRepository
