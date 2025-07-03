@@ -14,13 +14,16 @@ import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.CycleTrackingRepository;
 import com.S_Health.GenderHealthCare.repository.NotificationRepository;
 import com.S_Health.GenderHealthCare.repository.UserRepository;
+import com.S_Health.GenderHealthCare.service.authentication.EmailService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.checkerframework.checker.units.qual.A;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,8 @@ public class NotificationService {
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
+    @Autowired
+    EmailService emailService;
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest request) {
@@ -149,5 +154,29 @@ public class NotificationService {
                         .build()
                         : null)
                 .build();
+    }
+
+    @Scheduled(cron = "0 37 13 * * *")
+    public void sendReminders() {
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+        List<Appointment> appointments = appointmentRepository
+                .findByPreferredDateAndIsActiveTrue(tomorrow);
+
+        for (Appointment appt : appointments) {
+            String email = appt.getCustomer().getEmail();
+            String name = appt.getCustomer().getFullname();
+            String serviceName = appt.getService().getName();
+            LocalDate date = appt.getPreferredDate();
+
+            String subject = "Reminder: Your Appointment Tomorrow";
+            String body = String.format(
+                    "Dear %s,\n\nThis is a reminder that you have an appointment scheduled on %s.\n\nBest regards,\nYour Service Team",
+                    name,
+                    date.toString()
+            );
+
+            emailService.sendAppointmentReminder(email, date);
+        }
     }
 }
