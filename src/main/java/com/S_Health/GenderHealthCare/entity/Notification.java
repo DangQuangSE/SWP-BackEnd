@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.S_Health.GenderHealthCare.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -22,9 +24,9 @@ public class Notification {
     private User user;
 
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "appointment_id")
-//    private Appointment appointment;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "appointment_id")
+    private Appointment appointment;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -38,8 +40,13 @@ public class Notification {
     private String content;
 
     @Column(name = "is_read")
-    private Boolean isRead;
+    private Boolean isRead = false;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    NotificationType type;
+
+    Boolean isActive = true;
 }

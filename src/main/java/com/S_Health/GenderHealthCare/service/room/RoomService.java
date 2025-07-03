@@ -114,7 +114,6 @@ public class RoomService {
         room.setName(request.getName());
         room.setDescription(request.getDescription());
         room.setUpdatedAt(LocalDateTime.now());
-
         Room updatedRoom = roomRepository.save(room);
 
         return convertToDTO(updatedRoom);

@@ -74,6 +74,12 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PROTECTED_PATCH_API = List.of(
             "/api/appointment/*/status",         // Update appointment status
             "/api/appointment/detail/*/status"   // Update appointment detail status
+            "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
+//            "/api/user/private/**"       // thêm wildcard nếu muốn
+            "/api/appointment/by-status",
+            "/api/zoom/**",
+            "/api/notifications",
+            "/api/notifications/{notificationId}"
     );
 
     public boolean isPulicApi(String uri, String method) {
