@@ -27,6 +27,7 @@ public class NotificationAPI {
         return ResponseEntity.status(201).body(notificationService.createNotification(request));
     }
 
+    // hoàn thành ở frondend
     @GetMapping
     @Operation(
             summary = "Lấy danh sách notification",
@@ -36,14 +37,13 @@ public class NotificationAPI {
         return ResponseEntity.ok(notificationService.getNotificationsByUser());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{notificationId}")
     @Operation(
             summary = "Lấy chi tiết notification",
             description = "Lấy chi tiết thông tin một notification theo id và userId."
     )
-    public ResponseEntity<NotificationResponse> getById(@PathVariable Long id,
-                                                        @RequestParam Long userId) {
-        return ResponseEntity.ok(notificationService.getNotificationById(id, userId));
+    public ResponseEntity<NotificationResponse> getById(@PathVariable Long notificationId) {
+        return ResponseEntity.ok(notificationService.getNotificationById(notificationId));
     }
 
     @PatchMapping("/{id}/read")
@@ -51,8 +51,8 @@ public class NotificationAPI {
             summary = "Đánh dấu notification đã đọc",
             description = "Đánh dấu một notification của user đã được đọc."
     )
-    public ResponseEntity<Void> markRead(@PathVariable Long id, @RequestParam Long userId) {
-        notificationService.markAsRead(id, userId);
+    public ResponseEntity<Void> markRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
         return ResponseEntity.ok().build();
     }
 
@@ -75,13 +75,13 @@ public class NotificationAPI {
         return ResponseEntity.ok(notificationService.countUnread(userId));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{notificationId}")
     @Operation(
             summary = "Xóa notification",
             description = "Xóa một notification theo id và userId."
     )
-    public ResponseEntity<Void> delete(@PathVariable Long id, @RequestParam Long userId) {
-        notificationService.deleteNotification(id, userId);
+    public ResponseEntity<Void> delete(@PathVariable Long notificationId) {
+        notificationService.deleteNotification(notificationId);
         return ResponseEntity.ok().build();
     }
 }

@@ -45,5 +45,8 @@ public class Notification {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Enumerated(EnumType.STRING)
     NotificationType type;
+
+    Boolean isActive = true;
 }
