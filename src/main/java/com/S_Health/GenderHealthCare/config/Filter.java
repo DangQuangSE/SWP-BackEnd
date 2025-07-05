@@ -45,6 +45,12 @@ public class Filter extends OncePerRequestFilter {
             "GET:/api/tags/**",              // Blog tags
             "GET:/api/blog/**",              // Blog reading (except protected ones)
 
+            // Chat APIs for customers (no login required)
+            "POST:/api/chat/start",          // Customer start chat
+            "POST:/api/chat/send",           // Customer send message
+            "POST:/api/chat/sessions/*/mark-read",  // Mark messages as read (customer can use)
+            "GET:/api/chat/sessions/*/unread-count", // Get unread count (customer can use)
+
             // Payment & External APIs
             "POST:/api/payment/vnpay/**",
             "POST:/api/zoom/**",
@@ -68,7 +74,9 @@ public class Filter extends OncePerRequestFilter {
             "/api/medical-result/**",            // Medical results
             "/api/payment/history/**",           // Payment history
             "/api/blog/my-blogs",                // User's own blogs
-            "/api/blog/detail/*"                 // Blog details for editing (specific ID)
+            "/api/blog/detail/*",                // Blog details for editing (specific ID)
+            "/api/chat/sessions",                // Staff get chat sessions (GET method)
+            "/api/chat/sessions/*/messages"      // Staff get session messages (GET method)
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
@@ -80,6 +88,11 @@ public class Filter extends OncePerRequestFilter {
             "/api/zoom/**",
             "/api/notifications",
             "/api/notifications/{notificationId}"
+    );
+
+    private final List<String> PROTECTED_POST_API = List.of(
+            "/api/chat/join/*",                  // Staff join chat session
+            "/api/chat/sessions/*/end"           // Staff end chat session
     );
 
     public boolean isPulicApi(String uri, String method) {
@@ -99,7 +112,27 @@ public class Filter extends OncePerRequestFilter {
             return !isProtected; // Nếu không bị bảo vệ → cho phép (nhưng hầu hết PATCH đều protected)
         }
 
-        // Xử lý các method khác (POST, PUT, DELETE)
+        // Xử lý POST requests
+        if (method.equalsIgnoreCase("POST")) {
+            // Kiểm tra xem có phải protected POST API không
+            boolean isProtected = PROTECTED_POST_API.stream()
+                    .anyMatch(pattern -> matcher.match(pattern, uri));
+
+            if (isProtected) {
+                return false; // Protected POST API → cần token
+            }
+
+            // Kiểm tra xem có phải public POST API không
+            return PUBLIC_API.stream().anyMatch(pattern -> {
+                String[] parts = pattern.split(":", 2);
+                if (parts.length != 2) return false;
+                String allowedMethod = parts[0];
+                String allowedUri = parts[1];
+                return method.equalsIgnoreCase(allowedMethod) && matcher.match(allowedUri, uri);
+            });
+        }
+
+        // Xử lý các method khác (PUT, DELETE)
         // Tất cả đều cần token trừ những API trong PUBLIC_API
         return PUBLIC_API.stream().anyMatch(pattern -> {
             String[] parts = pattern.split(":", 2);
