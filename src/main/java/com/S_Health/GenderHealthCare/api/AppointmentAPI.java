@@ -4,7 +4,6 @@ import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRe
 import com.S_Health.GenderHealthCare.entity.AppointmentAuditLog;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
-import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -23,8 +22,6 @@ import java.util.List;
 public class AppointmentAPI {
     @Autowired
     AppointmentService appointmentService;
-    @Autowired
-    AppointmentAuditService auditService;
     @GetMapping("{id}")
     public ResponseEntity getAppointmentById(@PathVariable Long id) {
         return ResponseEntity.ok(appointmentService.getAppointmentById(id));
@@ -73,16 +70,6 @@ public class AppointmentAPI {
     public ResponseEntity getPatientHistory(@PathVariable Long appointmentId) {
         return ResponseEntity.ok(appointmentService.getPatientHistoryFromAppointment(appointmentId));
     }
-
-    @GetMapping("/{id}/status-history")
-    @Operation(summary = "Lấy lịch sử thay đổi trạng thái của lịch hẹn",
-               description = "Trả về danh sách các thay đổi trạng thái của lịch hẹn, bao gồm thông tin người thay đổi, thời gian và lý do")
-    public ResponseEntity<List<AppointmentAuditLog>> getAppointmentStatusHistory(@PathVariable Long id) {
-        return ResponseEntity.ok(auditService.getAuditLogsForAppointment(id));
-    }
-
-
-
     @PatchMapping("/detail/{detailId}/status")
     @Operation(summary = "Cập nhật trạng thái dịch vụ cụ thể",
                description = "Bác sĩ cập nhật trạng thái cho dịch vụ mà họ phụ trách. Appointment status sẽ được tự động tính lại theo quy tắc: có 1 detail IN_PROGRESS → Appointment IN_PROGRESS; tất cả WAITING_RESULT → Appointment WAITING_RESULT; tất cả COMPLETED → Appointment COMPLETED")

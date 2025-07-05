@@ -11,7 +11,6 @@ import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
-import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentStatusCalculator;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -44,8 +43,6 @@ public class AppointmentService {
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
-    @Autowired
-    AppointmentAuditService auditService;
     @Autowired
     AppointmentStatusCalculator statusCalculator;
 
@@ -126,14 +123,6 @@ public class AppointmentService {
             if (request.getStatus() != null) {
                 AppointmentStatus oldStatus = appointment.getStatus();
                 if (!oldStatus.equals(request.getStatus())) {
-                    // Ghi log thay đổi trạng thái
-                    auditService.logStatusChange(
-                            appointmentId,
-                            oldStatus,
-                            request.getStatus(),
-                            user,
-                            "Cập nhật trạng thái qua API updateAppointment"
-                    );
                     appointment.setStatus(request.getStatus());
                 }
             }
@@ -163,15 +152,6 @@ public class AppointmentService {
         appointmentDetailRepository.saveAll(details);
         appointment.setIsActive(false);
         appointmentRepository.save(appointment);
-        User currentUser = authUtil.getCurrentUser();
-        AppointmentStatus oldStatus = appointment.getStatus();
-        auditService.logStatusChange(
-                id,
-                oldStatus,
-                AppointmentStatus.DELETED,
-                currentUser,
-                "Xóa lịch hẹn"
-        );
     }
 
     public void cancelAppointment(Long id) {
@@ -219,22 +199,12 @@ public class AppointmentService {
         }
         appointmentRepository.save(appointment);
 
-        // Ghi log thay đổi trạng thái
-        User currentUser = authUtil.getCurrentUser();
-        auditService.logStatusChange(
-                id,
-                oldStatus,
-                AppointmentStatus.CANCELED,
-                currentUser,
-                "Hủy lịch hẹn"
-        );
     }
 
     public void checkInAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
         try {
-            AppointmentStatus oldStatus = appointment.getStatus();
             appointment.setStatus(AppointmentStatus.CHECKED);
             appointment.setUpdate_at(LocalDateTime.now());
 
@@ -246,16 +216,6 @@ public class AppointmentService {
             }
 
             appointmentRepository.save(appointment);
-
-            // Ghi log thay đổi trạng thái
-            User currentUser = authUtil.getCurrentUser();
-            auditService.logStatusChange(
-                    id,
-                    oldStatus,
-                    AppointmentStatus.CHECKED,
-                    currentUser,
-                    "Check-in lịch hẹn"
-            );
         } catch (Exception e) {
             throw new BadRequestException("Không thể cập nhật trạng thái lịch hẹn: " + e.getMessage());
         }
@@ -307,8 +267,6 @@ public class AppointmentService {
         }
 
         try {
-            // Cập nhật status cho detail
-            AppointmentStatus oldDetailStatus = detail.getStatus();
             detail.setStatus(status);
             detail.setUpdate_at(LocalDateTime.now());
             appointmentDetailRepository.save(detail);
@@ -326,18 +284,6 @@ public class AppointmentService {
                 appointment.setStatus(newAppointmentStatus);
                 appointment.setUpdate_at(LocalDateTime.now());
                 appointmentRepository.save(appointment);
-
-                // Log thay đổi appointment
-                String reason = String.format("Tự động cập nhật từ dịch vụ '%s' (%s → %s)",
-                        detail.getService().getName(), oldDetailStatus, status);
-
-                auditService.logStatusChange(
-                        appointment.getId(),
-                        oldAppointmentStatus,
-                        newAppointmentStatus,
-                        currentUser,
-                        reason
-                );
             }
 
         } catch (Exception e) {
