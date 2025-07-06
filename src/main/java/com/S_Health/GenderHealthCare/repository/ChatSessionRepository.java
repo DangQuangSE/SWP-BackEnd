@@ -25,4 +25,7 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
     
     @Query("SELECT cs FROM ChatSession cs WHERE cs.status = :status AND cs.isActive = true ORDER BY cs.createdAt ASC")
     List<ChatSession> findWaitingSessionsOrderByCreatedAt(@Param("status") ChatStatus status);
+
+    @Query("SELECT cs FROM ChatSession cs WHERE cs.status IN :statuses AND cs.isActive = true ORDER BY cs.updatedAt DESC")
+    List<ChatSession> findByStatusInAndIsActiveTrueOrderByUpdatedAtDesc(@Param("statuses") List<ChatStatus> statuses);
 }

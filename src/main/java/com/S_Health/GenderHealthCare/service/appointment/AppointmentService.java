@@ -58,7 +58,13 @@ public class AppointmentService {
             MedicalResult medicalResult = medicalResultRepository.findByAppointmentDetail(appointmentDT)
                     .orElseThrow(() -> new BadRequestException("Không có kết quả!"));
             AppointmentDetailDTO detailDTO = modelMapper.map(appointmentDT, AppointmentDetailDTO.class);
+            detailDTO.setConsultantName(appointmentDT.getConsultant().getFullname());
+            detailDTO.setServiceName(appointmentDT.getService().getName());
             detailDTO.setMedicalResult(modelMapper.map(medicalResult, ResultDTO.class));
+
+            // Map Room information if available
+            detailDTO.setRoom(mapRoomToSimpleDTO(appointmentDT.getRoom()));
+
             detailDTOS.add(detailDTO);
         }
         AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
@@ -348,6 +354,9 @@ public class AppointmentService {
                                 detailDTO.setConsultantName(detail.getConsultant().getFullname());
                                 detailDTO.setServiceName(detail.getService().getName());
 
+                                // Map Room information if available
+                                detailDTO.setRoom(mapRoomToSimpleDTO(detail.getRoom()));
+
                                 // Lấy ra medical result nếu có
                                 medicalResultRepository.findByAppointmentDetail(detail)
                                         .ifPresent(result ->
@@ -376,6 +385,11 @@ public class AppointmentService {
                             .map(detail -> {
                                 AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
                                 detailDTO.setConsultantName(detail.getConsultant().getFullname());
+                                detailDTO.setServiceName(detail.getService().getName());
+
+                                // Map Room information if available
+                                detailDTO.setRoom(mapRoomToSimpleDTO(detail.getRoom()));
+
                                 // Lấy ra medical result nếu có
                                 medicalResultRepository.findByAppointmentDetail(detail)
                                         .ifPresent(result ->
@@ -389,4 +403,20 @@ public class AppointmentService {
                 })
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Helper method to map Room to SimpleRoomDTO using ModelMapper
+     */
+    private com.S_Health.GenderHealthCare.dto.SimpleRoomDTO mapRoomToSimpleDTO(com.S_Health.GenderHealthCare.entity.Room room) {
+        if (room == null) return null;
+
+        com.S_Health.GenderHealthCare.dto.SimpleRoomDTO roomDTO = modelMapper.map(room, com.S_Health.GenderHealthCare.dto.SimpleRoomDTO.class);
+        // Set specialization name manually since it's nested
+        if (room.getSpecialization() != null) {
+            roomDTO.setSpecializationName(room.getSpecialization().getName());
+        }
+        return roomDTO;
+    }
+
+
 }

@@ -136,7 +136,10 @@ public class ChatService {
             throw new BadRequestException("Chỉ staff mới có thể xem chat sessions");
         }
 
-        List<ChatSession> sessions = chatSessionRepository.findAllActiveSessionsOrderByUpdatedAtDesc();
+        // Lấy sessions đang WAITING và ACTIVE (không lấy ENDED) trong một query
+        List<ChatStatus> activeStatuses = List.of(ChatStatus.WAITING, ChatStatus.ACTIVE);
+        List<ChatSession> sessions = chatSessionRepository.findByStatusInAndIsActiveTrueOrderByUpdatedAtDesc(activeStatuses);
+
         return sessions.stream()
                 .map(this::convertToSessionDTO)
                 .collect(Collectors.toList());
