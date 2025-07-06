@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -156,7 +157,11 @@ public class VNPayService {
             throw new AuthenticationException("Cuộc hẹn đã huỷ.");
         }
 
+        BigDecimal percent = new BigDecimal("0.2");
         BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
+        BigDecimal payAmount = price.multiply(percent);
+        BigDecimal amountVnp = payAmount.multiply(BigDecimal.valueOf(100));
+        String vnp_Amount = amountVnp.setScale(0, RoundingMode.HALF_UP).toPlainString();
 
         long amount = price.longValue();// Số tiền thanh toán, ví dụ 10.000 VND
         String orderInfo = "Thanh toan don hang: " + appointment.getService().getName();
@@ -179,7 +184,7 @@ public class VNPayService {
         params.put("vnp_Version", vnp_Version);
         params.put("vnp_Command", vnp_Command);
         params.put("vnp_TmnCode", vnp_TmnCode);
-        params.put("vnp_Amount", String.valueOf(amount * 100 * 0.2));
+        params.put("vnp_Amount", vnp_Amount);
         params.put("vnp_CreateDate", vnp_CreateDate);
         params.put("vnp_CurrCode", "VND");
         params.put("vnp_IpAddr", vnp_IpAddr);
