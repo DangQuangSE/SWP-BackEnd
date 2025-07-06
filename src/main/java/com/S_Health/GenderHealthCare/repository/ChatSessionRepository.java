@@ -13,16 +13,16 @@ import java.util.Optional;
 
 @Repository
 public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> {
-    
+
     Optional<ChatSession> findBySessionIdAndIsActiveTrue(String sessionId);
-    
+
     List<ChatSession> findByStatusAndIsActiveTrueOrderByUpdatedAtDesc(ChatStatus status);
-    
+
     List<ChatSession> findByStaffAndIsActiveTrueOrderByUpdatedAtDesc(User staff);
-    
+
     @Query("SELECT cs FROM ChatSession cs WHERE cs.isActive = true ORDER BY cs.updatedAt DESC")
     List<ChatSession> findAllActiveSessionsOrderByUpdatedAtDesc();
-    
+
     @Query("SELECT cs FROM ChatSession cs WHERE cs.status = :status AND cs.isActive = true ORDER BY cs.createdAt ASC")
     List<ChatSession> findWaitingSessionsOrderByCreatedAt(@Param("status") ChatStatus status);
 

@@ -128,21 +128,40 @@ public class ChatService {
     }
 
     /**
-     * Lấy danh sách chat sessions cho staff
+     * Lấy danh sách chat sessions cho staff theo status
      */
-    public List<ChatSessionDTO> getChatSessionsForStaff() {
+    public List<ChatSessionDTO> getChatSessionsForStaff(String statusParam) {
         User currentStaff = authUtil.getCurrentUser();
         if (currentStaff.getRole() != UserRole.STAFF) {
             throw new BadRequestException("Chỉ staff mới có thể xem chat sessions");
         }
 
-        // Lấy sessions đang WAITING và ACTIVE (không lấy ENDED) trong một query
-        List<ChatStatus> activeStatuses = List.of(ChatStatus.WAITING, ChatStatus.ACTIVE);
-        List<ChatSession> sessions = chatSessionRepository.findByStatusInAndIsActiveTrueOrderByUpdatedAtDesc(activeStatuses);
+        List<ChatSession> sessions;
+
+        if (statusParam == null || statusParam.trim().isEmpty()) {
+            // Nếu không có status parameter, lấy WAITING và ACTIVE (mặc định)
+            List<ChatStatus> activeStatuses = List.of(ChatStatus.WAITING, ChatStatus.ACTIVE);
+            sessions = chatSessionRepository.findByStatusInAndIsActiveTrueOrderByUpdatedAtDesc(activeStatuses);
+        } else {
+            try {
+                // Parse status parameter
+                ChatStatus requestedStatus = ChatStatus.valueOf(statusParam.toUpperCase());
+                sessions = chatSessionRepository.findByStatusAndIsActiveTrueOrderByUpdatedAtDesc(requestedStatus);
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid status: " + statusParam + ". Valid values: WAITING, ACTIVE, ENDED");
+            }
+        }
 
         return sessions.stream()
                 .map(this::convertToSessionDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Overload method for backward compatibility
+     */
+    public List<ChatSessionDTO> getChatSessionsForStaff() {
+        return getChatSessionsForStaff(null);
     }
 
     /**

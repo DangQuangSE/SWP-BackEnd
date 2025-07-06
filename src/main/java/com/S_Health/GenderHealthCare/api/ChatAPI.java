@@ -6,6 +6,7 @@ import com.S_Health.GenderHealthCare.dto.request.SendMessageRequest;
 import com.S_Health.GenderHealthCare.dto.request.StartChatRequest;
 import com.S_Health.GenderHealthCare.service.chat.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -46,9 +47,17 @@ public class ChatAPI {
     }
 
     @GetMapping("/sessions")
-    @Operation(summary = "Lấy danh sách chat sessions", description = "Staff xem tất cả chat sessions")
-    public ResponseEntity<List<ChatSessionDTO>> getChatSessions() {
-        List<ChatSessionDTO> sessions = chatService.getChatSessionsForStaff();
+    @Operation(
+        summary = "Lấy danh sách chat sessions",
+        description = "Staff xem chat sessions theo status. Nếu không có status, sẽ lấy WAITING và ACTIVE sessions"
+    )
+    public ResponseEntity<List<ChatSessionDTO>> getChatSessions(
+            @Parameter(
+                description = "Chat status để filter. Valid values: WAITING, ACTIVE, ENDED. Nếu không có sẽ lấy WAITING + ACTIVE",
+                example = "WAITING"
+            )
+            @RequestParam(required = false) String status) {
+        List<ChatSessionDTO> sessions = chatService.getChatSessionsForStaff(status);
         return ResponseEntity.ok(sessions);
     }
 
