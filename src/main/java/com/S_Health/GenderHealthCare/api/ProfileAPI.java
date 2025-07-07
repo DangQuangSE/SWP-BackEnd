@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/me")
@@ -30,5 +31,11 @@ public class ProfileAPI {
     public ResponseEntity<UserDTO> getProfile() {
         UserDTO user = userService.getUserProfile();
         return ResponseEntity.ok(user);
+    }
+
+    @PutMapping("/avatar")
+    public ResponseEntity<UserDTO> updateAvatar(@RequestParam("file") MultipartFile file) {
+        UserDTO updatedUser = userService.updateAvatar(file);
+        return ResponseEntity.ok(updatedUser);
     }
 }
