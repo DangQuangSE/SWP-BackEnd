@@ -11,7 +11,6 @@ import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
-import com.S_Health.GenderHealthCare.service.audit.AppointmentAuditService;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentStatusCalculator;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -45,8 +44,6 @@ public class AppointmentService {
     @Autowired
     AuthUtil authUtil;
     @Autowired
-    AppointmentAuditService auditService;
-    @Autowired
     AppointmentStatusCalculator statusCalculator;
 
 
@@ -61,10 +58,19 @@ public class AppointmentService {
             MedicalResult medicalResult = medicalResultRepository.findByAppointmentDetail(appointmentDT)
                     .orElseThrow(() -> new BadRequestException("Không có kết quả!"));
             AppointmentDetailDTO detailDTO = modelMapper.map(appointmentDT, AppointmentDetailDTO.class);
+            detailDTO.setConsultantName(appointmentDT.getConsultant().getFullname());
+            detailDTO.setServiceName(appointmentDT.getService().getName());
             detailDTO.setMedicalResult(modelMapper.map(medicalResult, ResultDTO.class));
+
+            // Map Room information if available
+            detailDTO.setRoom(mapRoomToSimpleDTO(appointmentDT.getRoom()));
+
             detailDTOS.add(detailDTO);
         }
         AppointmentDTO appointmentDTO = modelMapper.map(appointment, AppointmentDTO.class);
+        appointmentDTO.setCustomerId(appointment.getCustomer().getId());
+        appointmentDTO.setCustomerName(appointment.getCustomer().getFullname());
+        appointmentDTO.setServiceName(appointment.getService().getName());
         appointmentDTO.setAppointmentDetails(detailDTOS);
         return appointmentDTO;
     }
@@ -123,14 +129,6 @@ public class AppointmentService {
             if (request.getStatus() != null) {
                 AppointmentStatus oldStatus = appointment.getStatus();
                 if (!oldStatus.equals(request.getStatus())) {
-                    // Ghi log thay đổi trạng thái
-                    auditService.logStatusChange(
-                            appointmentId,
-                            oldStatus,
-                            request.getStatus(),
-                            user,
-                            "Cập nhật trạng thái qua API updateAppointment"
-                    );
                     appointment.setStatus(request.getStatus());
                 }
             }
@@ -160,15 +158,6 @@ public class AppointmentService {
         appointmentDetailRepository.saveAll(details);
         appointment.setIsActive(false);
         appointmentRepository.save(appointment);
-        User currentUser = authUtil.getCurrentUser();
-        AppointmentStatus oldStatus = appointment.getStatus();
-        auditService.logStatusChange(
-                id,
-                oldStatus,
-                AppointmentStatus.DELETED,
-                currentUser,
-                "Xóa lịch hẹn"
-        );
     }
 
     public void cancelAppointment(Long id) {
@@ -216,22 +205,12 @@ public class AppointmentService {
         }
         appointmentRepository.save(appointment);
 
-        // Ghi log thay đổi trạng thái
-        User currentUser = authUtil.getCurrentUser();
-        auditService.logStatusChange(
-                id,
-                oldStatus,
-                AppointmentStatus.CANCELED,
-                currentUser,
-                "Hủy lịch hẹn"
-        );
     }
 
     public void checkInAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
         try {
-            AppointmentStatus oldStatus = appointment.getStatus();
             appointment.setStatus(AppointmentStatus.CHECKED);
             appointment.setUpdate_at(LocalDateTime.now());
 
@@ -243,16 +222,6 @@ public class AppointmentService {
             }
 
             appointmentRepository.save(appointment);
-
-            // Ghi log thay đổi trạng thái
-            User currentUser = authUtil.getCurrentUser();
-            auditService.logStatusChange(
-                    id,
-                    oldStatus,
-                    AppointmentStatus.CHECKED,
-                    currentUser,
-                    "Check-in lịch hẹn"
-            );
         } catch (Exception e) {
             throw new BadRequestException("Không thể cập nhật trạng thái lịch hẹn: " + e.getMessage());
         }
@@ -304,8 +273,6 @@ public class AppointmentService {
         }
 
         try {
-            // Cập nhật status cho detail
-            AppointmentStatus oldDetailStatus = detail.getStatus();
             detail.setStatus(status);
             detail.setUpdate_at(LocalDateTime.now());
             appointmentDetailRepository.save(detail);
@@ -323,18 +290,6 @@ public class AppointmentService {
                 appointment.setStatus(newAppointmentStatus);
                 appointment.setUpdate_at(LocalDateTime.now());
                 appointmentRepository.save(appointment);
-
-                // Log thay đổi appointment
-                String reason = String.format("Tự động cập nhật từ dịch vụ '%s' (%s → %s)",
-                        detail.getService().getName(), oldDetailStatus, status);
-
-                auditService.logStatusChange(
-                        appointment.getId(),
-                        oldAppointmentStatus,
-                        newAppointmentStatus,
-                        currentUser,
-                        reason
-                );
             }
 
         } catch (Exception e) {
@@ -388,6 +343,7 @@ public class AppointmentService {
                     List<AppointmentDetail> details = entry.getValue();
 
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    dto.setCustomerId(appointment.getCustomer().getId());
                     dto.setCustomerName(appointment.getCustomer().getFullname());
                     dto.setServiceName(appointment.getService().getName());
 
@@ -397,6 +353,9 @@ public class AppointmentService {
                                 AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
                                 detailDTO.setConsultantName(detail.getConsultant().getFullname());
                                 detailDTO.setServiceName(detail.getService().getName());
+
+                                // Map Room information if available
+                                detailDTO.setRoom(mapRoomToSimpleDTO(detail.getRoom()));
 
                                 // Lấy ra medical result nếu có
                                 medicalResultRepository.findByAppointmentDetail(detail)
@@ -417,6 +376,7 @@ public class AppointmentService {
         return appointments.stream()
                 .map(appointment -> {
                     AppointmentDTO dto = modelMapper.map(appointment, AppointmentDTO.class);
+                    dto.setCustomerId(appointment.getCustomer().getId());
                     dto.setCustomerName(appointment.getCustomer().getFullname());
                     // Lấy ra danh sách appointmentDetail
                     List<AppointmentDetail> details = appointmentDetailRepository
@@ -425,6 +385,11 @@ public class AppointmentService {
                             .map(detail -> {
                                 AppointmentDetailDTO detailDTO = modelMapper.map(detail, AppointmentDetailDTO.class);
                                 detailDTO.setConsultantName(detail.getConsultant().getFullname());
+                                detailDTO.setServiceName(detail.getService().getName());
+
+                                // Map Room information if available
+                                detailDTO.setRoom(mapRoomToSimpleDTO(detail.getRoom()));
+
                                 // Lấy ra medical result nếu có
                                 medicalResultRepository.findByAppointmentDetail(detail)
                                         .ifPresent(result ->
@@ -438,4 +403,20 @@ public class AppointmentService {
                 })
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Helper method to map Room to SimpleRoomDTO using ModelMapper
+     */
+    private com.S_Health.GenderHealthCare.dto.SimpleRoomDTO mapRoomToSimpleDTO(com.S_Health.GenderHealthCare.entity.Room room) {
+        if (room == null) return null;
+
+        com.S_Health.GenderHealthCare.dto.SimpleRoomDTO roomDTO = modelMapper.map(room, com.S_Health.GenderHealthCare.dto.SimpleRoomDTO.class);
+        // Set specialization name manually since it's nested
+        if (room.getSpecialization() != null) {
+            roomDTO.setSpecializationName(room.getSpecialization().getName());
+        }
+        return roomDTO;
+    }
+
+
 }

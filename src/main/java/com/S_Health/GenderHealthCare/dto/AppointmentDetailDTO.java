@@ -22,4 +22,5 @@ public class AppointmentDetailDTO {
     String startUrl;
     AppointmentStatus status;
     ResultDTO medicalResult;
+    SimpleRoomDTO room;
 }

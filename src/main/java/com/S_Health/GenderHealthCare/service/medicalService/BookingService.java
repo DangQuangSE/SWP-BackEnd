@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.service.MedicalService;
 
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
+import com.S_Health.GenderHealthCare.dto.SimpleRoomDTO;
 import com.S_Health.GenderHealthCare.dto.response.BookingResponse;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
@@ -156,6 +157,11 @@ public class BookingService {
         appointmentDetailRepository.save(detail);
 
         AppointmentDetailDTO dto = modelMapper.map(detail, AppointmentDetailDTO.class);
+        dto.setConsultantName(consultant.getFullname());
+        dto.setServiceName(subService.getName());
+
+        // Map Room information if available
+        dto.setRoom(mapRoomToSimpleDTO(assignedRoom));
 
         return new AppointmentDetailData(dto, slot);
     }
@@ -266,5 +272,19 @@ public class BookingService {
                                            java.time.LocalTime startTime,
                                            java.time.LocalTime endTime) {
         return !timeSlot.isBefore(startTime) && !timeSlot.isAfter(endTime);
+    }
+
+    /**
+     * Helper method to map Room to SimpleRoomDTO using ModelMapper
+     */
+    private SimpleRoomDTO mapRoomToSimpleDTO(Room room) {
+        if (room == null) return null;
+
+        SimpleRoomDTO roomDTO = modelMapper.map(room, SimpleRoomDTO.class);
+        // Set specialization name manually since it's nested
+        if (room.getSpecialization() != null) {
+            roomDTO.setSpecializationName(room.getSpecialization().getName());
+        }
+        return roomDTO;
     }
 }

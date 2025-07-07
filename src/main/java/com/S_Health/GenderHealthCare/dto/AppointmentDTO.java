@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.dto;
 
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
+import com.S_Health.GenderHealthCare.enums.ServiceType;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,8 +22,10 @@ public class AppointmentDTO {
     LocalDate preferredDate;
     LocalDateTime created_at;
     AppointmentStatus status;
+    Long customerId;
     String customerName;
     String serviceName;
+    ServiceType serviceType;
     Boolean isPaid;
     PaymentStatus paymentStatus;
     List<AppointmentDetailDTO> appointmentDetails;
