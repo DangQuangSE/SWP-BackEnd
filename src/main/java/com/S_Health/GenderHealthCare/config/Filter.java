@@ -47,7 +47,7 @@ public class Filter extends OncePerRequestFilter {
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
 //            "POST:/api/swagger-resources/**"
-            );
+    );
 
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
