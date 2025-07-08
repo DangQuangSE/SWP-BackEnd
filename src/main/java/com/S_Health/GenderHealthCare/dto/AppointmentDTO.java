@@ -24,6 +24,7 @@ public class AppointmentDTO {
     String customerName;
     String serviceName;
     Boolean isPaid;
+    Boolean isRated;
     PaymentStatus paymentStatus;
     List<AppointmentDetailDTO> appointmentDetails;
 }

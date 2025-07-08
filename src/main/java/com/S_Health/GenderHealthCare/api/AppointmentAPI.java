@@ -76,4 +76,10 @@ public class AppointmentAPI {
     public ResponseEntity<List<AppointmentAuditLog>> getAppointmentStatusHistory(@PathVariable Long id) {
         return ResponseEntity.ok(auditService.getAuditLogsForAppointment(id));
     }
+
+    @PutMapping("/{id}/rate")
+    public ResponseEntity rateAppointment(@PathVariable Long id) {
+        appointmentService.updateIsRated(id);
+        return ResponseEntity.noContent().build();
+    }
 }

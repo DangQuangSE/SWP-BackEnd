@@ -56,6 +56,7 @@ public class FeedbackService {
         serviceFeedbackRepository.save(serviceFeedback);
 
         return ServiceFeedbackResponse.builder()
+                .id(serviceFeedback.getId())
                 .rating(request.getRating())
                 .comment(request.getComment())
                 .createdAt(serviceFeedback.getCreateAt())
@@ -189,17 +190,18 @@ public class FeedbackService {
                 .build();
     }
 
-    public List<ConsultantFeedbackResponse> getByServiceFeedbackId(Long feedbackId) {
-        return consultantFeedbackRepository.findByServiceFeedbackId(feedbackId)
-                .stream()
-                .map(cf -> ConsultantFeedbackResponse.builder()
-                        .id(cf.getId())
-                        .consultantId(cf.getId())
-                        .comment(cf.getComment())
-                        .createdAt(cf.getCreateAt())
-                        .build())
-                .collect(Collectors.toList());
-    }
+        public List<ConsultantFeedbackResponse> getByServiceFeedbackId(Long feedbackId) {
+            return consultantFeedbackRepository.findByServiceFeedbackId(feedbackId)
+                    .stream()
+                    .map(cf -> ConsultantFeedbackResponse.builder()
+                            .id(cf.getId())
+                            .rating(cf.getRating())
+                            .consultantId(cf.getConsultantId())
+                            .comment(cf.getComment())
+                            .createdAt(cf.getCreateAt())
+                            .build())
+                    .collect(Collectors.toList());
+        }
 
 
 

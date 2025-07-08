@@ -10,5 +10,5 @@ import java.util.List;
 @Repository
 public interface ConsultantFeedbackRepository extends JpaRepository<ConsultantFeedback, Long> {
 
-    List<ServiceFeedback> findByServiceFeedbackId(Long feedbackId);
+    List<ConsultantFeedback> findByServiceFeedbackId(Long feedbackId);
 }

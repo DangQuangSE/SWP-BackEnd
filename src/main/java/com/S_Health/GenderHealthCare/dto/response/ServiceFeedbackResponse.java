@@ -19,5 +19,6 @@ public class ServiceFeedbackResponse {
     LocalDateTime updateAt;
     Long appointmentId;
 
+
     List<ConsultantFeedbackResponse> consultantFeedbacks;
 }
