@@ -53,14 +53,13 @@ public class Filter extends OncePerRequestFilter {
 
             // Payment & External APIs
             "POST:/api/payment/vnpay/**",
-            "POST:/api/zoom/**",
 
             // Swagger UI endpoints
             "GET:/swagger-ui/**",
             "GET:/v3/api-docs/**",
             "GET:/swagger-resources/**",
             "GET:/webjars/**",
-            "POST:/api/zoom/**",
+
             "POST:/api/me/profile"
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
@@ -81,7 +80,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/blog/my-blogs",                // User's own blogs
             "/api/blog/detail/*",                // Blog details for editing (specific ID)
             "/api/chat/sessions",                // Staff get chat sessions (GET method)
-            "/api/chat/sessions/*/messages"      // Staff get session messages (GET method)
+            "/api/chat/sessions/*/messages",// Staff get session messages (GET method)
+            "/api/zoom/**"
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
