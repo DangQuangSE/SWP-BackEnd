@@ -65,7 +65,7 @@ public class Filter extends OncePerRequestFilter {
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
 //            "POST:/api/swagger-resources/**"
-    );
+            );
 
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs",
@@ -97,7 +97,9 @@ public class Filter extends OncePerRequestFilter {
 
     private final List<String> PROTECTED_POST_API = List.of(
             "/api/chat/join/*",                  // Staff join chat session
-            "/api/chat/sessions/*/end"           // Staff end chat session
+            "/api/chat/sessions/*/end",           // Staff end chat session
+            "/api/zoom/**",
+            "/api/me"
     );
 
     public boolean isPulicApi(String uri, String method) {
