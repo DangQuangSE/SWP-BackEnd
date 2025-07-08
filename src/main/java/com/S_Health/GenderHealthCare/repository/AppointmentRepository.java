@@ -20,6 +20,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByPreferredDateAndConsultantAndIsActiveTrue(LocalDate date, User consultant);
     List<Appointment> findByMedicalProfileAndStatusAndIsActiveTrue(MedicalProfile medicalProfile, AppointmentStatus status);
     List<Appointment> findByCustomerAndStatusAndIsActiveTrue(User customer, AppointmentStatus status);
+
+    // Tìm appointments sắp diễn ra trong N ngày tới
+    List<Appointment> findByPreferredDateAndStatusInAndIsActiveTrue(LocalDate preferredDate, List<AppointmentStatus> statuses);
+    List<Appointment> findByPreferredDateAndIsActiveTrue(LocalDate preferredDate);
     List<Appointment> findByConsultantAndStatusAndIsActiveTrue(User customer, AppointmentStatus status);
     List<Appointment> findByStatusAndIsActiveTrue(AppointmentStatus status);
 }

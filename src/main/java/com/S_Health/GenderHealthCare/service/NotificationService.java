@@ -14,13 +14,16 @@ import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.CycleTrackingRepository;
 import com.S_Health.GenderHealthCare.repository.NotificationRepository;
 import com.S_Health.GenderHealthCare.repository.UserRepository;
+import com.S_Health.GenderHealthCare.service.authentication.EmailService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.checkerframework.checker.units.qual.A;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,10 +41,14 @@ public class NotificationService {
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
+    @Autowired
+    EmailService emailService;
 
     @Transactional
     public NotificationResponse createNotification(NotificationRequest request) {
-        User user = userRepository.findById(request.getUserId())
+        Long userId = authUtil.getCurrentUserId();
+
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng"));
 
         Appointment appointment = null;
@@ -78,16 +85,18 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    public NotificationResponse getNotificationById(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+    public NotificationResponse getNotificationById(Long notificationId) {
+        Long userId = authUtil.getCurrentUserId();
+        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> new AppException("Thông báo không tồn tại"));
         return mapToResponse(notification);
     }
 
 
     @Transactional
-    public void markAsRead(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+    public void markAsRead(Long notificationId) {
+        Long userId = authUtil.getCurrentUserId();
+        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> new AppException("Thông báo không tồn tại"));
         if (!notification.getIsRead()) {
             notification.setIsRead(true);
@@ -114,10 +123,12 @@ public class NotificationService {
 
 
     @Transactional
-    public void deleteNotification(Long id, Long userId) {
-        Notification notification = notificationRepository.findByIdAndUserId(id, userId)
+    public void deleteNotification(Long notificationId) {
+        Long userId = authUtil.getCurrentUserId();
+        Notification notification = notificationRepository.findByIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> new AppException("Thông báo không tồn tại"));
-        notificationRepository.delete(notification);
+        notification.setIsActive(false);
+        notificationRepository.save(notification);
     }
 
     private NotificationResponse mapToResponse(Notification notification) {
@@ -143,5 +154,29 @@ public class NotificationService {
                         .build()
                         : null)
                 .build();
+    }
+
+    @Scheduled(cron = "0 37 13 * * *")
+    public void sendReminders() {
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+
+        List<Appointment> appointments = appointmentRepository
+                .findByPreferredDateAndIsActiveTrue(tomorrow);
+
+        for (Appointment appt : appointments) {
+            String email = appt.getCustomer().getEmail();
+            String name = appt.getCustomer().getFullname();
+            String serviceName = appt.getService().getName();
+            LocalDate date = appt.getPreferredDate();
+
+            String subject = "Reminder: Your Appointment Tomorrow";
+            String body = String.format(
+                    "Dear %s,\n\nThis is a reminder that you have an appointment scheduled on %s.\n\nBest regards,\nYour Service Team",
+                    name,
+                    date.toString()
+            );
+
+            emailService.sendAppointmentReminder(email, date);
+        }
     }
 }
