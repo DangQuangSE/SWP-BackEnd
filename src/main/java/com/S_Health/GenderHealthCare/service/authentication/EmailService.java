@@ -135,13 +135,13 @@ public class EmailService {
         }
     }
 
-    public void sendUrlConsultantZoom (String toEmail, String startTime, String joinUrl, String serviceName) {
+    public void sendUrlConsultantZoom (String toEmail, String startTime, String startUrl, String serviceName) {
         try{
 
             Context context = new Context();
             context.setVariable("name", toEmail);
             context.setVariable("startTime", startTime);
-            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("startUrl", startUrl);
             context.setVariable("serviceName", serviceName);
 
             String html = templateEngine.process("ConsultantZoom", context);

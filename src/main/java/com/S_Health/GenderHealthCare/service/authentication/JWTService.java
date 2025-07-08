@@ -35,6 +35,7 @@ public class JWTService {
                 .claim("id", user.getId())
                 .claim("fullname", user.getFullname())
                 .claim("role", user.getRole().name())
+                .claim("imageUrl", user.getImageUrl()) // 
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 1 ngày
                 .signWith(key, SignatureAlgorithm.HS256)
