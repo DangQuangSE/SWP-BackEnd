@@ -59,7 +59,7 @@ public class Filter extends OncePerRequestFilter {
             "GET:/swagger-ui/**",
             "GET:/v3/api-docs/**",
             "GET:/swagger-resources/**",
-            "GET:/webjars/**"
+            "GET:/webjars/**",
             "POST:/api/zoom/**",
             "POST:/api/me/profile"
 //            "POST:/api/swagger-ui/**",
@@ -97,7 +97,7 @@ public class Filter extends OncePerRequestFilter {
 
     private final List<String> PROTECTED_POST_API = List.of(
             "/api/chat/join/*",                  // Staff join chat session
-            "/api/chat/sessions/*/end"           // Staff end chat session
+            "/api/chat/sessions/*/end",           // Staff end chat session
             "/api/zoom/**",
             "/api/me"
     );
