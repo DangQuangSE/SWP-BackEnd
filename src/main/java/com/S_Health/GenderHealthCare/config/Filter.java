@@ -48,18 +48,21 @@ public class Filter extends OncePerRequestFilter {
             // Chat APIs for customers (no login required)
             "POST:/api/chat/start",          // Customer start chat
             "POST:/api/chat/send",           // Customer send message
+            "GET:/api/chat/sessions/*/messages",    // Customer get chat history
+            "POST:/api/chat/sessions/*/verify",     // Customer verify/recover session
             "POST:/api/chat/sessions/*/mark-read",  // Mark messages as read (customer can use)
             "GET:/api/chat/sessions/*/unread-count", // Get unread count (customer can use)
 
             // Payment & External APIs
             "POST:/api/payment/vnpay/**",
+            "POST:/api/zoom/**",
 
             // Swagger UI endpoints
             "GET:/swagger-ui/**",
             "GET:/v3/api-docs/**",
             "GET:/swagger-resources/**",
             "GET:/webjars/**",
-
+            "POST:/api/zoom/**",
             "POST:/api/me/profile"
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
@@ -81,7 +84,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/blog/detail/*",                // Blog details for editing (specific ID)
             "/api/chat/sessions",                // Staff get chat sessions (GET method)
             "/api/chat/sessions/*/messages",// Staff get session messages (GET method)
-            "/api/zoom/**"
+            "/api/zoom/**",
+            "/api/chat/sessions"             // Staff get chat sessions (GET method// Staff get session messages (GET method)
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
@@ -97,9 +101,7 @@ public class Filter extends OncePerRequestFilter {
 
     private final List<String> PROTECTED_POST_API = List.of(
             "/api/chat/join/*",                  // Staff join chat session
-            "/api/chat/sessions/*/end",           // Staff end chat session
-            "/api/zoom/**",
-            "/api/me"
+            "/api/chat/sessions/*/end"           // Staff end chat session
     );
 
     public boolean isPulicApi(String uri, String method) {
