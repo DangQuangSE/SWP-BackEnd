@@ -13,12 +13,11 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ServiceFeedbackResponse {
     Long id;
-    int rating;
+    double rating;
     String comment;
     LocalDateTime createdAt;
     LocalDateTime updateAt;
     Long appointmentId;
-
 
     List<ConsultantFeedbackResponse> consultantFeedbacks;
 }

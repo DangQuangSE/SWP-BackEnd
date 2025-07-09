@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConsultantFeedbackResponse {
     Long id;
-    int rating;
+    double rating;
     Long consultantId;
     String comment;
     LocalDateTime createdAt;
