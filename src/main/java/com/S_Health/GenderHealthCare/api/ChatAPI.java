@@ -68,7 +68,7 @@ public class ChatAPI {
         return ResponseEntity.ok(messages);
     }
 
-    @PostMapping("/sessions/{sessionId}/end")
+    @DeleteMapping("/sessions/{sessionId}/end")
     @Operation(summary = "Kết thúc chat session", description = "Kết thúc chat session")
     public ResponseEntity<Void> endChatSession(@PathVariable String sessionId) {
         chatService.endChatSession(sessionId);

@@ -178,19 +178,19 @@ public class ChatService {
     }
 
     /**
-     * Kết thúc chat session
+     * Kết thúc chat session - Xóa cứng session và tất cả messages
      */
     public void endChatSession(String sessionId) {
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
 
-        session.setStatus(ChatStatus.ENDED);
-        session.setEndedAt(LocalDateTime.now());
-        session.setUpdatedAt(LocalDateTime.now());
+        // Xóa tất cả messages của session này trước
+        chatMessageRepository.deleteByChatSession(session);
 
-        chatSessionRepository.save(session);
+        // Xóa session
+        chatSessionRepository.delete(session);
 
-        // Notify participants
+        // Notify participants về việc session đã kết thúc
         messagingTemplate.convertAndSend("/topic/chat/" + sessionId + "/ended", "Chat session ended");
     }
 
