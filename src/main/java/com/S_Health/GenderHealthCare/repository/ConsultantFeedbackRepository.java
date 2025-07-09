@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ConsultantFeedbackRepository extends JpaRepository<ConsultantFeedback, Long> {
 
-    List<ConsultantFeedback> findByServiceFeedbackId(Long feedbackId);
+    Optional<ConsultantFeedback> findByServiceFeedbackId(Long feedbackId);
 }

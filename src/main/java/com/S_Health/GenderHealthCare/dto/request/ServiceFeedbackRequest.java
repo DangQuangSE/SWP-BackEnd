@@ -11,5 +11,6 @@ import lombok.experimental.FieldDefaults;
 public class ServiceFeedbackRequest {
     double rating;
     String comment;
+    String commentConsultant;
     Long appointmentId;
 }

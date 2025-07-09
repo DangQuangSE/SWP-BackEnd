@@ -9,6 +9,7 @@ import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
 import com.S_Health.GenderHealthCare.entity.ServiceFeedback;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
@@ -20,7 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,12 +58,34 @@ public class FeedbackService {
                 .build();
         serviceFeedbackRepository.save(serviceFeedback);
 
+        ConsultantFeedback consultantFeedback = ConsultantFeedback.builder()
+                .rating(request.getRating())
+                .comment(request.getCommentConsultant())
+                .consultantId(appointment.getConsultant().getId())
+                .serviceFeedback(serviceFeedback)
+                .createAt(serviceFeedback.getCreateAt())
+                .build();
+        consultantFeedbackRepository.save(consultantFeedback);
+
+        List<ConsultantFeedbackResponse> consultantFeedbacks = Optional.ofNullable(consultantFeedback)
+                .map(feedback -> Collections.singletonList(
+                        ConsultantFeedbackResponse.builder()
+                                .id(feedback.getId())
+                                .rating(feedback.getRating())
+                                .comment(feedback.getComment())
+                                .createdAt(feedback.getCreateAt())
+                                .consultantId(feedback.getConsultantId())
+                                .build()
+                ))
+                .orElse(Collections.emptyList());
+
         return ServiceFeedbackResponse.builder()
                 .id(serviceFeedback.getId())
                 .rating(request.getRating())
                 .comment(request.getComment())
                 .createdAt(serviceFeedback.getCreateAt())
                 .appointmentId(request.getAppointmentId())
+                .consultantFeedbacks(consultantFeedbacks)
                 .build();
     }
 
@@ -79,6 +104,24 @@ public class FeedbackService {
     }
 
     public List<ServiceFeedbackResponse> getByAppointmentId(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new AppException("Cuộc hẹn không tồn tại"));
+
+        ServiceFeedback  serviceFeedback = serviceFeedbackRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new AppException("Chưa có đánh giá cho cuộc hẹn này"));
+
+        List<ConsultantFeedbackResponse> consultantFeedbacks = consultantFeedbackRepository.findByServiceFeedbackId(serviceFeedback.getId())
+                .stream()
+                .map(cf -> ConsultantFeedbackResponse.builder()
+                        .id(cf.getId())
+                        .rating(cf.getRating())
+                        .comment(cf.getComment())
+                        .createdAt(cf.getCreateAt())
+                        .consultantId(cf.getConsultantId())
+                        .build())
+                .collect(Collectors.toList());
+
+
         return serviceFeedbackRepository.findByAppointmentId(appointmentId)
                 .stream()
                 .map(feedback -> ServiceFeedbackResponse.builder()
@@ -87,7 +130,7 @@ public class FeedbackService {
                         .comment(feedback.getComment())
                         .createdAt(feedback.getCreateAt())
                         .appointmentId(feedback.getAppointment().getId())
-                        .consultantFeedbacks(List.of())
+                        .consultantFeedbacks(consultantFeedbacks)
                         .build())
                 .collect(Collectors.toList());
     }
@@ -107,6 +150,14 @@ public class FeedbackService {
         feedback.setComment(request.getComment());
         feedback.setUpdateAt(LocalDateTime.now());
         ServiceFeedback updated = serviceFeedbackRepository.save(feedback);
+
+        ConsultantFeedback consultantFeedback = consultantFeedbackRepository.findByServiceFeedbackId(feedback.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá bác sĩ"));
+
+        consultantFeedback.setComment(request.getCommentConsultant());
+        consultantFeedback.setRating(request.getRating());
+        consultantFeedback.setUpdateAt(LocalDateTime.now());
+        consultantFeedbackRepository.save(consultantFeedback);
 
         return ServiceFeedbackResponse.builder()
                 .id(updated.getId())
