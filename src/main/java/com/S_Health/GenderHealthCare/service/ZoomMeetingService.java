@@ -45,7 +45,7 @@ public class ZoomMeetingService {
         AppointmentDetail check = appointmentDetailRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn"));
 
-        if(check.getStartUrl() == null || check.getJoinUrl() == null) {
+        if(check.getStartUrl() != null || check.getJoinUrl() != null) {
             throw new AppException("Cuộc họp đã được tạo trước đó");
         }
         //check status
