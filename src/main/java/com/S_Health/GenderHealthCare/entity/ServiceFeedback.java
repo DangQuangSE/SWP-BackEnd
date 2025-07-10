@@ -22,7 +22,7 @@ public class ServiceFeedback {
 
     @Min(1)
     @Max(5)
-    int rating;
+    double rating;
 
     @Column(columnDefinition = "TEXT")
     String comment;

@@ -419,4 +419,10 @@ public class AppointmentService {
     }
 
 
+    public void updateIsRated(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+        appointment.setIsRated(true);
+        appointmentRepository.save(appointment);
+    }
 }

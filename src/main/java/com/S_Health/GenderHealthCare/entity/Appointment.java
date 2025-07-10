@@ -54,6 +54,7 @@ public class Appointment {
     LocalDateTime update_at;
     LocalDate preferredDate;
     Boolean isActive = true;
+    Boolean isRated = false;
 
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ServiceFeedback> serviceFeedbacks;
