@@ -3,6 +3,7 @@ package com.S_Health.GenderHealthCare.repository;
 import com.S_Health.GenderHealthCare.entity.ChatMessage;
 import com.S_Health.GenderHealthCare.entity.ChatSession;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -25,4 +26,9 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     @Query("SELECT COUNT(cm) FROM ChatMessage cm WHERE cm.chatSession = :session AND cm.isRead = false AND cm.senderName != :readerName")
     Integer countUnreadMessagesForReader(@Param("session") ChatSession session, @Param("readerName") String readerName);
+
+    // Method để xóa tất cả messages của một session
+    @Modifying
+    @Query("DELETE FROM ChatMessage cm WHERE cm.chatSession = :session")
+    void deleteByChatSession(@Param("session") ChatSession session);
 }
