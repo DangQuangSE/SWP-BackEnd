@@ -10,4 +10,5 @@ import java.util.Optional;
 @Repository
 public interface ServiceFeedbackRepository extends JpaRepository<ServiceFeedback, Long> {
     Optional<ServiceFeedback> findByAppointmentId(Long appointmentId);
+    List<ServiceFeedback> findByAppointmentIdIn(List<Long> appointmentIds);
 }

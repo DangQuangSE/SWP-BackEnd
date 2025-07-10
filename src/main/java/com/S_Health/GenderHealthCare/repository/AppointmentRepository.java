@@ -62,5 +62,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             @Param("endDate") LocalDateTime endDate
     );
 
+    List<Appointment> findByServiceIdAndIsRatedTrue(Long serviceId);
+
 
 }

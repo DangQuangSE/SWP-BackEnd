@@ -2,8 +2,9 @@ package com.S_Health.GenderHealthCare.service;
 
 import com.S_Health.GenderHealthCare.dto.request.ConsultantFeedbackRequest;
 import com.S_Health.GenderHealthCare.dto.request.ServiceFeedbackRequest;
-import com.S_Health.GenderHealthCare.dto.response.ConsultantFeedbackResponse;
-import com.S_Health.GenderHealthCare.dto.response.ServiceFeedbackResponse;
+import com.S_Health.GenderHealthCare.dto.response.feedback.AverageRatingResponse;
+import com.S_Health.GenderHealthCare.dto.response.feedback.ConsultantFeedbackResponse;
+import com.S_Health.GenderHealthCare.dto.response.feedback.ServiceFeedbackResponse;
 import com.S_Health.GenderHealthCare.entity.Appointment;
 import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
 import com.S_Health.GenderHealthCare.entity.ServiceFeedback;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -241,18 +243,108 @@ public class FeedbackService {
                 .build();
     }
 
-        public List<ConsultantFeedbackResponse> getByServiceFeedbackId(Long feedbackId) {
-            return consultantFeedbackRepository.findByServiceFeedbackId(feedbackId)
-                    .stream()
-                    .map(cf -> ConsultantFeedbackResponse.builder()
-                            .id(cf.getId())
-                            .rating(cf.getRating())
-                            .consultantId(cf.getConsultantId())
-                            .comment(cf.getComment())
-                            .createdAt(cf.getCreateAt())
-                            .build())
-                    .collect(Collectors.toList());
-        }
+    public List<ConsultantFeedbackResponse> getByServiceFeedbackId(Long feedbackId) {
+        return consultantFeedbackRepository.findByServiceFeedbackId(feedbackId)
+                .stream()
+                .map(cf -> ConsultantFeedbackResponse.builder()
+                        .id(cf.getId())
+                        .rating(cf.getRating())
+                        .consultantId(cf.getConsultantId())
+                        .comment(cf.getComment())
+                        .createdAt(cf.getCreateAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public AverageRatingResponse getAverageRatingByServiceId(Long serviceId) {
+        List<Appointment> appointment = appointmentRepository.findByServiceIdAndIsRatedTrue(serviceId);
+
+        if (appointment.isEmpty()) {
+            return AverageRatingResponse.builder()
+                    .serviceId(serviceId)
+                    .averageRating(0.0)
+                    .totalAppointment(0L)
+                    .build();
+            }
+
+        List<Long> appointmentIds = appointment
+                .stream()
+                .map(Appointment::getId)
+                .collect(Collectors.toList());
+
+        List<ServiceFeedback> feedbacks = serviceFeedbackRepository.findByAppointmentIdIn(appointmentIds);
+
+        if (feedbacks.isEmpty()) {
+            return AverageRatingResponse.builder()
+                    .serviceId(serviceId)
+                    .averageRating(0.0)
+                    .totalAppointment(0L)
+                    .build();
+            }
+
+
+        double sumRate = feedbacks.stream()
+                .mapToDouble(ServiceFeedback::getRating)
+                .sum();
+
+        double averageRating = sumRate / feedbacks.size();
+
+        return AverageRatingResponse.builder()
+                .serviceId(serviceId)
+                .averageRating(averageRating)
+                .totalAppointment((long) feedbacks.size())
+                .build();
+    }
+
+    public List<ServiceFeedbackResponse> getByServiceId(Long serviceId) {
+        List<Appointment> appointment = appointmentRepository.findByServiceIdAndIsRatedTrue(serviceId);
+        // liệt kê tất cả id appointment của 1 service
+        List<Long> appointmentIds = appointment
+                .stream()
+                .map(Appointment::getId)
+                .collect(Collectors.toList());
+
+        List<ServiceFeedback> feedbacks = serviceFeedbackRepository.findByAppointmentIdIn(appointmentIds);
+        // liệt kê tất cả id serviceFeedback trong các appointment của service
+        List<Long> serviceFeedbackIds =feedbacks
+                .stream()
+                .map(ServiceFeedback::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, List<ConsultantFeedbackResponse>> consultantFeedbackMap =
+                consultantFeedbackRepository.findByServiceFeedbackIdIn(serviceFeedbackIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(
+                                cf -> cf.getServiceFeedback().getId(),
+                                Collectors.mapping(cf -> ConsultantFeedbackResponse.builder()
+                                        .id(cf.getId())
+                                        .rating(cf.getRating())
+                                        .comment(cf.getComment())
+                                        .createdAt(cf.getCreateAt())
+                                        .consultantId(cf.getConsultantId())
+                                        .updateAt(cf.getUpdateAt())
+                                        .build(), Collectors.toList())
+                        ));
+
+        return feedbacks.stream()
+                .map(feedback -> {
+                    List<ConsultantFeedbackResponse> consultantFeedbacksOfThisFeedback =
+                            consultantFeedbackMap.getOrDefault(feedback.getId(), Collections.emptyList());
+
+                    return ServiceFeedbackResponse.builder()
+                            .id(feedback.getId())
+                            .rating(feedback.getRating())
+                            .comment(feedback.getComment())
+                            .createdAt(feedback.getCreateAt())
+                            .appointmentId(feedback.getAppointment().getId())
+                            .consultantFeedbacks(consultantFeedbacksOfThisFeedback)
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+
+
 
 
 

@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface ConsultantFeedbackRepository extends JpaRepository<ConsultantFeedback, Long> {
 
     Optional<ConsultantFeedback> findByServiceFeedbackId(Long feedbackId);
+    List<ConsultantFeedback> findByServiceFeedbackIdIn(List<Long> serviceFeedbackIds);
 }
