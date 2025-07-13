@@ -1,7 +1,6 @@
 package com.S_Health.GenderHealthCare.api;
 import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
-import com.S_Health.GenderHealthCare.entity.AppointmentAuditLog;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
