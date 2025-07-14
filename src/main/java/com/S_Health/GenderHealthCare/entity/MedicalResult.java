@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.ResultType;
 import com.S_Health.GenderHealthCare.enums.TestStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -66,6 +67,7 @@ public class MedicalResult {
     // === QUAN HỆ VÀ METADATA ===
     @OneToOne
     @JoinColumn(name = "appointment_detail_id")
+    @JsonIgnore
     AppointmentDetail appointmentDetail;
 
     @ManyToOne

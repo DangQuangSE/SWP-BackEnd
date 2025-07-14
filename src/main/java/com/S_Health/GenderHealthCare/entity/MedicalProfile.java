@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -69,5 +70,6 @@ public class MedicalProfile {
 
     // === RELATIONSHIPS ===
     @OneToMany(mappedBy = "medicalProfile", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     List<Appointment> appointments;
 }

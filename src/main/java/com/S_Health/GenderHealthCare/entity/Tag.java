@@ -1,5 +1,6 @@
 package com.S_Health.GenderHealthCare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -24,6 +25,7 @@ public class Tag {
     String description;
 
     @ManyToMany(mappedBy = "tags")
+    @JsonIgnore
     List<Blog> blogs;
     Boolean isActive = true;
 }

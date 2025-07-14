@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.Symptoms;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,9 +23,11 @@ public class CycleTracking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     User user;
 
     @OneToMany(mappedBy = "cycleTracking")
+    @JsonIgnore
     List<Notification> notifications;
 
     LocalDate startDate;
