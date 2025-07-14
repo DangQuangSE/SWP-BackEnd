@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/admin/")
 @SecurityRequirement(name = "api")
@@ -55,5 +57,34 @@ public class ManagementUserAPI {
             description = "Lấy danh sách tất cả người dùng theo vai trò (ADMIN, STAFF, CONSULTANT, etc.)")
     public ResponseEntity getUsersByRole(@RequestParam String role) {
         return ResponseEntity.ok(manageUserService.getUsersByRole(role));
+    }
+
+    @DeleteMapping("/user/{userId}")
+    @Operation(
+        summary = "Vô hiệu hóa người dùng (Soft Delete)",
+        description = "Vô hiệu hóa người dùng một cách an toàn với kiểm tra ràng buộc business logic. " +
+                     "Người dùng sẽ không thể đăng nhập nhưng dữ liệu vẫn được bảo toàn để audit."
+    )
+    public ResponseEntity<?> softDeleteUser(@PathVariable Long userId) {
+        manageUserService.softDeleteUser(userId);
+        return ResponseEntity.ok().body(Map.of(
+            "message", "Người dùng đã được vô hiệu hóa thành công",
+            "userId", userId,
+            "timestamp", java.time.LocalDateTime.now()
+        ));
+    }
+
+    @PutMapping("/user/{userId}/restore")
+    @Operation(
+        summary = "Khôi phục người dùng đã bị vô hiệu hóa",
+        description = "Khôi phục người dùng đã bị vô hiệu hóa trước đó, cho phép họ đăng nhập lại"
+    )
+    public ResponseEntity<?> restoreUser(@PathVariable Long userId) {
+        manageUserService.restoreUser(userId);
+        return ResponseEntity.ok().body(Map.of(
+            "message", "Người dùng đã được khôi phục thành công",
+            "userId", userId,
+            "timestamp", java.time.LocalDateTime.now()
+        ));
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.time.LocalDate;
+
 @Service
 public class EmailService {
 
@@ -133,13 +135,13 @@ public class EmailService {
         }
     }
 
-    public void sendUrlConsultantZoom (String toEmail, String startTime, String joinUrl, String serviceName) {
+    public void sendUrlConsultantZoom (String toEmail, String startTime, String startUrl, String serviceName) {
         try{
 
             Context context = new Context();
             context.setVariable("name", toEmail);
             context.setVariable("startTime", startTime);
-            context.setVariable("joinUrl", joinUrl);
+            context.setVariable("startUrl", startUrl);
             context.setVariable("serviceName", serviceName);
 
             String html = templateEngine.process("ConsultantZoom", context);
@@ -154,6 +156,36 @@ public class EmailService {
             mailSender.send(message);
         }catch (Exception e){
             System.out.println("Lỗi gửi email Zoom cho bác sĩ: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Gửi email nhắc nhở lịch hẹn sắp tới
+     */
+    public void sendAppointmentReminder(String toEmail, LocalDate date) {
+        try {
+            Context context = new Context();
+            context.setVariable("customerName", toEmail);
+            context.setVariable("appointmentDate", date);
+//            context.setVariable("appointmentDate", appointmentDate);
+//            context.setVariable("consultantName", consultantName);
+//            context.setVariable("appointmentTime", appointmentTime);
+//            context.setVariable("note", note);
+//            context.setVariable("daysLeft", daysLeft);
+
+            String html = templateEngine.process("appointment-reminder", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(toEmail);
+            helper.setSubject("🔔 Nhắc nhở: Lịch hẹn sắp tới của bạn - SHealthCare");
+            helper.setText(html, true);
+
+            mailSender.send(message);
+            System.out.println("Đã gửi email nhắc nhở lịch hẹn tới: " + toEmail);
+        } catch (Exception e) {
+            System.out.println("Lỗi gửi email nhắc nhở lịch hẹn: " + e.getMessage());
         }
     }
 }

@@ -31,12 +31,17 @@ public class AppointmentDetail {
     @JoinColumn(name = "consultant_id")
     User consultant;
 
+    @ManyToOne
+    @JoinColumn(name = "room_id")
+    Room room;
+
     LocalDateTime slotTime;
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     AppointmentStatus status = AppointmentStatus.PENDING;
-
+    @Column(columnDefinition = "TEXT")
     String joinUrl;
+    @Column(length = 1000)
     String startUrl;
 
     @OneToOne(mappedBy = "appointmentDetail")

@@ -1,7 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.request.ConsultantFeedbackRequest;
-import com.S_Health.GenderHealthCare.dto.response.ConsultantFeedbackResponse;
+import com.S_Health.GenderHealthCare.dto.response.feedback.ConsultantFeedbackResponse;
 import com.S_Health.GenderHealthCare.service.FeedbackService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,7 @@ import java.util.List;
 public class ConsultantFeedbackAPI {
 
     @Autowired
-    FeedbackService feedbackService;
+    FeedbackService feedbackService;    
 
     @PostMapping
     public ResponseEntity<ConsultantFeedbackResponse> create(@RequestBody ConsultantFeedbackRequest request) {

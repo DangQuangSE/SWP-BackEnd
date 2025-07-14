@@ -8,11 +8,9 @@ import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
 import com.S_Health.GenderHealthCare.repository.*;
-import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -99,7 +97,7 @@ public class ServiceSlotPoolService {
     public List<User> getConsultantInSpecialization(long service_id) {
         List<Specialization> specializations = specializationRepository.findByServicesIdAndIsActiveTrue(service_id);
         List<Long> specializationIds = specializations.stream().map(Specialization::getId).toList();
-        List<User> consultants = userRepository.findBySpecializations_IdIn(specializationIds);
+        List<User> consultants = userRepository.findBySpecializations_IdInAndIsActive(specializationIds, true);
         return consultants;
     }
 }

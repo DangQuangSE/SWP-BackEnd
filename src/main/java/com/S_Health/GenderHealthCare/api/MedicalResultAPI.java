@@ -15,7 +15,7 @@ public class MedicalResultAPI {
     @Autowired
     MedicalResultService medicalResultService;
 
-    @PostMapping("/result")
+    @PostMapping
     public ResponseEntity inputResult(@RequestBody @Valid ResultRequest request) {
         return ResponseEntity.ok(medicalResultService.saveResult(request));
     }

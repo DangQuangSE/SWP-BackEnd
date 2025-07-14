@@ -9,7 +9,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ServiceFeedbackRequest {
-    int rating;
+    double rating;
     String comment;
+    String commentConsultant;
     Long appointmentId;
 }

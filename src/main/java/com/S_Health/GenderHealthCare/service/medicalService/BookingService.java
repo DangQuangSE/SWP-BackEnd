@@ -2,9 +2,11 @@ package com.S_Health.GenderHealthCare.service.MedicalService;
 
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
+import com.S_Health.GenderHealthCare.dto.SimpleRoomDTO;
 import com.S_Health.GenderHealthCare.dto.response.BookingResponse;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
+import com.S_Health.GenderHealthCare.enums.ServiceType;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
@@ -42,6 +44,10 @@ public class BookingService {
     AuthUtil authUtil;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    RoomRepository roomRepository;
+    @Autowired
+    RoomConsultantRepository roomConsultantRepository;
 
     @Transactional
     public BookingResponse bookingService(BookingRequest request) {
@@ -136,14 +142,26 @@ public class BookingService {
             slot.setStatus(SlotStatus.FULL);
         }
         consultantSlotRepository.save(slot);
+        // Auto-assign room chỉ khi cần (không phải consulting online)
+        Room assignedRoom = null;
+        if (subService.getType() != ServiceType.CONSULTING_ON) {
+            assignedRoom = autoAssignRoomForConsultant(consultant, request.getPreferredDate(), request.getSlot());
+        }
+
         AppointmentDetail detail = new AppointmentDetail();
         detail.setAppointment(appointment);
         detail.setConsultant(consultant);
         detail.setService(subService);
+        detail.setRoom(assignedRoom); // Assign room
         detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot()));
         appointmentDetailRepository.save(detail);
 
         AppointmentDetailDTO dto = modelMapper.map(detail, AppointmentDetailDTO.class);
+        dto.setConsultantName(consultant.getFullname());
+        dto.setServiceName(subService.getName());
+
+        // Map Room information if available
+        dto.setRoom(mapRoomToSimpleDTO(assignedRoom));
 
         return new AppointmentDetailData(dto, slot);
     }
@@ -160,87 +178,6 @@ public class BookingService {
         slotPool.setIsActive(available > 0);
         serviceSlotPoolRepository.save(slotPool);
     }
-
-//    @Transactional
-//    public BookingResponse bookingService(BookingRequest request, long customerId) {
-//        com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
-//                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ!"));
-//        ServiceSlotPool slotPool = serviceSlotPoolRepository.findById(request.getSlot_id())
-//                .orElseThrow(() -> new BadRequestException("Không tìm thấy khung giờ này!"));
-//        User customer = authenticationRepository.findById(customerId)
-//                .orElseThrow(() -> new BadRequestException("Không tìm thấy khách hàng!"));
-//        LocalDateTime slotDateTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
-//        boolean conflict = appointmentDetailRepository.existsByAppointment_Customer_IdAndSlotTime(customerId, slotDateTime);
-//        if (conflict) {
-//            throw new BadRequestException("Bạn đã có lịch hẹn vào khung giờ này");
-//        }
-//        // Tạo Appointment gốc
-//        Appointment appointment = new Appointment();
-//        appointment.setCustomer(customer);
-//        appointment.setNote(request.getNote());
-//        appointment.setStatus(AppointmentStatus.PENDING);
-//        appointment.setCreated_at(LocalDateTime.now());
-//        appointment.setService(service);
-//        appointment.setServiceSlotPool(slotPool);
-//        appointment.setPreferredDate(request.getPreferredDate());
-//        appointmentRepository.save(appointment);
-//        List<AppointmentDetailDTO> appointmentDetailDTOS = new ArrayList<>();
-//
-//        List<com.S_Health.GenderHealthCare.entity.Service> subServices = service.getIsCombo()
-//                ? service.getSubServices().stream()
-//                .map(ComboItem::getSubService)
-//                .collect(Collectors.toList())
-//                : List.of(service);
-//        Double totalPrice = 0d;
-//        List<ConsultantSlot> slots  = new ArrayList<>();
-//        for (com.S_Health.GenderHealthCare.entity.Service sub : subServices) {
-//            List<User> consultantsForSub = serviceSlotPoolService.getConsultantInSpecialization(sub.getId());
-//            User availableConsultant = findAvailableConsultant(request, consultantsForSub);
-//            if (availableConsultant == null) {
-//                throw new BadRequestException("Không có tư vấn viên rảnh cho dịch vụ: " + sub.getName());
-//            }
-//            ConsultantSlot slot = consultantSlotRepository
-//                    .findByConsultantAndDateAndStartTimeAndStatus(availableConsultant, request.getPreferredDate(), request.getSlot(), SlotStatus.ACTIVE)
-//                    .orElseThrow(() -> new BadRequestException("Khung giờ này không tồn tại!"));
-//            int current = slot.getCurrentBooking() + 1;
-//            int available = slot.getAvailableBooking() - 1;
-//            slot.setAvailableBooking(available);
-//            slot.setCurrentBooking(current);
-//            slots.add(slot);
-//            totalPrice += sub.getPrice();
-//            // Lưu AppointmentDetail
-//            AppointmentDetail detail = new AppointmentDetail();
-//            detail.setAppointment(appointment);
-//            detail.setConsultant(availableConsultant);
-//            detail.setService(sub);
-//            detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot())); // dùng chung slot cho tất cả
-//            appointmentDetailRepository.save(detail);
-//
-//            appointmentDetailDTOS.add(AppointmentDetailDTO.builder()
-//                    .serviceName(sub.getName())
-//                    .consultantName(availableConsultant.getFullname())
-//                    .startTime(request.getSlot())
-//                    .status(appointment.getStatus())
-//                    .build());
-//        }
-//            int max = slots.stream().mapToInt(ConsultantSlot::getMaxBooking).sum();
-//            int currentBookingSV = slots.stream().mapToInt(ConsultantSlot::getCurrentBooking).sum();
-//            int availableSloSV = Math.max(0, max - currentBookingSV);
-//            slotPool.setMaxBooking(max);
-//            slotPool.setCurrentBooking(currentBookingSV);
-//            slotPool.setAvailableBooking(availableSloSV);
-//        appointment.setPrice(totalPrice * (1 - service.getDiscountPercent()));
-//        appointmentRepository.save(appointment);
-//        return BookingResponse.builder()
-//                .appointmentId(appointment.getId())
-//                .customerName(customer.getFullname())
-//                .date(request.getPreferredDate())
-//                .time(request.getSlot())
-//                .note(request.getNote())
-//                .status(AppointmentStatus.PENDING)
-//                .details(appointmentDetailDTOS)
-//                .build();
-//    }
 
     public User findAvailableConsultant(BookingRequest request, List<User> consultants) {
         for (User consultant : consultants) {
@@ -262,5 +199,92 @@ public class BookingService {
         throw new BadRequestException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
     }
 
+    /**
+     * Auto-assign room dựa trên bác sĩ được chọn và thời gian làm việc
+     */
+    private Room autoAssignRoomForConsultant(User consultant,
+                                           java.time.LocalDate date,
+                                           java.time.LocalTime timeSlot) {
+        try {
+            // Tìm tất cả phòng mà bác sĩ này được phân công
+            List<RoomConsultant> consultantRooms = roomConsultantRepository
+                    .findByConsultantAndIsActiveTrue(consultant);
 
+            if (consultantRooms.isEmpty()) {
+                // Fallback: Nếu bác sĩ chưa được phân phòng, assign theo specialization
+                return fallbackAssignRoomBySpecialization(consultant);
+            }
+
+            // Tìm phòng phù hợp với thời gian làm việc
+            for (RoomConsultant roomConsultant : consultantRooms) {
+                Room room = roomConsultant.getRoom();
+
+                // Kiểm tra phòng còn active
+                if (!room.isActive()) {
+                    continue;
+                }
+
+                // Kiểm tra thời gian làm việc
+                if (isTimeSlotInWorkingHours(timeSlot, roomConsultant.getStartTime(), roomConsultant.getEndTime())) {
+                    return room; // Tìm thấy phòng phù hợp
+                }
+            }
+
+            // Nếu không có phòng nào phù hợp với thời gian, lấy phòng đầu tiên
+            return consultantRooms.get(0).getRoom();
+
+        } catch (Exception e) {
+            System.err.println("Error auto-assigning room for consultant: " + e.getMessage());
+            return null; // Không assign room nếu có lỗi
+        }
+    }
+
+    /**
+     * Fallback: Assign room theo specialization nếu bác sĩ chưa được phân phòng
+     */
+    private Room fallbackAssignRoomBySpecialization(User consultant) {
+        try {
+            if (consultant.getSpecializations() == null || consultant.getSpecializations().isEmpty()) {
+                return null;
+            }
+
+            Specialization specialization = consultant.getSpecializations().get(0);
+
+            // Tìm phòng theo specialization
+            List<Room> availableRooms = roomRepository.findAll().stream()
+                    .filter(room -> room.isActive())
+                    .filter(room -> room.getSpecialization() != null &&
+                                  room.getSpecialization().getId().equals(specialization.getId()))
+                    .toList();
+
+            return availableRooms.isEmpty() ? null : availableRooms.get(0);
+
+        } catch (Exception e) {
+            System.err.println("Error in fallback room assignment: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Kiểm tra thời gian slot có nằm trong giờ làm việc không
+     */
+    private boolean isTimeSlotInWorkingHours(java.time.LocalTime timeSlot,
+                                           java.time.LocalTime startTime,
+                                           java.time.LocalTime endTime) {
+        return !timeSlot.isBefore(startTime) && !timeSlot.isAfter(endTime);
+    }
+
+    /**
+     * Helper method to map Room to SimpleRoomDTO using ModelMapper
+     */
+    private SimpleRoomDTO mapRoomToSimpleDTO(Room room) {
+        if (room == null) return null;
+
+        SimpleRoomDTO roomDTO = modelMapper.map(room, SimpleRoomDTO.class);
+        // Set specialization name manually since it's nested
+        if (room.getSpecialization() != null) {
+            roomDTO.setSpecializationName(room.getSpecialization().getName());
+        }
+        return roomDTO;
+    }
 }
