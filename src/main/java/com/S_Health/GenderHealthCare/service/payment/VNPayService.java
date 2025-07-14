@@ -76,7 +76,7 @@ public class VNPayService {
 
         Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
-        cld.add(Calendar.MINUTE, 1);
+        cld.add(Calendar.MINUTE, 5);
         String vnp_ExpireDate = formatter.format(cld.getTime());
 
         Map<String, String> params = new HashMap<>();

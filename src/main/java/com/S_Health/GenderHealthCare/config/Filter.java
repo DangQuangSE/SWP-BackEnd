@@ -48,6 +48,8 @@ public class Filter extends OncePerRequestFilter {
             // Chat APIs for customers (no login required)
             "POST:/api/chat/start",          // Customer start chat
             "POST:/api/chat/send",           // Customer send message
+            "GET:/api/chat/sessions/*/messages",    // Customer get chat history
+            "POST:/api/chat/sessions/*/verify",     // Customer verify/recover session
             "POST:/api/chat/sessions/*/mark-read",  // Mark messages as read (customer can use)
             "GET:/api/chat/sessions/*/unread-count", // Get unread count (customer can use)
 
@@ -65,7 +67,7 @@ public class Filter extends OncePerRequestFilter {
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
 //            "POST:/api/swagger-resources/**"
-    );
+            );
 
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs",
@@ -80,8 +82,7 @@ public class Filter extends OncePerRequestFilter {
             "/api/payment/history/**",           // Payment history
             "/api/blog/my-blogs",                // User's own blogs
             "/api/blog/detail/*",                // Blog details for editing (specific ID)
-            "/api/chat/sessions",                // Staff get chat sessions (GET method)
-            "/api/chat/sessions/*/messages"      // Staff get session messages (GET method)
+            "/api/chat/sessions"             // Staff get chat sessions (GET method// Staff get session messages (GET method)
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(

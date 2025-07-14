@@ -147,6 +147,7 @@ public class ManageUserService {
         UserRole userRole;
         userRole = UserRole.valueOf(role.toUpperCase());
         return authenticationRepository.findByRole(userRole).stream()
+                .filter(User::isActive) // Chỉ lấy user đang active
                 .map(this::convertToUserDTO)
                 .collect(Collectors.toList());
     }
@@ -160,5 +161,31 @@ public class ManageUserService {
             userDTO.setSpecializationIds(specializationIds);
         }
         return userDTO;
+    }
+
+    /**
+     * Xóa mềm user - Set isActive = false
+     */
+    public void softDeleteUser(Long userId) {
+        User user = authenticationRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+
+        user.setActive(false);
+        authenticationRepository.save(user);
+    }
+
+    /**
+     * Khôi phục user đã bị xóa mềm
+     */
+    public void restoreUser(Long userId) {
+        User user = authenticationRepository.findById(userId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+
+        if (user.isActive()) {
+            throw new BadRequestException("Người dùng đang hoạt động bình thường");
+        }
+
+        user.setActive(true);
+        authenticationRepository.save(user);
     }
 }
