@@ -10,11 +10,9 @@ import java.util.Optional;
 
 @Repository
 public interface AuthenticationRepository extends JpaRepository<User, Long> {
-    Optional<User> findByPhone(String phone);
-    boolean existsByPhone(String phone);
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
     User findUserByEmail(String email);
-    List<User> findBySpecializations_IdIn(List<Long> specializations);
+    List<User> findBySpecializations_IdInAndIsActive(List<Long> specializations, boolean isActive);
     List<User> findByRole(UserRole role);
 }

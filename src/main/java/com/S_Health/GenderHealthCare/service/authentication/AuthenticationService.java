@@ -102,6 +102,12 @@ public class AuthenticationService implements UserDetailsService {
             throw new AuthenticationException("Email hoặc mật khẩu không chính xác!");
         }
         User user = authenticationRepository.findUserByEmail(loginEmailRequest.getEmail());
+
+        // Kiểm tra user có bị vô hiệu hóa không
+        if (!user.isActive()) {
+            throw new AuthenticationException("Tài khoản đã bị vô hiệu hóa!");
+        }
+
         String jwt = jwtService.generateToken(user);
         UserDTO userDTO = modelMapper.map(user, UserDTO.class);
         return new JwtResponse(jwt, userDTO, "email", true);
@@ -134,6 +140,11 @@ public class AuthenticationService implements UserDetailsService {
                         .role(UserRole.CUSTOMER)
                         .build());
             });
+
+            // Kiểm tra user có bị vô hiệu hóa không
+            if (!user.isActive()) {
+                throw new AuthenticationException("Tài khoản đã bị vô hiệu hóa!");
+            }
 
             String jwt = jwtService.generateToken(user);
             UserDTO userDTO = modelMapper.map(user, UserDTO.class);
@@ -186,6 +197,11 @@ public class AuthenticationService implements UserDetailsService {
                         .build());
             });
 
+            // Kiểm tra user có bị vô hiệu hóa không
+            if (!user.isActive()) {
+                throw new AuthenticationException("Tài khoản đã bị vô hiệu hóa!");
+            }
+
             String jwt = jwtService.generateToken(user);
             UserDTO userDTO =  modelMapper.map(user, UserDTO.class);
 
@@ -196,7 +212,17 @@ public class AuthenticationService implements UserDetailsService {
     }
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return authenticationRepository.findUserByEmail(email);
+        User user = authenticationRepository.findUserByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("Không tìm thấy người dùng với email: " + email);
+        }
+
+        // Kiểm tra user có bị vô hiệu hóa không
+        if (!user.isActive()) {
+            throw new UsernameNotFoundException("Tài khoản đã bị vô hiệu hóa!");
+        }
+
+        return user;
     }
 
 }
