@@ -23,7 +23,7 @@ public class ConsultantFeedback {
 
     @Min(1)
     @Max(5)
-    int rating;
+    double rating;
 
     LocalDateTime createAt;
 

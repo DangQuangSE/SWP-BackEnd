@@ -1,7 +1,8 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.request.ServiceFeedbackRequest;
-import com.S_Health.GenderHealthCare.dto.response.ServiceFeedbackResponse;
+import com.S_Health.GenderHealthCare.dto.response.feedback.AverageRatingResponse;
+import com.S_Health.GenderHealthCare.dto.response.feedback.ServiceFeedbackResponse;
 import com.S_Health.GenderHealthCare.service.FeedbackService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,16 @@ public class ServiceFeedbackAPI {
     public ResponseEntity<ServiceFeedbackResponse> update(@PathVariable Long id,
                                                           @RequestBody ServiceFeedbackRequest request) {
         return ResponseEntity.ok(feedbackService.update(id, request));
+    }
+
+    @GetMapping("average-rating/{serviceId}")
+    public ResponseEntity<AverageRatingResponse> getAverageRatingByServiceId(@PathVariable Long serviceId) {
+        return ResponseEntity.ok(feedbackService.getAverageRatingByServiceId(serviceId));
+    }
+
+    @GetMapping("/service/{serviceId}")
+    public ResponseEntity<List<ServiceFeedbackResponse>> getByService(@PathVariable Long serviceId) {
+        return ResponseEntity.ok(feedbackService.getByServiceId(serviceId));
     }
 
 

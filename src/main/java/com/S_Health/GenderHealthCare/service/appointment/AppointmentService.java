@@ -404,6 +404,13 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
+    public void updateIsRated(Long appointmentId) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+        appointment.setIsRated(true);
+        appointmentRepository.save(appointment);
+    }
+
     /**
      * Helper method to map Room to SimpleRoomDTO using ModelMapper
      */

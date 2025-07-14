@@ -79,4 +79,10 @@ public class AppointmentAPI {
         appointmentService.updateAppointmentDetailStatus(detailId, status);
         return ResponseEntity.ok("Cập nhật trạng thái dịch vụ thành công");
     }
+
+    @PutMapping("/{id}/rate")
+    public ResponseEntity rateAppointment(@PathVariable Long id) {
+        appointmentService.updateIsRated(id);
+        return ResponseEntity.noContent().build();
+    }
 }
