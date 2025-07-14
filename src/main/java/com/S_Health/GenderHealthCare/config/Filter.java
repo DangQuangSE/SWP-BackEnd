@@ -83,7 +83,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/blog/my-blogs",                // User's own blogs
             "/api/blog/detail/*",                // Blog details for editing (specific ID)
             "/api/chat/sessions",// Staff get chat sessions (GET method// Staff get session messages (GET method)
-            "/api/notifications"
+            "/api/notifications",
+            "/api/certifications/my-certifications"
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
@@ -101,7 +102,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/chat/join/*",                  // Staff join chat session
             "/api/chat/sessions/*/end",           // Staff end chat session
             "/api/zoom/**",
-            "/api/me"
+            "/api/me",
+            "/api/certifications"
     );
 
     public boolean isPulicApi(String uri, String method) {
