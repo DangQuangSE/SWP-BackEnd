@@ -82,7 +82,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/payment/history/**",           // Payment history
             "/api/blog/my-blogs",                // User's own blogs
             "/api/blog/detail/*",                // Blog details for editing (specific ID)
-            "/api/chat/sessions"             // Staff get chat sessions (GET method// Staff get session messages (GET method)
+            "/api/chat/sessions",// Staff get chat sessions (GET method// Staff get session messages (GET method)
+            "/api/notifications"
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
