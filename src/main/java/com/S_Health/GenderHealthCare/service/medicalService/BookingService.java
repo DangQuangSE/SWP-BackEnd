@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.service.MedicalService;
 
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
+import com.S_Health.GenderHealthCare.dto.BasicMedicalProfileDTO;
 import com.S_Health.GenderHealthCare.dto.SimpleRoomDTO;
 import com.S_Health.GenderHealthCare.dto.response.BookingResponse;
 import com.S_Health.GenderHealthCare.entity.*;
@@ -40,6 +41,8 @@ public class BookingService {
     ConsultantSlotRepository consultantSlotRepository;
     @Autowired
     MedicalProfileService medicalProfileService;
+    @Autowired
+    MedicalProfileRepository medicalProfileRepository;
     @Autowired
     AuthUtil authUtil;
     @Autowired
@@ -286,5 +289,25 @@ public class BookingService {
             roomDTO.setSpecializationName(room.getSpecialization().getName());
         }
         return roomDTO;
+    }
+
+    /**
+     * Helper method to get basic medical profile information for customer
+     */
+    private BasicMedicalProfileDTO getBasicMedicalProfile(Long customerId) {
+        List<MedicalProfile> profiles = medicalProfileRepository.findByCustomerIdAndIsActiveTrue(customerId);
+
+        if (profiles.isEmpty()) {
+            return null;
+        }
+
+        // Lấy profile mới nhất có thông tin y tế
+        MedicalProfile latestProfile = profiles.stream()
+                .filter(p -> p.getAllergies() != null || p.getFamilyHistory() != null ||
+                           p.getChronicConditions() != null || p.getSpecialNotes() != null)
+                .max((p1, p2) -> p1.getUpdatedAt().compareTo(p2.getUpdatedAt()))
+                .orElse(profiles.get(0)); // Fallback to first profile if no medical info found
+
+        return modelMapper.map(latestProfile, BasicMedicalProfileDTO.class);
     }
 }
