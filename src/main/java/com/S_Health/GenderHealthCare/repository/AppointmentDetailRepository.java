@@ -16,7 +16,8 @@ import java.util.Optional;
 
 @Repository
 public interface AppointmentDetailRepository extends JpaRepository<AppointmentDetail, Long> {
-    boolean existsByAppointment_Customer_IdAndSlotTime(Long customerId, LocalDateTime slotTime );
+    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM AppointmentDetail a WHERE a.appointment.customer.id = :customerId AND a.slotTime = :slotTime AND a.status != 'CANCELED' AND a.isActive = true")
+    boolean existsByAppointment_Customer_IdAndSlotTime(@Param("customerId") Long customerId, @Param("slotTime") LocalDateTime slotTime);
     List<AppointmentDetail> findByConsultant_idAndSlotTime(Long customer_id, LocalDateTime slotTime);
     List<AppointmentDetail> findByAppointment(Appointment appointment);
     List<AppointmentDetail> findByAppointmentAndIsActiveTrue(Appointment appointment);
