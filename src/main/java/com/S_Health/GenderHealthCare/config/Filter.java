@@ -55,14 +55,14 @@ public class Filter extends OncePerRequestFilter {
 
             // Payment & External APIs
             "POST:/api/payment/vnpay/**",
-            "POST:/api/zoom/**",
+
 
             // Swagger UI endpoints
             "GET:/swagger-ui/**",
             "GET:/v3/api-docs/**",
             "GET:/swagger-resources/**",
             "GET:/webjars/**",
-            "POST:/api/zoom/**",
+
             "POST:/api/me/profile"
 //            "POST:/api/swagger-ui/**",
 //            "POST:/api/v3/api-docs/**",
@@ -93,7 +93,7 @@ public class Filter extends OncePerRequestFilter {
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
             "/api/appointment/by-status",
-            "/api/zoom/**",
+
             "/api/notifications",
             "/api/notifications/{notificationId}"
     );
