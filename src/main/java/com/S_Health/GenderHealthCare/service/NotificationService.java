@@ -150,7 +150,7 @@ public class NotificationService {
                 .appointment(notification.getAppointment() != null
                         ? NotificationAppointmentResponse.builder()
                         .id(notification.getAppointment().getId())
-                        .doctorName(notification.getAppointment().getConsultant().getFullname())
+
                         .appointmentDate(notification.getAppointment().getPreferredDate())
                         .build()
                         : null)
