@@ -47,8 +47,8 @@ public class VNPayService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
 
-        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
-                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
+//        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
+//                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
