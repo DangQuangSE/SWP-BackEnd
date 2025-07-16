@@ -5,12 +5,18 @@ import com.S_Health.GenderHealthCare.dto.request.ServiceFeedbackRequest;
 import com.S_Health.GenderHealthCare.dto.response.feedback.AverageRatingResponse;
 import com.S_Health.GenderHealthCare.dto.response.feedback.ConsultantFeedbackResponse;
 import com.S_Health.GenderHealthCare.dto.response.feedback.ServiceFeedbackResponse;
-import com.S_Health.GenderHealthCare.entity.*;
+import com.S_Health.GenderHealthCare.entity.Appointment;
+import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
+import com.S_Health.GenderHealthCare.entity.ServiceFeedback;
+import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
-import com.S_Health.GenderHealthCare.repository.*;
+import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
+import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
+import com.S_Health.GenderHealthCare.repository.ServiceFeedbackRepository;
+import com.S_Health.GenderHealthCare.repository.UserRepository;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,8 +35,6 @@ public class FeedbackService {
     @Autowired
     ServiceFeedbackRepository serviceFeedbackRepository;
     @Autowired
-    AppointmentDetailRepository appointmentDetailRepository;
-    @Autowired
     ConsultantFeedbackRepository consultantFeedbackRepository;
     @Autowired
     UserRepository userRepository;
@@ -40,9 +44,6 @@ public class FeedbackService {
     public ServiceFeedbackResponse createFeedback(ServiceFeedbackRequest request){
         Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
                 .orElseThrow(() -> new RuntimeException("Cuộc hẹn không tồn tại"));
-
-        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(request.getAppointmentId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết cuộc hẹn"));
 
         Long userId = authUtil.getCurrentUserId();
         Long customerId = appointment.getCustomer().getId();
@@ -62,7 +63,7 @@ public class FeedbackService {
         ConsultantFeedback consultantFeedback = ConsultantFeedback.builder()
                 .rating(request.getRating())
                 .comment(request.getCommentConsultant())
-                .consultantId(appointmentDetail.getConsultant().getId())
+                .consultantId(appointment.getConsultant().getId())
                 .serviceFeedback(serviceFeedback)
                 .createAt(serviceFeedback.getCreateAt())
                 .build();

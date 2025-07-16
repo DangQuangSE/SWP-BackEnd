@@ -21,7 +21,7 @@ public interface AppointmentDetailRepository extends JpaRepository<AppointmentDe
     List<AppointmentDetail> findByConsultant_idAndSlotTime(Long customer_id, LocalDateTime slotTime);
     List<AppointmentDetail> findByAppointment(Appointment appointment);
     List<AppointmentDetail> findByAppointmentAndIsActiveTrue(Appointment appointment);
-    List<AppointmentDetail> findByAppointmentId(Long appointmentId);
+    Optional<AppointmentDetail> findByAppointmentId(Long appointmentId);
     @Query("SELECT a FROM AppointmentDetail a WHERE a.consultant.id = :consultantId AND DATE(a.slotTime) = :date AND a.isActive = true")
     List<AppointmentDetail> findByConsultant_idAndSlotDate(@Param("consultantId") Long consultantId,
                                                            @Param("date") LocalDate date);
