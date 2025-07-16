@@ -95,7 +95,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/appointment/by-status",
             "/api/zoom/**",
             "/api/notifications",
-            "/api/notifications/{notificationId}"
+            "/api/notifications/{notificationId}",
+            "/api/notifications/{id}/read"
     );
 
     private final List<String> PROTECTED_POST_API = List.of(
