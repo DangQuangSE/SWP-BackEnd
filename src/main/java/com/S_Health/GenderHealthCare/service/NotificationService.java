@@ -165,7 +165,7 @@ public class NotificationService {
                 .build();
     }
 
-    @Scheduled(cron = "0 37 13 * * *")
+    @Scheduled(cron = "0 00 08 * * *")
     public void sendReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 
