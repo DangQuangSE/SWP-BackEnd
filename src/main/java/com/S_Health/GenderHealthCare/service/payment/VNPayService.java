@@ -9,7 +9,6 @@ import com.S_Health.GenderHealthCare.entity.Transaction;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
@@ -48,8 +47,8 @@ public class VNPayService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
 
-//        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
-//                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
+        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
@@ -144,8 +143,8 @@ public class VNPayService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
 
-//        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
-//                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
+        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
+                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
@@ -292,21 +291,10 @@ public class VNPayService {
             appointment.setStatus(AppointmentStatus.CONFIRMED);
             appointmentRepository.save(appointment);
 
-            List<AppointmentDetail> appointmentDetail =appointmentDetailRepository.findByAppointmentId(appointment.getId());
-            if(appointmentDetail.isEmpty()){
-                throw new AppException("Không tìm thấy chi tiết cuộc hẹn.");
-            }
-
-            if(appointment.getService().getIsCombo()) {
-                for (AppointmentDetail detail : appointmentDetail) {
-                    detail.setStatus(AppointmentStatus.CONFIRMED);
-                }
-                appointmentDetailRepository.saveAll(appointmentDetail);
-            }else{
-                AppointmentDetail detail = appointmentDetail.get(0);
-                detail.setStatus(AppointmentStatus.CONFIRMED);
-                appointmentDetailRepository.save(detail);
-            }
+            AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointment.getId())
+                    .orElseThrow(() -> new AuthenticationException("Không tìm thấy chi tiết cuộc hẹn."));
+            appointmentDetail.setStatus(AppointmentStatus.CONFIRMED);
+            appointmentDetailRepository.save(appointmentDetail);
         } else {
             payment.setStatus(PaymentStatus.FAILED);
             payment.setPaidAt(LocalDateTime.now());
@@ -314,21 +302,10 @@ public class VNPayService {
             appointment.setStatus(AppointmentStatus.CANCELED);
             appointmentRepository.save(appointment);
 
-            List<AppointmentDetail> appointmentDetail =appointmentDetailRepository.findByAppointmentId(appointment.getId());
-            if(appointmentDetail.isEmpty()){
-                throw new AppException("Không tìm thấy chi tiết cuộc hẹn.");
-            }
-
-            if(appointment.getService().getIsCombo()) {
-                for (AppointmentDetail detail : appointmentDetail) {
-                    detail.setStatus(AppointmentStatus.CANCELED);
-                }
-                appointmentDetailRepository.saveAll(appointmentDetail);
-            }else{
-                AppointmentDetail detail = appointmentDetail.get(0);
-                detail.setStatus(AppointmentStatus.CANCELED);
-                appointmentDetailRepository.save(detail);
-            }
+            AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointment.getId())
+                    .orElseThrow(() -> new AuthenticationException("Không tìm thấy chi tiết cuộc hẹn."));
+            appointmentDetail.setStatus(AppointmentStatus.CANCELED);
+            appointmentDetailRepository.save(appointmentDetail);
         }
 
         paymentRepository.save(payment);
