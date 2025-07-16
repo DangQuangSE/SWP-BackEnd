@@ -44,8 +44,13 @@ public class SecurityConfig {
                 .cors(cors -> cors
                         .configurationSource(request -> {
                             CorsConfiguration config = new CorsConfiguration();
-                            config.setAllowedOriginPatterns(List.of("http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:3000"));
-                            config.setAllowedMethods(List.of("*"));
+                            config.setAllowedOriginPatterns(List.of(
+                                "http://localhost:*",
+                                "http://127.0.0.1:*",
+                                "http://14.225.192.15:*",
+                                "http://14.225.192.15"
+                            ));
+                            config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                             config.setAllowedHeaders(List.of("*"));
                             config.setAllowCredentials(true);
                             return config;
@@ -70,10 +75,15 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:5173")
-                        .allowedMethods("*")
-                        .allowedHeaders("*");
-//                        .allowCredentials(true);
+                        .allowedOriginPatterns(
+                            "http://localhost:*",
+                            "http://127.0.0.1:*",
+                            "http://14.225.192.15:*",
+                            "http://14.225.192.15"
+                        )
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }
