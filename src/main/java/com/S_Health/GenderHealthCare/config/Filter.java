@@ -84,7 +84,9 @@ public class Filter extends OncePerRequestFilter {
             "/api/blog/detail/*",                // Blog details for editing (specific ID)
             "/api/chat/sessions",                // Staff get chat sessions (GET method)// Staff get session messages (GET method)
             "/api/zoom/**",// Staff get chat sessions (GET method// Staff get session messages (GET method)
-            "/api/notifications"
+            "/api/chat/sessions",// Staff get chat sessions (GET method// Staff get session messages (GET method)
+            "/api/notifications",
+            "/api/certifications/my-certifications"
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
@@ -93,7 +95,7 @@ public class Filter extends OncePerRequestFilter {
             "/api/cycle-track/logs"    ,// ví dụ route cần bảo vệ
 //            "/api/user/private/**"       // thêm wildcard nếu muốn
             "/api/appointment/by-status",
-
+            "/api/zoom/**",
             "/api/notifications",
             "/api/notifications/{notificationId}"
     );
@@ -102,7 +104,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/chat/join/*",                  // Staff join chat session
             "/api/chat/sessions/*/end",           // Staff end chat session
             "/api/zoom/**",
-            "/api/me"
+            "/api/me",
+            "/api/certifications"
     );
 
     public boolean isPulicApi(String uri, String method) {
