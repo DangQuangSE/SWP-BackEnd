@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.service.appointment;
 
 import com.S_Health.GenderHealthCare.dto.AppointmentDTO;
 import com.S_Health.GenderHealthCare.dto.AppointmentDetailDTO;
+import com.S_Health.GenderHealthCare.dto.BasicMedicalProfileDTO;
 import com.S_Health.GenderHealthCare.dto.PatientHistoryDTO;
 import com.S_Health.GenderHealthCare.dto.ResultDTO;
 import com.S_Health.GenderHealthCare.dto.request.appointment.UpdateAppointmentRequest;
@@ -11,7 +12,6 @@ import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.*;
-import com.S_Health.GenderHealthCare.service.appointment.AppointmentStatusCalculator;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -33,6 +33,8 @@ public class AppointmentService {
     AppointmentDetailRepository appointmentDetailRepository;
     @Autowired
     MedicalResultRepository medicalResultRepository;
+    @Autowired
+    MedicalProfileRepository medicalProfileRepository;
     @Autowired
     ServiceSlotPoolRepository serviceSlotPoolRepository;
     @Autowired
@@ -72,6 +74,10 @@ public class AppointmentService {
         appointmentDTO.setCustomerName(appointment.getCustomer().getFullname());
         appointmentDTO.setServiceName(appointment.getService().getName());
         appointmentDTO.setAppointmentDetails(detailDTOS);
+
+        // Map basic medical profile information at appointment level
+        appointmentDTO.setCustomerMedicalProfile(getBasicMedicalProfile(appointment.getCustomer().getId()));
+
         return appointmentDTO;
     }
 
@@ -367,6 +373,10 @@ public class AppointmentService {
                             .collect(Collectors.toList());
 
                     dto.setAppointmentDetails(detailDTOs);
+
+                    // Map basic medical profile information at appointment level
+                    dto.setCustomerMedicalProfile(getBasicMedicalProfile(appointment.getCustomer().getId()));
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -399,6 +409,10 @@ public class AppointmentService {
                             })
                             .collect(Collectors.toList());
                     dto.setAppointmentDetails(detailDTOs);
+
+                    // Map basic medical profile information at appointment level
+                    dto.setCustomerMedicalProfile(getBasicMedicalProfile(appointment.getCustomer().getId()));
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -423,6 +437,26 @@ public class AppointmentService {
             roomDTO.setSpecializationName(room.getSpecialization().getName());
         }
         return roomDTO;
+    }
+
+    /**
+     * Helper method to get basic medical profile information for customer
+     */
+    private BasicMedicalProfileDTO getBasicMedicalProfile(Long customerId) {
+        List<MedicalProfile> profiles = medicalProfileRepository.findByCustomerIdAndIsActiveTrue(customerId);
+
+        if (profiles.isEmpty()) {
+            return null;
+        }
+
+        // Lấy profile mới nhất có thông tin y tế
+        MedicalProfile latestProfile = profiles.stream()
+                .filter(p -> p.getAllergies() != null || p.getFamilyHistory() != null ||
+                           p.getChronicConditions() != null || p.getSpecialNotes() != null)
+                .max((p1, p2) -> p1.getUpdatedAt().compareTo(p2.getUpdatedAt()))
+                .orElse(profiles.get(0)); // Fallback to first profile if no medical info found
+
+        return modelMapper.map(latestProfile, BasicMedicalProfileDTO.class);
     }
 
 

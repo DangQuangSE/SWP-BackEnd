@@ -64,31 +64,42 @@ public class User implements UserDetails {
     List<Specialization> specializations;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnore
     List<MedicalProfile> medicalProfiles;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnore
     List<Appointment> appointments;
     @OneToMany(mappedBy = "consultant")
+    @JsonIgnore
     List<AppointmentDetail> appointmentDetails;
     @OneToMany(mappedBy = "consultant")
+    @JsonIgnore
     List<ConsultantSlot> consultantSlots;
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     List<CycleTracking> cycleTrackings;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     List<Notification> notifications;
 
     @OneToMany(mappedBy = "author")
+    @JsonIgnore
     List<Blog> blogs;
 
     @OneToMany(mappedBy = "commenter")
+    @JsonIgnore
     List<Comment> comments;
     @OneToMany(mappedBy = "paidBy")
+    @JsonIgnore
     List<Payment> payments;
     @OneToMany(mappedBy = "consultant")
+    @JsonIgnore
     List<MedicalResult> medicalResults;
 
     @OneToMany(mappedBy = "consultant")
+    @JsonIgnore
     List<RoomConsultant> roomAssignments;
 
     @Override

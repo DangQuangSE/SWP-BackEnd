@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.entity;
 
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,7 @@ public class AppointmentDetail {
 
     @ManyToOne
     @JoinColumn(name = "appointment_id")
+    @JsonIgnore
     Appointment appointment;
 
     @ManyToOne

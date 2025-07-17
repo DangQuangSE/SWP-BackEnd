@@ -30,4 +30,5 @@ public class AppointmentDTO {
     Boolean isRated;
     PaymentStatus paymentStatus;
     List<AppointmentDetailDTO> appointmentDetails;
+    BasicMedicalProfileDTO customerMedicalProfile;
 }
