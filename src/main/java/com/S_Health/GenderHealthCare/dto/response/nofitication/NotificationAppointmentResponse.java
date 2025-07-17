@@ -14,5 +14,6 @@ import java.time.LocalDateTime;
 public class NotificationAppointmentResponse {
     Long id;
     String doctorName;
+    String serviceName;
     LocalDate appointmentDate;
 }

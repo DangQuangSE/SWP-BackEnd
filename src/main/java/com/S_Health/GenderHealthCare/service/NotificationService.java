@@ -150,7 +150,8 @@ public class NotificationService {
                 .appointment(notification.getAppointment() != null
                         ? NotificationAppointmentResponse.builder()
                         .id(notification.getAppointment().getId())
-
+//                        .doctorName(notification.getAppointment().getConsultant().getFullname())
+                        .serviceName(notification.getAppointment().getService().getName())
                         .appointmentDate(notification.getAppointment().getPreferredDate())
                         .build()
                         : null)
@@ -164,7 +165,7 @@ public class NotificationService {
                 .build();
     }
 
-    @Scheduled(cron = "0 37 13 * * *")
+    @Scheduled(cron = "0 00 08 * * *")
     public void sendReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 
