@@ -24,4 +24,5 @@ public class UserDTO {
     LocalDate dateOfBirth;
     String address;
     List<Long> specializationIds;
+    String gender;
 }
