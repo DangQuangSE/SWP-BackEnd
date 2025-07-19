@@ -132,6 +132,9 @@ public class NotificationServiceTest {
         assertEquals(1, results.size());
         assertEquals(notification.getId(), results.get(0).getId());
         assertEquals(notification.getTitle(), results.get(0).getTitle());
+
+        System.out.println(results.get(0).getId());
+        System.out.println(results.get(0).getTitle());
     }
 
     @Test
@@ -145,6 +148,10 @@ public class NotificationServiceTest {
 
         assertFalse(notification.getIsActive());
         verify(notificationRepository).save(notification);
+
+        System.out.println(notification.getIsActive());
+
+
     }
 
     @Test
@@ -158,6 +165,8 @@ public class NotificationServiceTest {
 
         assertTrue(notification.getIsRead());
         verify(notificationRepository).save(notification);
+
+        System.out.println(notification.getIsRead());
     }
 
     @Test
