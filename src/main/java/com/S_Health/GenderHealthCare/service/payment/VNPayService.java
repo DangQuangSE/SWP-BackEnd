@@ -10,7 +10,6 @@ import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.PaymentRepository;
@@ -21,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URLEncoder;
@@ -47,20 +45,20 @@ public class VNPayService {
     public VNPayResponse createOrder(Long appointmentId){
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
+                .orElseThrow(() -> new AppException("Cuộc hẹn không tồn tại"));
 
 //        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
 //                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+            throw new AppException("Cuộc hẹn đã được thanh toán.");
         }
 
         // Tìm giao dịch thanh toán thất bại
         Optional<Payment> failed = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.FAILED);
         if (failed.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn đã huỷ.");
+            throw new AppException("Cuộc hẹn đã huỷ.");
         }
 
         BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());
@@ -143,20 +141,20 @@ public class VNPayService {
     public VNPayResponse createOrderOff(Long appointmentId){
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
+                .orElseThrow(() -> new AppException("Cuộc hẹn không tồn tại"));
 
 //        AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointmentId)
 //                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không có chi tiết"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+            throw new AppException("Cuộc hẹn đã được thanh toán.");
         }
 
         // Tìm giao dịch thanh toán thất bại
         Optional<Payment> failed = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.FAILED);
         if (failed.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn đã huỷ.");
+            throw new AppException("Cuộc hẹn đã huỷ.");
         }
 
         BigDecimal percent = new BigDecimal("0.2");
@@ -264,7 +262,7 @@ public class VNPayService {
         String calculatedHash = VNPayConfig.hmacSHA512(VNPayConfig.vnp_HashSecret, hashData.toString());
 
         if (!calculatedHash.equals(receivedHash)) {
-            throw new AuthenticationException("Chữ ký không hợp lệ.");
+            throw new AppException("Chữ ký không hợp lệ.");
         }
 
         String vnp_ResponseCode = params.get("vnp_ResponseCode");
@@ -274,7 +272,7 @@ public class VNPayService {
         String vnp_PayDate = params.get("vnp_PayDate"); // yyyyMMddHHmmss
 
         Transaction transaction = transactionRepository.findByOrderId(vnp_TxnRef)
-                .orElseThrow(() -> new AuthenticationException("Không tìm thấy giao dịch."));
+                .orElseThrow(() -> new AppException("Không tìm thấy giao dịch."));
 
         Payment payment = transaction.getPayment();
 
@@ -305,7 +303,7 @@ public class VNPayService {
                 appointmentDetailRepository.saveAll(appointmentDetails);
             } else {
                 AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointment.getId())
-                        .orElseThrow(() -> new AuthenticationException("Không tìm thấy chi tiết cuộc hẹn."));
+                        .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn."));
                 appointmentDetail.setStatus(AppointmentStatus.CONFIRMED);
                 appointmentDetailRepository.save(appointmentDetail);
             }
@@ -332,7 +330,7 @@ public class VNPayService {
                 appointmentDetailRepository.saveAll(appointmentDetails);
             } else {
                 AppointmentDetail appointmentDetail = appointmentDetailRepository.findByAppointmentId(appointment.getId())
-                        .orElseThrow(() -> new AuthenticationException("Không tìm thấy chi tiết cuộc hẹn."));
+                        .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn."));
                 appointmentDetail.setStatus(AppointmentStatus.CANCELED);
                 appointmentDetailRepository.save(appointmentDetail);
             }

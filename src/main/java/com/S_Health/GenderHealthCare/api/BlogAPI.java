@@ -4,7 +4,7 @@ import com.S_Health.GenderHealthCare.dto.request.blog.BlogRequest;
 import com.S_Health.GenderHealthCare.dto.response.BlogResponse;
 import com.S_Health.GenderHealthCare.entity.Blog;
 import com.S_Health.GenderHealthCare.enums.BlogStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.service.blog.BlogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -126,7 +126,7 @@ public class BlogAPI {
         try {
             BlogResponse response = blogService.updateBlog(id, request);
             return ResponseEntity.ok(response);
-        } catch (BadRequestException e) {
+        } catch (AppException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -137,7 +137,7 @@ public class BlogAPI {
         try {
             blogService.deleteBlog(id);
             return ResponseEntity.ok("Đã xóa bài viết thành công");
-        } catch (BadRequestException e) {
+        } catch (AppException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

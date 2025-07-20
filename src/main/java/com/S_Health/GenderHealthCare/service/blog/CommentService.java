@@ -4,7 +4,7 @@ import com.S_Health.GenderHealthCare.dto.request.blog.CommentRequest;
 import com.S_Health.GenderHealthCare.entity.Blog;
 import com.S_Health.GenderHealthCare.entity.Comment;
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.exception.exceptions.ResourceNotFoundException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.BlogRepository;
 import com.S_Health.GenderHealthCare.repository.CommentRepository;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
@@ -49,7 +49,7 @@ public class CommentService {
         Long userId = authUtil.getCurrentUserId();;
 
         Comment comment = commentRepository.findById(commentID)
-                .orElseThrow(()-> new ResourceNotFoundException("Không tìm thấy bình luận"));
+                .orElseThrow(()-> new AppException("Không tìm thấy bình luận"));
 
         if (!Objects.equals(comment.getCommenter().getId(), userId)) {
             throw new SecurityException("Bạn không có quyền xóa bình luận này");

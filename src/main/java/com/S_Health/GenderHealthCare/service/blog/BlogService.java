@@ -9,8 +9,7 @@ import com.S_Health.GenderHealthCare.entity.Tag;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.BlogStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.BlogRepository;
 import com.S_Health.GenderHealthCare.service.cloudinary.CloudinaryService;
@@ -25,13 +24,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -78,7 +74,7 @@ public class BlogService {
                 String imageUrl = cloudinaryService.uploadImage(request.getImg());
                 request.setImgUrl(imageUrl);
             } catch (IOException e) {
-                throw new BadRequestException("Không thể tải lên hình ảnh: " + e.getMessage());
+                throw new AppException("Không thể tải lên hình ảnh: " + e.getMessage());
             }
         }
 
@@ -106,7 +102,7 @@ public class BlogService {
             // Kiểm tra tag không hợp lệ
             List<String> invalidTags = tagService.validateTagNames(request.getTagNames());
             if (!invalidTags.isEmpty()) {
-                throw new BadRequestException("Các tag sau không tồn tại: " + String.join(", ", invalidTags));
+                throw new AppException("Các tag sau không tồn tại: " + String.join(", ", invalidTags));
             }
             
             // Lấy các tag đã tồn tại
@@ -154,12 +150,12 @@ public class BlogService {
         
         // Tìm blog
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         // Kiểm tra quyền sở hữu
         User currentUser = authUtil.getCurrentUser();
         if (!(blog.getAuthor().getId() == (currentUser.getId()))) {
-            throw new BadRequestException("Bạn không có quyền chỉnh sửa bài viết này");
+            throw new AppException("Bạn không có quyền chỉnh sửa bài viết này");
         }
         
         // Upload hình ảnh mới nếu có
@@ -168,7 +164,7 @@ public class BlogService {
                 String imageUrl = cloudinaryService.uploadImage(request.getImg());
                 blog.setImgUrl(imageUrl);
             } catch (IOException e) {
-                throw new BadRequestException("Không thể tải lên hình ảnh: " + e.getMessage());
+                throw new AppException("Không thể tải lên hình ảnh: " + e.getMessage());
             }
         } else if (request.getImgUrl() != null) {
             blog.setImgUrl(request.getImgUrl());
@@ -184,7 +180,7 @@ public class BlogService {
             // Kiểm tra tag không hợp lệ
             List<String> invalidTags = tagService.validateTagNames(request.getTagNames());
             if (!invalidTags.isEmpty()) {
-                throw new BadRequestException("Các tag sau không tồn tại: " + String.join(", ", invalidTags));
+                throw new AppException("Các tag sau không tồn tại: " + String.join(", ", invalidTags));
             }
             
             // Lấy các tag đã tồn tại
@@ -203,12 +199,12 @@ public class BlogService {
     public void deleteBlog(Long blogId) {
         // Tìm blog
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         // Kiểm tra quyền sở hữu
         User currentUser = authUtil.getCurrentUser();
         if (!(blog.getAuthor().getId() == (currentUser.getId()))) {
-            throw new BadRequestException("Bạn không có quyền xóa bài viết này");
+            throw new AppException("Bạn không có quyền xóa bài viết này");
         }
         
         // Xóa blog
@@ -231,7 +227,7 @@ public class BlogService {
 
     public BlogResponse getBlogById(Long blogId) {
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         BlogResponse response = modelMapper.map(blog, BlogResponse.class);
         if (blog.getAuthor() != null) {
@@ -258,7 +254,7 @@ public class BlogService {
         // Chỉ admin/staff mới có thể xem blog theo status
         User currentUser = authUtil.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN) {
-            throw new BadRequestException("Bạn không có quyền xem danh sách blog theo trạng thái");
+            throw new AppException("Bạn không có quyền xem danh sách blog theo trạng thái");
         }
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -277,14 +273,14 @@ public class BlogService {
     public BlogResponse approveBlog(Long blogId) {
         User currentUser = authUtil.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN && currentUser.getRole() != UserRole.STAFF) {
-            throw new BadRequestException("Bạn không có quyền duyệt bài viết");
+            throw new AppException("Bạn không có quyền duyệt bài viết");
         }
         
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         if (blog.getStatus() != BlogStatus.PENDING) {
-            throw new BadRequestException("Chỉ có thể duyệt bài viết có trạng thái PENDING");
+            throw new AppException("Chỉ có thể duyệt bài viết có trạng thái PENDING");
         }
         
         blog.setStatus(BlogStatus.APPROVED);
@@ -303,14 +299,14 @@ public class BlogService {
     public BlogResponse rejectBlog(Long blogId) {
         User currentUser = authUtil.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN && currentUser.getRole() != UserRole.STAFF) {
-            throw new BadRequestException("Bạn không có quyền từ chối bài viết");
+            throw new AppException("Bạn không có quyền từ chối bài viết");
         }
         
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         if (blog.getStatus() != BlogStatus.PENDING) {
-            throw new BadRequestException("Chỉ có thể từ chối bài viết có trạng thái PENDING");
+            throw new AppException("Chỉ có thể từ chối bài viết có trạng thái PENDING");
         }
         
         blog.setStatus(BlogStatus.REJECTED);
@@ -329,14 +325,14 @@ public class BlogService {
     public BlogResponse publishBlog(Long blogId) {
         User currentUser = authUtil.getCurrentUser();
         if (currentUser.getRole() != UserRole.ADMIN && currentUser.getRole() != UserRole.STAFF) {
-            throw new BadRequestException("Bạn không có quyền đăng bài viết");
+            throw new AppException("Bạn không có quyền đăng bài viết");
         }
         
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         if (blog.getStatus() != BlogStatus.APPROVED) {
-            throw new BadRequestException("Chỉ có thể đăng bài viết đã được duyệt");
+            throw new AppException("Chỉ có thể đăng bài viết đã được duyệt");
         }
         
         blog.setStatus(BlogStatus.PUBLISHED);
@@ -355,15 +351,15 @@ public class BlogService {
     @Transactional
     public BlogResponse submitBlogForReview(Long blogId) {
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
         User currentUser = authUtil.getCurrentUser();
         if (!(blog.getAuthor().getId() == (currentUser.getId()))) {
-            throw new BadRequestException("Bạn không có quyền gửi bài viết này để duyệt");
+            throw new AppException("Bạn không có quyền gửi bài viết này để duyệt");
         }
         
         if (blog.getStatus() != BlogStatus.DRAFT && blog.getStatus() != BlogStatus.REJECTED) {
-            throw new BadRequestException("Chỉ có thể gửi bài viết ở trạng thái DRAFT hoặc REJECTED để duyệt");
+            throw new AppException("Chỉ có thể gửi bài viết ở trạng thái DRAFT hoặc REJECTED để duyệt");
         }
         
         blog.setStatus(BlogStatus.PENDING);

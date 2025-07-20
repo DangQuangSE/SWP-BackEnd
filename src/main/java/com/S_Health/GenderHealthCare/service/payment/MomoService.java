@@ -10,7 +10,7 @@ import com.S_Health.GenderHealthCare.entity.Transaction;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.PaymentRepository;
 import com.S_Health.GenderHealthCare.repository.TransactionRepository;
@@ -62,17 +62,17 @@ public class MomoService {
         String requestId = UUID.randomUUID().toString();
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AuthenticationException("Cuộc hẹn không tồn tại"));
+                .orElseThrow(() -> new AppException("Cuộc hẹn không tồn tại"));
 
         Optional<Payment> paid = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.SUCCESS);
         if (paid.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn đã được thanh toán.");
+            throw new AppException("Cuộc hẹn đã được thanh toán.");
         }
 
         // Tìm giao dịch thanh toán thất bại
         Optional<Payment> failed = paymentRepository.findByAppointmentIdAndStatus(appointmentId, PaymentStatus.FAILED);
         if (failed.isPresent()) {
-            throw new AuthenticationException("Cuộc hẹn đã huỷ.");
+            throw new AppException("Cuộc hẹn đã huỷ.");
         }
 
 //        BigDecimal price = BigDecimal.valueOf(appointment.getService().getPrice());

@@ -4,7 +4,6 @@ import com.S_Health.GenderHealthCare.dto.SlotDTO;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
-import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleCancelResponse;
 import com.S_Health.GenderHealthCare.dto.response.WorkDateSlotResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleRegisterResponse;
@@ -12,10 +11,9 @@ import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
 import com.S_Health.GenderHealthCare.entity.ConsultantSlot;
 import com.S_Health.GenderHealthCare.entity.Schedule;
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ScheduleStatus;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantSlotRepository;
@@ -77,7 +75,7 @@ public class ScheduleService {
 
     public ScheduleRegisterResponse registerSchedule(ScheduleRegisterRequest request) {
         User consultant = authenticationRepository.findById(authUtil.getCurrentUserId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người tư vấn này!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy người tư vấn này!"));
         List<ScheduleRegisterRequest.ScheduleItem> scheduleItems = request.getScheduleItems();
         for (ScheduleRegisterRequest.ScheduleItem item : scheduleItems) {
             if (!item.getWorkDate().isAfter(LocalDate.now())) {
@@ -152,7 +150,7 @@ public class ScheduleService {
                     .findByConsultant_idAndSlotDate(consultantId, date);
             List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDate(consultantId, date);
             if (slots.isEmpty()) {
-                throw new BadRequestException("Không tìm thấy slots cần huỷ.");
+                throw new AppException("Không tìm thấy slots cần huỷ.");
             }
             for (ConsultantSlot slot : slots) {
                 slot.setIsActive(false);
@@ -171,7 +169,7 @@ public class ScheduleService {
                 slot.setStatus(SlotStatus.DEACTIVE);
                 consultantSlotRepository.save(slot);
             } else {
-                throw new BadRequestException("Không tìm thấy slot cần huỷ.");
+                throw new AppException("Không tìm thấy slot cần huỷ.");
             }
         }
 

@@ -3,7 +3,7 @@ package com.S_Health.GenderHealthCare.service;
 import com.S_Health.GenderHealthCare.dto.SpecializationDTO;
 import com.S_Health.GenderHealthCare.dto.request.SpecializationRequest;
 import com.S_Health.GenderHealthCare.entity.Specialization;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +27,10 @@ public class SpecializationService {
 
     public SpecializationDTO getSpecializationById(Long id) {
         Specialization specialization = specializationRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + id));
 
         if (!specialization.getIsActive()) {
-            throw new BadRequestException("Chuyên môn không hoạt động");
+            throw new AppException("Chuyên môn không hoạt động");
         }
 
         return modelMapper.map(specialization, SpecializationDTO.class);
@@ -46,7 +46,7 @@ public class SpecializationService {
     public SpecializationDTO createSpecialization(SpecializationRequest request) {
         // Kiểm tra tên chuyên môn có bị trùng không
         if (specializationRepository.existsByNameAndIsActiveTrue(request.getName().trim())) {
-            throw new BadRequestException("Tên chuyên môn đã tồn tại");
+            throw new AppException("Tên chuyên môn đã tồn tại");
         }
 
         Specialization specialization = new Specialization();
@@ -61,16 +61,16 @@ public class SpecializationService {
     @Transactional
     public SpecializationDTO updateSpecialization(Long id, SpecializationRequest request) {
         Specialization specialization = specializationRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + id));
 
         if (!specialization.getIsActive()) {
-            throw new BadRequestException("Không thể cập nhật chuyên môn đã bị xóa");
+            throw new AppException("Không thể cập nhật chuyên môn đã bị xóa");
         }
 
         // Kiểm tra xem tên chuyên môn mới có trùng với chuyên môn khác không
         if (!specialization.getName().equalsIgnoreCase(request.getName().trim()) &&
                 specializationRepository.existsByNameAndIsActiveTrue(request.getName().trim())) {
-            throw new BadRequestException("Tên chuyên môn đã tồn tại");
+            throw new AppException("Tên chuyên môn đã tồn tại");
         }
 
         specialization.setName(request.getName().trim());
@@ -83,19 +83,19 @@ public class SpecializationService {
     @Transactional
     public void deleteSpecialization(Long id) {
         Specialization specialization = specializationRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + id));
 
         if (!specialization.getIsActive()) {
-            throw new BadRequestException("Chuyên môn đã bị xóa trước đó");
+            throw new AppException("Chuyên môn đã bị xóa trước đó");
         }
 
         // Kiểm tra xem chuyên môn có được sử dụng không
         if (!specialization.getServices().isEmpty()) {
-            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các dịch vụ");
+            throw new AppException("Không thể xóa chuyên môn đang được sử dụng bởi các dịch vụ");
         }
 
         if (!specialization.getConsultants().isEmpty()) {
-            throw new BadRequestException("Không thể xóa chuyên môn đang được sử dụng bởi các bác sĩ");
+            throw new AppException("Không thể xóa chuyên môn đang được sử dụng bởi các bác sĩ");
         }
         specialization.setIsActive(false);
         specializationRepository.save(specialization);

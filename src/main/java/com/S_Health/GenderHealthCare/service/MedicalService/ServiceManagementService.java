@@ -7,7 +7,7 @@ import com.S_Health.GenderHealthCare.dto.response.ComboResponse;
 import com.S_Health.GenderHealthCare.entity.ComboItem;
 import com.S_Health.GenderHealthCare.entity.Service;
 import com.S_Health.GenderHealthCare.entity.Specialization;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.ComboItemRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceRepository;
 import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
@@ -41,10 +41,10 @@ public class ServiceManagementService {
 
     public ServiceDTO getServiceById(Long id) {
         Service service = serviceRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ với ID: " + id));
 
         if (!service.getIsActive()) {
-            throw new BadRequestException("Dịch vụ không hoạt động");
+            throw new AppException("Dịch vụ không hoạt động");
         }
 
         return convertToDTO(service);
@@ -58,10 +58,10 @@ public class ServiceManagementService {
 
     public List<ServiceDTO> getServicesBySpecialization(Long specializationId) {
         Specialization specialization = specializationRepository.findById(specializationId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + specializationId));
+                .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + specializationId));
 
         if (!specialization.getIsActive()) {
-            throw new BadRequestException("Chuyên môn không hoạt động");
+            throw new AppException("Chuyên môn không hoạt động");
         }
 
         return serviceRepository.findBySpecializationsContainingAndIsActiveTrue(specialization).stream()
@@ -73,7 +73,7 @@ public class ServiceManagementService {
     public ServiceDTO createService(ServiceDTO serviceDTO) {
         // Kiểm tra tên dịch vụ có bị trùng không
         if (serviceRepository.existsByNameAndIsActiveTrue(serviceDTO.getName().trim())) {
-            throw new BadRequestException("Tên dịch vụ đã tồn tại");
+            throw new AppException("Tên dịch vụ đã tồn tại");
         }
 
         // Tạo dịch vụ
@@ -93,10 +93,10 @@ public class ServiceManagementService {
 
             for (Long specializationId : serviceDTO.getSpecializationIds()) {
                 Specialization specialization = specializationRepository.findById(specializationId)
-                        .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + specializationId));
+                        .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + specializationId));
 
                 if (!specialization.getIsActive()) {
-                    throw new BadRequestException("Chuyên môn với ID: " + specializationId + " không hoạt động");
+                    throw new AppException("Chuyên môn với ID: " + specializationId + " không hoạt động");
                 }
 
                 specializations.add(specialization);
@@ -112,16 +112,16 @@ public class ServiceManagementService {
     @Transactional
     public ServiceDTO updateService(Long id, ServiceDTO serviceDTO) {
         Service service = serviceRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ với ID: " + id));
 
         if (!service.getIsActive()) {
-            throw new BadRequestException("Dịch vụ không hoạt động, không thể cập nhật");
+            throw new AppException("Dịch vụ không hoạt động, không thể cập nhật");
         }
 
         // Kiểm tra tên dịch vụ có bị trùng không (nếu tên thay đổi)
         if (serviceDTO.getName() != null && !service.getName().equals(serviceDTO.getName().trim()) &&
                 serviceRepository.existsByNameAndIsActiveTrue(serviceDTO.getName().trim())) {
-            throw new BadRequestException("Tên dịch vụ đã tồn tại");
+            throw new AppException("Tên dịch vụ đã tồn tại");
         }
 
         // Cập nhật thông tin cơ bản
@@ -155,10 +155,10 @@ public class ServiceManagementService {
 
             for (Long specializationId : serviceDTO.getSpecializationIds()) {
                 Specialization specialization = specializationRepository.findById(specializationId)
-                        .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + specializationId));
+                        .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + specializationId));
 
                 if (!specialization.getIsActive()) {
-                    throw new BadRequestException("Chuyên môn với ID: " + specializationId + " không hoạt động");
+                    throw new AppException("Chuyên môn với ID: " + specializationId + " không hoạt động");
                 }
 
                 specializations.add(specialization);
@@ -174,7 +174,7 @@ public class ServiceManagementService {
     @Transactional
     public ServiceDTO activateService(Long id) {
         Service service = serviceRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ với ID: " + id));
 
         service.setIsActive(true);
         Service updatedService = serviceRepository.save(service);
@@ -184,7 +184,7 @@ public class ServiceManagementService {
     @Transactional
     public ServiceDTO deactivateService(Long id) {
         Service service = serviceRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ với ID: " + id));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ với ID: " + id));
 
         service.setIsActive(false);
         Service updatedService = serviceRepository.save(service);
@@ -195,12 +195,12 @@ public class ServiceManagementService {
     public ComboResponse createComboService(ServiceDTO serviceDTO) {
         // Kiểm tra tên dịch vụ combo có bị trùng không
         if (serviceRepository.existsByNameAndIsActiveTrue(serviceDTO.getName().trim())) {
-            throw new BadRequestException("Tên dịch vụ combo đã tồn tại");
+            throw new AppException("Tên dịch vụ combo đã tồn tại");
         }
 
         // Kiểm tra danh sách dịch vụ thành phần
         if (serviceDTO.getSubServiceIds() == null || serviceDTO.getSubServiceIds().isEmpty()) {
-            throw new BadRequestException("Dịch vụ combo phải có ít nhất 1 dịch vụ thành phần");
+            throw new AppException("Dịch vụ combo phải có ít nhất 1 dịch vụ thành phần");
         }
 
         // Tạo dịch vụ combo
@@ -219,10 +219,10 @@ public class ServiceManagementService {
 
             for (Long specializationId : serviceDTO.getSpecializationIds()) {
                 Specialization specialization = specializationRepository.findById(specializationId)
-                        .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + specializationId));
+                        .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + specializationId));
 
                 if (!specialization.getIsActive()) {
-                    throw new BadRequestException("Chuyên môn với ID: " + specializationId + " không hoạt động");
+                    throw new AppException("Chuyên môn với ID: " + specializationId + " không hoạt động");
                 }
 
                 specializations.add(specialization);
@@ -241,10 +241,10 @@ public class ServiceManagementService {
 
         for (Long subServiceId : serviceDTO.getSubServiceIds()) {
             Service subService = serviceRepository.findById(subServiceId)
-                    .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ thành phần với ID: " + subServiceId));
+                    .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ thành phần với ID: " + subServiceId));
 
             if (!subService.getIsActive()) {
-                throw new BadRequestException("Dịch vụ thành phần với ID: " + subServiceId + " không hoạt động");
+                throw new AppException("Dịch vụ thành phần với ID: " + subServiceId + " không hoạt động");
             }
 
             ComboItem comboItem = new ComboItem();

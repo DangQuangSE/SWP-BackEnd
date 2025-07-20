@@ -4,13 +4,11 @@ import com.S_Health.GenderHealthCare.dto.*;
 import com.S_Health.GenderHealthCare.dto.request.MedicalInfoUpdateRequest;
 import com.S_Health.GenderHealthCare.dto.response.MedicalProfileDTO;
 import com.S_Health.GenderHealthCare.entity.*;
-import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ResultType;
 import com.S_Health.GenderHealthCare.enums.ServiceType;
 import com.S_Health.GenderHealthCare.enums.TestStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
-import com.S_Health.GenderHealthCare.exception.exceptions.ResourceNotFoundException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
@@ -19,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -76,9 +73,9 @@ public class MedicalProfileService {
     public MedicalProfileDTO getMyProfile(Long serviceId) {
         User user = authUtil.getCurrentUser();
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ này!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ này!"));
         MedicalProfile medicalProfile = medicalProfileRepository.findByCustomerAndServiceAndIsActiveTrue(user, service)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy hồ sơ khám bệnh!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy hồ sơ khám bệnh!"));
         return modelMapper.map(medicalProfile, MedicalProfileDTO.class);
     }
     /**
@@ -89,18 +86,18 @@ public class MedicalProfileService {
 
         // Kiểm tra quyền truy cập
         if (currentDoctor.getRole() != UserRole.CONSULTANT) {
-            throw new BadRequestException("Chỉ bác sĩ mới có thể xem lịch sử khám bệnh");
+            throw new AppException("Chỉ bác sĩ mới có thể xem lịch sử khám bệnh");
         }
 
         // Lấy thông tin bệnh nhân
         User patient = authenticationRepository.findById(patientId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bệnh nhân"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bệnh nhân"));
 
         // Kiểm tra bác sĩ có quyền xem bệnh nhân này không
         boolean hasAccess = appointmentDetailRepository
                 .existsByConsultantIdAndAppointmentCustomerId(currentDoctor.getId(), patientId);
         if (!hasAccess) {
-            throw new BadRequestException("Bạn không có quyền xem hồ sơ bệnh nhân này");
+            throw new AppException("Bạn không có quyền xem hồ sơ bệnh nhân này");
         }
 
         // Approach mới: Lấy 5 appointments gần nhất của bệnh nhân (đơn giản và hiệu quả)
@@ -251,15 +248,15 @@ public class MedicalProfileService {
 
         // Kiểm tra quyền (chỉ staff và admin)
         if (currentStaff.getRole() != UserRole.STAFF && currentStaff.getRole() != UserRole.ADMIN) {
-            throw new BadRequestException("Chỉ staff mới có thể cập nhật thông tin y tế");
+            throw new AppException("Chỉ staff mới có thể cập nhật thông tin y tế");
         }
 
         // Lấy customer và service
         User customer = authenticationRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy bệnh nhân"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bệnh nhân"));
 
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getServiceId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ"));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ"));
 
         // Tìm hoặc tạo medical profile
         MedicalProfile profile = medicalProfileRepository
@@ -287,10 +284,10 @@ public class MedicalProfileService {
      */
     public MedicalProfile getMedicalInfoForDoctor(Long customerId, Long serviceId) {
         User customer = authenticationRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bệnh nhân"));
+                .orElseThrow(() -> new AppException("Không tìm thấy bệnh nhân"));
 
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dịch vụ"));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ"));
 
         return medicalProfileRepository
                 .findByCustomerAndServiceAndIsActiveTrue(customer, service)
