@@ -11,8 +11,6 @@ import com.S_Health.GenderHealthCare.entity.ServiceFeedback;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
 import com.S_Health.GenderHealthCare.repository.ServiceFeedbackRepository;
@@ -49,7 +47,7 @@ public class FeedbackService {
         Long customerId = appointment.getCustomer().getId();
 
         if (!customerId.equals(userId)) {
-            throw new BadRequestException("Bạn chưa có cuộc hẹn nào");
+            throw new AppException("Bạn chưa có cuộc hẹn nào");
         }
 
         ServiceFeedback serviceFeedback = ServiceFeedback.builder()
@@ -174,18 +172,18 @@ public class FeedbackService {
 
     public ConsultantFeedbackResponse createConsultantFeedback(ConsultantFeedbackRequest request){
         ServiceFeedback feedback = serviceFeedbackRepository.findById(request.getServiceFeedbackId())
-                .orElseThrow(() -> new BadRequestException("Chưa có đánh giá cho cuộc hẹn này"));
+                .orElseThrow(() -> new AppException("Chưa có đánh giá cho cuộc hẹn này"));
 
         Long userId = authUtil.getCurrentUserId();
 
         Long customerId = feedback.getAppointment().getCustomer().getId();
 
         if (!customerId.equals(userId)) {
-            throw new AuthenticationException("Bạn chưa có cuộc hẹn nào");
+            throw new AppException("Bạn chưa có cuộc hẹn nào");
         }
 
         User consultant = userRepository.findByIdAndRole(request.getConsultantId(), UserRole.CONSULTANT)
-                .orElseThrow(() -> new BadRequestException("Không có bác sĩ này"));
+                .orElseThrow(() -> new AppException("Không có bác sĩ này"));
 
         Long consultantId = feedback.getAppointment().getConsultant().getId();
         if (!consultantId.equals(request.getConsultantId())) {
@@ -222,7 +220,7 @@ public class FeedbackService {
         }
 
         User consultant = userRepository.findByIdAndRole(request.getConsultantId(), UserRole.CONSULTANT)
-                .orElseThrow(() -> new BadRequestException("Không có bác sĩ này"));
+                .orElseThrow(() -> new AppException("Không có bác sĩ này"));
 
         Long consultantId = cf.getServiceFeedback().getAppointment().getConsultant().getId();
         if (!consultantId.equals(request.getConsultantId())) {

@@ -6,7 +6,7 @@ import com.S_Health.GenderHealthCare.dto.response.CreateUserResponse;
 import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
 import jakarta.transaction.Transactional;
@@ -37,13 +37,13 @@ public class ManageUserService {
 
     public CreateUserResponse createStaffAccount(CreateUserRequest request) {
         if (authenticationRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email đã tồn tại trong hệ thống");
+            throw new AppException("Email đã tồn tại trong hệ thống");
         }
         validateRole(request.getRole());
         List<Specialization> specializations = null;
         if (request.getRole() == UserRole.CONSULTANT) {
             if (request.getSpecializationIds() == null || request.getSpecializationIds().isEmpty()) {
-                throw new BadRequestException("Tư vấn viên phải có ít nhất một chuyên môn");
+                throw new AppException("Tư vấn viên phải có ít nhất một chuyên môn");
             }
             specializations = validateAndGetSpecializations(request.getSpecializationIds());
         }
@@ -73,14 +73,14 @@ public class ManageUserService {
 
     private void validateRole(UserRole role) {
         if (role == UserRole.CUSTOMER) {
-            throw new BadRequestException("Không thể tạo tài khoản Khách hàng qua API này");
+            throw new AppException("Không thể tạo tài khoản Khách hàng qua API này");
         }
     }
 
     private List<Specialization> validateAndGetSpecializations(Set<Long> specializationIds) {
         List<Specialization> specializations = specializationRepository.findAllById(specializationIds);
         if (specializations.size() != specializationIds.size()) {
-            throw new BadRequestException("Một hoặc nhiều chuyên môn không tồn tại");
+            throw new AppException("Một hoặc nhiều chuyên môn không tồn tại");
         }
         return specializations;
     }
@@ -94,10 +94,10 @@ public class ManageUserService {
 
     public User addSpecializationsToConsultant(Long userId, Set<Long> specializationIds) {
         User consultant = authenticationRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));
 
         if (consultant.getRole() != UserRole.CONSULTANT) {
-            throw new BadRequestException("Người dùng này không phải là tư vấn viên");
+            throw new AppException("Người dùng này không phải là tư vấn viên");
         }
         List<Specialization> specializationsToAdd = validateAndGetSpecializations(specializationIds);
         if (consultant.getSpecializations() == null) {
@@ -113,21 +113,21 @@ public class ManageUserService {
 
     public void removeSpecializationFromConsultant(Long userId, Long specializationId) {
         User consultant = authenticationRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));
         // Kiểm tra xem người dùng có phải là tư vấn viên không
         if (consultant.getRole() != UserRole.CONSULTANT) {
-            throw new BadRequestException("Người dùng này không phải là tư vấn viên");
+            throw new AppException("Người dùng này không phải là tư vấn viên");
         }
         // Kiểm tra xem chuyên môn có tồn tại không
         Specialization specialization = specializationRepository.findById(specializationId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chuyên môn với ID: " + specializationId));
+                .orElseThrow(() -> new AppException("Không tìm thấy chuyên môn với ID: " + specializationId));
         // Kiểm tra xem tư vấn viên có chuyên môn này không
         if (consultant.getSpecializations() == null || !consultant.getSpecializations().contains(specialization)) {
-            throw new BadRequestException("Tư vấn viên không có chuyên môn này");
+            throw new AppException("Tư vấn viên không có chuyên môn này");
         }
         // Đảm bảo tư vấn viên có ít nhất một chuyên môn sau khi xóa
         if (consultant.getSpecializations().size() <= 1) {
-            throw new BadRequestException("Tư vấn viên phải có ít nhất một chuyên môn");
+            throw new AppException("Tư vấn viên phải có ít nhất một chuyên môn");
         }
         // Xóa chuyên môn
         consultant.getSpecializations().remove(specialization);
@@ -136,10 +136,10 @@ public class ManageUserService {
 
     public List<Specialization> getConsultantSpecializations(Long userId) {
         User consultant = authenticationRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));
         // Kiểm tra xem người dùng có phải là tư vấn viên không
         if (consultant.getRole() != UserRole.CONSULTANT) {
-            throw new BadRequestException("Người dùng này không phải là tư vấn viên");
+            throw new AppException("Người dùng này không phải là tư vấn viên");
         }
         return consultant.getSpecializations() != null ? consultant.getSpecializations() : new ArrayList<>();
     }
@@ -168,7 +168,7 @@ public class ManageUserService {
      */
     public void softDeleteUser(Long userId) {
         User user = authenticationRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));
 
         user.setActive(false);
         authenticationRepository.save(user);
@@ -179,10 +179,10 @@ public class ManageUserService {
      */
     public void restoreUser(Long userId) {
         User user = authenticationRepository.findById(userId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người dùng với ID: " + userId));
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));
 
         if (user.isActive()) {
-            throw new BadRequestException("Người dùng đang hoạt động bình thường");
+            throw new AppException("Người dùng đang hoạt động bình thường");
         }
 
         user.setActive(true);

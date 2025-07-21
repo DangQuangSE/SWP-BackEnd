@@ -10,7 +10,7 @@ import com.S_Health.GenderHealthCare.dto.response.MedicalProfileDTO;
 import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.UserRole;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -51,14 +51,14 @@ public class AppointmentService {
 
     public AppointmentDTO getAppointmentById(long id) {
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("không tìm thấy lịch hẹn này!"));
+                .orElseThrow(() -> new AppException("không tìm thấy lịch hẹn này!"));
         //lấy ra danh sách appointmentDetail;
         List<AppointmentDetail> appointmentDetails = appointmentDetailRepository.findByAppointmentAndIsActiveTrue(appointment);
         List<AppointmentDetailDTO> detailDTOS = new ArrayList<>();
         //lấy ra danh sách result
         for (AppointmentDetail appointmentDT : appointmentDetails) {
             MedicalResult medicalResult = medicalResultRepository.findByAppointmentDetail(appointmentDT)
-                    .orElseThrow(() -> new BadRequestException("Không có kết quả!"));
+                    .orElseThrow(() -> new AppException("Không có kết quả!"));
             AppointmentDetailDTO detailDTO = modelMapper.map(appointmentDT, AppointmentDetailDTO.class);
             detailDTO.setConsultantName(appointmentDT.getConsultant().getFullname());
             detailDTO.setServiceName(appointmentDT.getService().getName());
@@ -85,7 +85,7 @@ public class AppointmentService {
     public AppointmentDTO updateAppointment(Long appointmentId, UpdateAppointmentRequest request) {
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy lịch hẹn!"));
 
         Long userId = authUtil.getCurrentUserId();
         User user = authUtil.getCurrentUser();
@@ -96,19 +96,19 @@ public class AppointmentService {
 
 
         if (!isOwner && !isPrivileged) {
-            throw new BadRequestException("Bạn không có quyền chỉnh sửa lịch hẹn này!");
+            throw new AppException("Bạn không có quyền chỉnh sửa lịch hẹn này!");
         }
 
         // Nếu thay đổi slot
         if (request.getSlotId() != null) {
             ServiceSlotPool newSlot = serviceSlotPoolRepository.findById(request.getSlotId())
-                    .orElseThrow(() -> new BadRequestException("Không tìm thấy slot mới"));
+                    .orElseThrow(() -> new AppException("Không tìm thấy slot mới"));
 
             LocalDateTime newSlotTime = LocalDateTime.of(request.getPreferredDate(), newSlot.getStartTime());
 
             // Nếu là user thì giới hạn đổi slot phải trước ít nhất 1 ngày
             if (isOwner && newSlotTime.minusDays(1).isBefore(LocalDateTime.now())) {
-                throw new BadRequestException("Chỉ được đổi slot trước ít nhất 1 ngày!");
+                throw new AppException("Chỉ được đổi slot trước ít nhất 1 ngày!");
             }
 
             // Cập nhật slot cũ và mới
@@ -140,7 +140,7 @@ public class AppointmentService {
             }
             if (request.getConsultantId() != null) {
                 User consultant = authenticationRepository.findById(request.getConsultantId())
-                        .orElseThrow(() -> new BadRequestException("Không tìm thấy tư vấn viên!"));
+                        .orElseThrow(() -> new AppException("Không tìm thấy tư vấn viên!"));
                 appointment.setConsultant(consultant);
             }
             if (request.getPrice() != null) {
@@ -156,7 +156,7 @@ public class AppointmentService {
     @Transactional
     public void deleteAppointment(long id) {
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy lịch hẹn!"));
         List<AppointmentDetail> details = appointmentDetailRepository.findByAppointment(appointment);
         for (AppointmentDetail detail : details) {
             detail.setIsActive(false);
@@ -168,10 +168,10 @@ public class AppointmentService {
 
     public void cancelAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy lịch hẹn!"));
 
         if (appointment.getStatus() == AppointmentStatus.CANCELED) {
-            throw new BadRequestException("Lịch hẹn đã bị hủy trước đó.");
+            throw new AppException("Lịch hẹn đã bị hủy trước đó.");
         }
 
         AppointmentStatus oldStatus = appointment.getStatus();
@@ -215,7 +215,7 @@ public class AppointmentService {
 
     public void checkInAppointment(Long id) {
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy lịch hẹn!"));
         try {
             appointment.setStatus(AppointmentStatus.CHECKED);
             appointment.setUpdate_at(LocalDateTime.now());
@@ -229,18 +229,18 @@ public class AppointmentService {
 
             appointmentRepository.save(appointment);
         } catch (Exception e) {
-            throw new BadRequestException("Không thể cập nhật trạng thái lịch hẹn: " + e.getMessage());
+            throw new AppException("Không thể cập nhật trạng thái lịch hẹn: " + e.getMessage());
         }
 
     }
 
     public PatientHistoryDTO getPatientHistoryFromAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new AppException("Không tìm thấy lịch hẹn"));
         // Get the medical profile
         MedicalProfile medicalProfile = appointment.getMedicalProfile();
         if (medicalProfile == null) {
-            throw new BadRequestException("Lịch hẹn này không có hồ sơ y tế");
+            throw new AppException("Lịch hẹn này không có hồ sơ y tế");
         }
         // Get past appointments for this patient with this service
         List<Appointment> pastAppointments = appointmentRepository.findByMedicalProfileAndStatusAndIsActiveTrue(
@@ -263,19 +263,19 @@ public class AppointmentService {
     public void updateAppointmentDetailStatus(Long detailId, AppointmentStatus status) {
         // Lấy appointmentDetail
         AppointmentDetail detail = appointmentDetailRepository.findById(detailId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chi tiết cuộc hẹn"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn"));
 
         // Kiểm tra quyền: chỉ bác sĩ phụ trách được cập nhật
         User currentUser = authUtil.getCurrentUser();
         if (detail.getConsultant().getId() != currentUser.getId()) {
-            throw new BadRequestException("Bạn chỉ có thể cập nhật dịch vụ mà bạn phụ trách");
+            throw new AppException("Bạn chỉ có thể cập nhật dịch vụ mà bạn phụ trách");
         }
 
         // Kiểm tra trạng thái hợp lệ
         if (status != AppointmentStatus.IN_PROGRESS &&
                 status != AppointmentStatus.WAITING_RESULT &&
                 status != AppointmentStatus.COMPLETED) {
-            throw new BadRequestException("Chỉ có thể cập nhật trạng thái IN_PROGRESS, WAITING_RESULT hoặc COMPLETED");
+            throw new AppException("Chỉ có thể cập nhật trạng thái IN_PROGRESS, WAITING_RESULT hoặc COMPLETED");
         }
 
         try {
@@ -299,7 +299,7 @@ public class AppointmentService {
             }
 
         } catch (Exception e) {
-            throw new BadRequestException("Lỗi khi cập nhật trạng thái: " + e.getMessage());
+            throw new AppException("Lỗi khi cập nhật trạng thái: " + e.getMessage());
         }
     }
 
@@ -420,7 +420,7 @@ public class AppointmentService {
 
     public void updateIsRated(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy lịch hẹn"));
+                .orElseThrow(() -> new AppException("Không tìm thấy lịch hẹn"));
         appointment.setIsRated(true);
         appointmentRepository.save(appointment);
     }

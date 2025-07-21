@@ -9,7 +9,7 @@ import com.S_Health.GenderHealthCare.entity.MedicalResult;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ResultType;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class MedicalResultService {
@@ -47,9 +46,9 @@ public class MedicalResultService {
 
     public ResultDTO saveResult(ResultRequest request) {
         User writer = authenticationRepository.findById(authUtil.getCurrentUserId())
-                .orElseThrow(() -> new BadRequestException("Không thể tìm thấy người nhập!"));
+                .orElseThrow(() -> new AppException("Không thể tìm thấy người nhập!"));
         AppointmentDetail appointmentDetail = appointmentDetailRepository.findById(request.getAppointmentDetailId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy chi tiết cuộc hẹn!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn!"));
 
         MedicalResult medicalResult = MedicalResult.builder()
                 .appointmentDetail(appointmentDetail)
@@ -129,7 +128,7 @@ public class MedicalResultService {
 
     public ResultDTO getResultById(Long id) {
         MedicalResult result = medicalResultRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy kết quả hoặc đã bị xóa!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy kết quả hoặc đã bị xóa!"));
 
         return mapToFullResultDTO(result);
     }
@@ -143,9 +142,9 @@ public class MedicalResultService {
     }
     public ResultDTO updateResult(Long id, ResultRequest request) {
         User writer = authenticationRepository.findById(authUtil.getCurrentUserId())
-                .orElseThrow(() -> new BadRequestException("Không thể tìm thấy người nhập!"));
+                .orElseThrow(() -> new AppException("Không thể tìm thấy người nhập!"));
         MedicalResult result = medicalResultRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy kết quả để cập nhật!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy kết quả để cập nhật!"));
         result.setConsultant(writer);
         result.setDescription(request.getDescription());
         result.setDiagnosis(request.getDiagnosis());
@@ -156,7 +155,7 @@ public class MedicalResultService {
     }
     public void deleteResult(Long id) {
         MedicalResult result = medicalResultRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy kết quả để xóa!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy kết quả để xóa!"));
 
         result.setIsActive(false);
         medicalResultRepository.save(result);

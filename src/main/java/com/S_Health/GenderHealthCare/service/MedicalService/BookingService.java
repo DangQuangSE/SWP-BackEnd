@@ -9,7 +9,7 @@ import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ServiceType;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.medicalProfile.MedicalProfileService;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
@@ -97,22 +97,22 @@ public class BookingService {
     //validate request
     public BookingContext validateAndFetchBookingEntities(BookingRequest request, long customerId) {
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ!"));
 
         ServiceSlotPool slotPool = serviceSlotPoolRepository.findById(request.getSlot_id())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy khung giờ này!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy khung giờ này!"));
 
         if (!slotPool.getDate().equals(request.getPreferredDate()) ||
                 !slotPool.getStartTime().equals(request.getSlot())) {
-            throw new BadRequestException("Khung giờ không khớp với ngày/giờ yêu cầu!");
+            throw new AppException("Khung giờ không khớp với ngày/giờ yêu cầu!");
         }
 
         User customer = authenticationRepository.findById(customerId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy khách hàng!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy khách hàng!"));
 
         LocalDateTime slotTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
         if (appointmentDetailRepository.existsByAppointment_Customer_IdAndSlotTime(customerId, slotTime)) {
-            throw new BadRequestException("Bạn đã có lịch hẹn vào khung giờ này");
+            throw new AppException("Bạn đã có lịch hẹn vào khung giờ này");
         }
         List<com.S_Health.GenderHealthCare.entity.Service> services = service.getIsCombo()
                 ? service.getComboItems().stream().map(ComboItem::getSubService).toList()
@@ -133,12 +133,12 @@ public class BookingService {
         List<User> consultants = serviceSlotPoolService.getConsultantInSpecialization(subService.getId());
         User consultant = findAvailableConsultant(request, consultants);
         if (consultant == null) {
-            throw new BadRequestException("Không có tư vấn viên rảnh cho dịch vụ: " + subService.getName());
+            throw new AppException("Không có tư vấn viên rảnh cho dịch vụ: " + subService.getName());
         }
 
         ConsultantSlot slot = consultantSlotRepository
                 .findByConsultantAndDateAndStartTimeAndStatus(consultant, request.getPreferredDate(), request.getSlot(), SlotStatus.ACTIVE)
-                .orElseThrow(() -> new BadRequestException("Khung giờ không tồn tại"));
+                .orElseThrow(() -> new AppException("Khung giờ không tồn tại"));
         slot.setCurrentBooking(slot.getCurrentBooking() + 1);
         slot.setAvailableBooking(slot.getAvailableBooking() - 1);
         if (slot.getAvailableBooking() == 0) {
@@ -199,7 +199,7 @@ public class BookingService {
                 System.out.println("Lỗi khi kiểm tra tư vấn viên " + consultant.getFullname() + ": " + e.getMessage());
             }
         }
-        throw new BadRequestException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
+        throw new AppException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
     }
 
     /**

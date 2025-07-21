@@ -1,7 +1,7 @@
 package com.S_Health.GenderHealthCare.config;
 
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.service.authentication.JWTService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -10,7 +10,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.tomcat.util.net.jsse.JSSEUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -170,7 +169,7 @@ public class Filter extends OncePerRequestFilter {
             //xát thực
             String token = getToken(request);
             if (token == null) {
-                resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
+                resolver.resolveException(request, response, null, new AppException("Empty token!") {
                 });
             }
 
