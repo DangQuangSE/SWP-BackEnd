@@ -22,6 +22,7 @@ import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantSlotRepository;
 import com.S_Health.GenderHealthCare.repository.ScheduleRepository;
 import com.S_Health.GenderHealthCare.service.MedicalService.BookingService;
+import com.S_Health.GenderHealthCare.service.configValue.ConfigValueService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
 import org.modelmapper.ModelMapper;
@@ -44,15 +45,17 @@ public class ScheduleService {
     @Autowired
     AppointmentDetailRepository appointmentDetailRepository;
     @Autowired
-    ServiceSlotPoolService serviceSlotPoolService;
-    @Autowired
-    BookingService bookingService;
-    @Autowired
     ConsultantSlotRepository consultantSlotRepository;
+    @Autowired
+    ConfigValueService configValueService;
     @Autowired
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
+
+    private Integer getMaxBooking() {
+        return configValueService.getConfigValue("MAX_BOOKING", 6);
+    }
 
     public List<WorkDateSlotResponse> getScheduleOfConsultant(ScheduleConsultantRequest request) {
         List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDateBetweenAndStatus(request.getConsultant_id(),
@@ -107,13 +110,14 @@ public class ScheduleService {
             List<LocalTime> slots = TimeSlotUtils.generateSlots(item.getTimeSlotDTO().getStartTime(), item.getTimeSlotDTO().getEndTime(), Duration.ofMinutes(90));
             for (LocalTime start : slots) {
                 LocalTime end = start.plusMinutes(90);
+                Integer maxBooking = getMaxBooking();
                 ConsultantSlot consultantSlot = ConsultantSlot.builder()
                         .consultant(consultant)
                         .date(item.getWorkDate())
                         .startTime(start)
                         .endTime(end)
-                        .availableBooking(6)
-                        .maxBooking(6)
+                        .availableBooking(maxBooking)
+                        .maxBooking(maxBooking)
                         .currentBooking(0)
                         .status(SlotStatus.ACTIVE)
                         .isActive(true)
