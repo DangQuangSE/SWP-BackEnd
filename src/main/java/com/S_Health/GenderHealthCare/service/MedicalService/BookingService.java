@@ -183,6 +183,9 @@ public class BookingService {
     }
 
     public User findAvailableConsultant(BookingRequest request, List<User> consultants) {
+        User bestConsultant = null;
+        int lowestCurrentBooking = Integer.MAX_VALUE;
+
         for (User consultant : consultants) {
             try {
                 ConsultantSlot slot = consultantSlotRepository
@@ -192,14 +195,24 @@ public class BookingService {
                                 request.getSlot(),
                                 SlotStatus.ACTIVE
                         ).orElse(null);
+
                 if (slot != null && slot.getAvailableBooking() > 0) {
-                    return consultant;
+                    // Chọn bác sĩ có currentBooking thấp nhất để phân bổ đều bệnh nhân
+                    if (slot.getCurrentBooking() < lowestCurrentBooking) {
+                        lowestCurrentBooking = slot.getCurrentBooking();
+                        bestConsultant = consultant;
+                    }
                 }
             } catch (Exception e) {
-                System.out.println("Lỗi khi kiểm tra tư vấn viên " + consultant.getFullname() + ": " + e.getMessage());
+                throw new AppException("Lỗi khi kiểm tra tư vấn viên " + consultant.getFullname() + ": " + e.getMessage());
             }
         }
-        throw new AppException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
+
+        if (bestConsultant == null) {
+            throw new AppException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
+        }
+
+        return bestConsultant;
     }
 
     /**
@@ -289,25 +302,5 @@ public class BookingService {
             roomDTO.setSpecializationName(room.getSpecialization().getName());
         }
         return roomDTO;
-    }
-
-    /**
-     * Helper method to get basic medical profile information for customer
-     */
-    private BasicMedicalProfileDTO getBasicMedicalProfile(Long customerId) {
-        List<MedicalProfile> profiles = medicalProfileRepository.findByCustomerIdAndIsActiveTrue(customerId);
-
-        if (profiles.isEmpty()) {
-            return null;
-        }
-
-        // Lấy profile mới nhất có thông tin y tế
-        MedicalProfile latestProfile = profiles.stream()
-                .filter(p -> p.getAllergies() != null || p.getFamilyHistory() != null ||
-                           p.getChronicConditions() != null || p.getSpecialNotes() != null)
-                .max((p1, p2) -> p1.getUpdatedAt().compareTo(p2.getUpdatedAt()))
-                .orElse(profiles.get(0)); // Fallback to first profile if no medical info found
-
-        return modelMapper.map(latestProfile, BasicMedicalProfileDTO.class);
     }
 }
