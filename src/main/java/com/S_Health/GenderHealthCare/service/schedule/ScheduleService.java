@@ -1,9 +1,11 @@
 package com.S_Health.GenderHealthCare.service.schedule;
 
 import com.S_Health.GenderHealthCare.dto.SlotDTO;
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
+import com.S_Health.GenderHealthCare.dto.response.DoctorWorkingScheduleDTO;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleCancelResponse;
 import com.S_Health.GenderHealthCare.dto.response.WorkDateSlotResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleRegisterResponse;
@@ -13,6 +15,7 @@ import com.S_Health.GenderHealthCare.entity.Schedule;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.ScheduleStatus;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
+import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
@@ -30,6 +33,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ScheduleService {
@@ -181,6 +185,58 @@ public class ScheduleService {
                         "Đã huỷ"
                 )).toList()
         );
+    }
+
+    /**
+     * Lấy danh sách bác sĩ làm việc theo ngày
+     */
+    public List<DoctorWorkingScheduleDTO> getDoctorsWorkingOnDate(LocalDate date) {
+        // Lấy tất cả bác sĩ có role CONSULTANT và đang active
+        List<User> doctors = authenticationRepository.findByRole(UserRole.CONSULTANT)
+                .stream()
+                .filter(User::isActive)
+                .collect(Collectors.toList());
+
+        List<DoctorWorkingScheduleDTO> result = new ArrayList<>();
+
+        for (User doctor : doctors) {
+            // Lấy các slot làm việc của bác sĩ trong ngày
+            List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDate(doctor.getId(), date)
+                    .stream()
+                    .filter(slot -> slot.getStatus() == SlotStatus.ACTIVE && slot.getIsActive())
+                    .collect(Collectors.toList());
+
+            if (!slots.isEmpty()) {
+                // Chuyển đổi slots thành SlotDTO
+                List<SlotDTO> slotDTOs = slots.stream()
+                        .map(slot -> new SlotDTO(
+                                slot.getId(),
+                                slot.getDate(),
+                                slot.getStartTime(),
+                                slot.getEndTime(),
+                                slot.getMaxBooking(),
+                                slot.getCurrentBooking(),
+                                slot.getAvailableBooking()
+                        ))
+                        .sorted(Comparator.comparing(SlotDTO::getStartTime))
+                        .collect(Collectors.toList());
+
+                // Tạo DTO cho bác sĩ
+                UserDTO doctorDTO = modelMapper.map(doctor, UserDTO.class);
+
+                DoctorWorkingScheduleDTO doctorSchedule = new DoctorWorkingScheduleDTO();
+                doctorSchedule.setDoctor(doctorDTO);
+                doctorSchedule.setWorkDate(date);
+                doctorSchedule.setSlots(slotDTOs);
+
+                result.add(doctorSchedule);
+            }
+        }
+
+        // Sắp xếp theo tên bác sĩ
+        return result.stream()
+                .sorted(Comparator.comparing(dto -> dto.getDoctor().getFullname()))
+                .collect(Collectors.toList());
     }
 
 
