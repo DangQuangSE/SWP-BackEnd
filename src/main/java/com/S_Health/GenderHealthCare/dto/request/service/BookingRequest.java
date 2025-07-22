@@ -16,4 +16,6 @@ public class BookingRequest {
     LocalDate preferredDate;
     LocalTime slot; //start
     String note;
+
+    Long consultantId;
 }

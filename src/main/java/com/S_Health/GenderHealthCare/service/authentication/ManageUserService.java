@@ -163,9 +163,17 @@ public class ManageUserService {
         return userDTO;
     }
 
-    /**
-     * Xóa mềm user - Set isActive = false
-     */
+    public List<UserDTO> getConsultantsByService(Long serviceId) {
+        List<Specialization> specializations = specializationRepository.findByServicesIdAndIsActiveTrue(serviceId);
+        List<Long> specializationIds = specializations.stream().map(Specialization::getId).toList();
+        List<User> consultants = authenticationRepository.findBySpecializations_IdInAndIsActive(specializationIds, true);
+
+        return consultants.stream()
+                .filter(user -> UserRole.CONSULTANT.equals(user.getRole()))
+                .map(this::convertToUserDTO)
+                .collect(Collectors.toList());
+    }
+
     public void softDeleteUser(Long userId) {
         User user = authenticationRepository.findById(userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));
@@ -173,10 +181,6 @@ public class ManageUserService {
         user.setActive(false);
         authenticationRepository.save(user);
     }
-
-    /**
-     * Khôi phục user đã bị xóa mềm
-     */
     public void restoreUser(Long userId) {
         User user = authenticationRepository.findById(userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy người dùng với ID: " + userId));

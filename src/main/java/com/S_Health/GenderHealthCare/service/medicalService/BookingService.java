@@ -131,9 +131,26 @@ public class BookingService {
     //tạo appointmentDetail và cập nhật consultantSlot
     public AppointmentDetailData createAppointmentDetail(BookingRequest request, Appointment appointment, com.S_Health.GenderHealthCare.entity.Service subService) {
         List<User> consultants = serviceSlotPoolService.getConsultantInSpecialization(subService.getId());
-        User consultant = findAvailableConsultant(request, consultants);
-        if (consultant == null) {
-            throw new AppException("Không có tư vấn viên rảnh cho dịch vụ: " + subService.getName());
+
+        User consultant;
+        if (request.getConsultantId() != null) {
+            // Direct booking - tìm bác sĩ cụ thể
+            consultant = consultants.stream()
+                    .filter(c -> c.getId() == (request.getConsultantId()))
+                    .findFirst()
+                    .orElseThrow(() -> new AppException("Bác sĩ được chọn không phù hợp với dịch vụ này!"));
+
+            // Kiểm tra bác sĩ có slot trống không
+            ConsultantSlot checkSlot = consultantSlotRepository
+                    .findByConsultantAndDateAndStartTimeAndStatus(consultant, request.getPreferredDate(), request.getSlot(), SlotStatus.ACTIVE)
+                    .orElseThrow(() -> new AppException("Bác sĩ không có lịch trống vào thời gian này!"));
+
+            if (checkSlot.getAvailableBooking() <= 0) {
+                throw new AppException("Bác sĩ đã hết slot trong khung giờ này!");
+            }
+        } else {
+            // Auto assign - dùng logic phân bổ đều
+            consultant = findAvailableConsultant(request, consultants);
         }
 
         ConsultantSlot slot = consultantSlotRepository
@@ -155,7 +172,7 @@ public class BookingService {
         detail.setAppointment(appointment);
         detail.setConsultant(consultant);
         detail.setService(subService);
-        detail.setRoom(assignedRoom); // Assign room
+        detail.setRoom(assignedRoom);
         detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot()));
         appointmentDetailRepository.save(detail);
 
@@ -168,8 +185,10 @@ public class BookingService {
 
         return new AppointmentDetailData(dto, slot);
     }
+
     public static record AppointmentDetailData(AppointmentDetailDTO dto, ConsultantSlot slot) {
     }
+
     public void updateServiceSlotPool(ServiceSlotPool slotPool, List<ConsultantSlot> slots) {
         int max = slots.stream().mapToInt(ConsultantSlot::getMaxBooking).sum();
         int current = slots.stream().mapToInt(ConsultantSlot::getCurrentBooking).sum();
@@ -215,12 +234,9 @@ public class BookingService {
         return bestConsultant;
     }
 
-    /**
-     * Auto-assign room dựa trên bác sĩ được chọn và thời gian làm việc
-     */
     private Room autoAssignRoomForConsultant(User consultant,
-                                           java.time.LocalDate date,
-                                           java.time.LocalTime timeSlot) {
+                                             java.time.LocalDate date,
+                                             java.time.LocalTime timeSlot) {
         try {
             // Tìm tất cả phòng mà bác sĩ này được phân công
             List<RoomConsultant> consultantRooms = roomConsultantRepository
@@ -250,8 +266,7 @@ public class BookingService {
             return consultantRooms.get(0).getRoom();
 
         } catch (Exception e) {
-            System.err.println("Error auto-assigning room for consultant: " + e.getMessage());
-            return null; // Không assign room nếu có lỗi
+            throw new AppException("Có lỗi xảy ra khi auto-assign phòng: " + e.getMessage());
         }
     }
 
@@ -270,14 +285,13 @@ public class BookingService {
             List<Room> availableRooms = roomRepository.findAll().stream()
                     .filter(room -> room.isActive())
                     .filter(room -> room.getSpecialization() != null &&
-                                  room.getSpecialization().getId().equals(specialization.getId()))
+                            room.getSpecialization().getId().equals(specialization.getId()))
                     .toList();
 
             return availableRooms.isEmpty() ? null : availableRooms.get(0);
 
         } catch (Exception e) {
-            System.err.println("Error in fallback room assignment: " + e.getMessage());
-            return null;
+            throw new AppException("Có lỗi xảy ra khi auto-assign phòng: " + e.getMessage());
         }
     }
 
@@ -285,8 +299,8 @@ public class BookingService {
      * Kiểm tra thời gian slot có nằm trong giờ làm việc không
      */
     private boolean isTimeSlotInWorkingHours(java.time.LocalTime timeSlot,
-                                           java.time.LocalTime startTime,
-                                           java.time.LocalTime endTime) {
+                                             java.time.LocalTime startTime,
+                                             java.time.LocalTime endTime) {
         return !timeSlot.isBefore(startTime) && !timeSlot.isAfter(endTime);
     }
 
