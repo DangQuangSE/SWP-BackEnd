@@ -1,6 +1,5 @@
 package com.S_Health.GenderHealthCare.Service;
 
-
 import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
 import com.S_Health.GenderHealthCare.dto.response.BookingResponse;
 import com.S_Health.GenderHealthCare.entity.*;
@@ -18,7 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
@@ -110,13 +109,16 @@ class BookingServiceTest {
         verify(medicalProfileService).createMedicalProfile(any());
     }
 
+
+
     @Test
     void testBookingWithInvalidSlot_throwsException() {
         when(serviceRepository.findById(1L)).thenReturn(Optional.of(service));
         when(serviceSlotPoolRepository.findById(10L)).thenReturn(Optional.of(slotPool));
-        bookingRequest.setSlot(LocalTime.of(15, 0)); // lệch so với slotPool
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        bookingRequest.setSlot(LocalTime.of(15, 0)); // lệch với slotPool
+
+        AppException ex = assertThrows(AppException.class,
                 () -> bookingService.bookingService(bookingRequest));
 
         assertEquals("Khung giờ không khớp với ngày/giờ yêu cầu!", ex.getMessage());
