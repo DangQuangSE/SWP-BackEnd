@@ -5,10 +5,12 @@ import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleServiceRequest;
+import com.S_Health.GenderHealthCare.dto.response.DoctorWorkingScheduleDTO;
 import com.S_Health.GenderHealthCare.dto.response.WorkDateSlotResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleServiceResponse;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import com.S_Health.GenderHealthCare.service.schedule.ScheduleService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -65,5 +67,14 @@ public class ScheduleAPI {
     @PostMapping("/cancel")
     public ResponseEntity cancelSchedule(@RequestBody ScheduleCancelRequest request) {
         return ResponseEntity.ok(scheduleService.cancelSchedule(request));
+    }
+
+    @GetMapping("/doctors-working")
+    @Operation(summary = "Lấy danh sách bác sĩ làm việc theo ngày",
+               description = "Trả về danh sách tất cả bác sĩ có lịch làm việc trong ngày được chỉ định")
+    public ResponseEntity<List<DoctorWorkingScheduleDTO>> getDoctorsWorkingOnDate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<DoctorWorkingScheduleDTO> result = scheduleService.getDoctorsWorkingOnDate(date);
+        return ResponseEntity.ok(result);
     }
 }

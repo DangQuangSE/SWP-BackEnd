@@ -31,9 +31,6 @@ public class MedicalProfile {
     Service service;
 
     // === THÔNG TIN Y TẾ CƠ BẢN ===
-    @Column(name = "blood_type", length = 10)
-    String bloodType;                    // Nhóm máu: A, B, AB, O
-
     @Column(name = "allergies", columnDefinition = "TEXT")
     String allergies;                    // Dị ứng thuốc/thực phẩm
 

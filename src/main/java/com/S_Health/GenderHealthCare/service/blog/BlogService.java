@@ -285,9 +285,6 @@ public class BlogService {
         
         blog.setStatus(BlogStatus.APPROVED);
         blogRepository.save(blog);
-        
-        log.info("Blog {} đã được duyệt bởi admin {}", blogId, currentUser.getId());
-        
         BlogResponse response = modelMapper.map(blog, BlogResponse.class);
         if (blog.getAuthor() != null) {
             response.setAuthor(modelMapper.map(blog.getAuthor(), UserDTO.class));
@@ -311,9 +308,6 @@ public class BlogService {
         
         blog.setStatus(BlogStatus.REJECTED);
         blogRepository.save(blog);
-        
-        log.info("Blog {} đã bị từ chối bởi admin {}", blogId, currentUser.getId());
-        
         BlogResponse response = modelMapper.map(blog, BlogResponse.class);
         if (blog.getAuthor() != null) {
             response.setAuthor(modelMapper.map(blog.getAuthor(), UserDTO.class));
