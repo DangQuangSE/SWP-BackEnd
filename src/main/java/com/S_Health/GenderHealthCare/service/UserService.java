@@ -2,11 +2,15 @@ package com.S_Health.GenderHealthCare.service;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.response.ConsultantDTO;
+import com.S_Health.GenderHealthCare.entity.Certification;
 import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
+import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
+import com.S_Health.GenderHealthCare.repository.CertificationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
+import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
 import com.S_Health.GenderHealthCare.repository.UserRepository;
 import com.S_Health.GenderHealthCare.service.cloudinary.CloudinaryService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
@@ -17,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -30,6 +35,10 @@ public class UserService {
     CloudinaryService cloudinaryService;
     @Autowired
     ConsultantFeedbackRepository consultantFeedbackRepository;
+    @Autowired
+    CertificationRepository certificationRepository;
+    @Autowired
+    SpecializationRepository specializationRepository;
 
     public UserDTO updateUserProfile(UserDTO request) {
         Long userId = authUtil.getCurrentUserId();
@@ -75,30 +84,5 @@ public class UserService {
         } catch (IOException e) {
             throw new AppException("Không thể tải lên hình ảnh: " + e.getMessage());
         }
-    }
-
-    public ConsultantDTO getConsultantProfile(Long consultanId) {
-        User consultant = userRepository.findByIdAndRole(consultanId, UserRole.CONSULTANT)
-                .orElseThrow(() -> new AppException("Không tìm thấy bác sĩ"));
-
-        ConsultantDTO consultantDTO = modelMapper.map(consultant, ConsultantDTO.class);
-
-        List<ConsultantFeedback> rating = consultantFeedbackRepository.findByConsultantId(consultanId);
-
-        if(rating.isEmpty()){
-            consultantDTO.setRating(0.0);
-        }
-
-        double sumRate = rating.stream()
-                .mapToDouble(ConsultantFeedback::getRating)
-                .sum();
-
-        double averageRating = sumRate / rating.size();
-
-        consultantDTO.setRating(averageRating);
-
-
-
-        return consultantDTO;
     }
 }

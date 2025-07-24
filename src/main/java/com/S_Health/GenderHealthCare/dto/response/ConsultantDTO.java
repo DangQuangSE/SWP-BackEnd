@@ -23,7 +23,8 @@ public class ConsultantDTO {
     String imageUrl;
     LocalDate dateOfBirth;
     String address;
-    List<Long> specializationIds;
+    List<String> specializationIds;
+    List<String> certificationNames;
     String gender;
     double rating;
 
