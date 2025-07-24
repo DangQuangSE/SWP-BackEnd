@@ -77,8 +77,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/medical-profile/**",           // Medical profile APIs (bao gồm patient history)
             "/api/medical-result/**",            // Medical results
             "/api/payment/history/**",           // Payment history
-            "/api/blog/my-blogs",
-            "/api/blog/admin/by-status",// Blog details - REMOVED: Cho phép public access để đọc blog
+            "/api/blog/my-blogs/**",
+            "/api/blog/admin/**",
             "/api/chat/sessions",                // Staff get chat sessions (GET method)
             "/api/zoom/**",                      // Zoom APIs
             "/api/notifications",

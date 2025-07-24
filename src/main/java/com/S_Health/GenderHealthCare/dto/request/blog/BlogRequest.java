@@ -19,7 +19,7 @@ public class BlogRequest {
     @NotBlank(message = "Content is required")
     private String content;
 
-    private BlogStatus status; // Optional - sẽ được set tự động trong service
+    private BlogStatus status; // Chỉ dùng khi tạo blog mới, không được cập nhật trong updateBlog
 
     MultipartFile img;
     String imgUrl;
@@ -35,6 +35,5 @@ public class BlogRequest {
             throw new IllegalArgumentException("Nội dung bài viết phải có ít nhất 50 ký tự.");
         }
 
-        // Không cần validate status nữa vì sẽ được set tự động trong service
     }
 }
