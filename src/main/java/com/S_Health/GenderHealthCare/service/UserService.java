@@ -1,12 +1,7 @@
 package com.S_Health.GenderHealthCare.service;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
-import com.S_Health.GenderHealthCare.dto.response.ConsultantDTO;
-import com.S_Health.GenderHealthCare.entity.Certification;
-import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
-import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.CertificationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
@@ -20,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {

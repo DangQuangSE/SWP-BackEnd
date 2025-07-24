@@ -2,12 +2,17 @@ package com.S_Health.GenderHealthCare.service.authentication;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.authentication.CreateUserRequest;
+import com.S_Health.GenderHealthCare.dto.response.ConsultantDTO;
 import com.S_Health.GenderHealthCare.dto.response.CreateUserResponse;
+import com.S_Health.GenderHealthCare.entity.Certification;
+import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
 import com.S_Health.GenderHealthCare.entity.Specialization;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
+import com.S_Health.GenderHealthCare.repository.CertificationRepository;
+import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
 import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -15,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +36,11 @@ public class ManageUserService {
     EmailService emailService;
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    ConsultantFeedbackRepository consultantFeedbackRepository;
+    @Autowired
+    CertificationRepository certificationRepository;
+
 
     public CreateUserResponse createStaffAccount(CreateUserRequest request) {
         if (authenticationRepository.existsByEmail(request.getEmail())) {
@@ -163,14 +170,43 @@ public class ManageUserService {
         return userDTO;
     }
 
-    public List<UserDTO> getConsultantsByService(Long serviceId) {
+    private ConsultantDTO convertToConsultantDTO(User user) {
+        ConsultantDTO consultantDTO = modelMapper.map(user, ConsultantDTO.class);
+
+        if (user.getSpecializations() != null && !user.getSpecializations().isEmpty()) {
+            List<Long> specializationIds = user.getSpecializations().stream()
+                    .map(Specialization::getId)
+                    .collect(Collectors.toList());
+            consultantDTO.setSpecializationIds(specializationIds);
+        }
+
+        double avgRating = consultantFeedbackRepository
+                .findByConsultantId(user.getId())
+                .stream()
+                .mapToDouble(ConsultantFeedback::getRating)
+                .average()
+                .orElse(0.0);
+        consultantDTO.setRating(avgRating);
+
+        List<String> certNames = certificationRepository
+                .findByConsultantAndIsActiveTrue(user)
+                .stream()
+                .map(Certification::getName)
+                .collect(Collectors.toList());
+        consultantDTO.setCertificationNames(certNames);
+        return consultantDTO;
+    }
+
+
+
+    public List<ConsultantDTO> getConsultantsByService(Long serviceId) {
         List<Specialization> specializations = specializationRepository.findByServicesIdAndIsActiveTrue(serviceId);
         List<Long> specializationIds = specializations.stream().map(Specialization::getId).toList();
         List<User> consultants = authenticationRepository.findBySpecializations_IdInAndIsActive(specializationIds, true);
 
         return consultants.stream()
                 .filter(user -> UserRole.CONSULTANT.equals(user.getRole()))
-                .map(this::convertToUserDTO)
+                .map(this::convertToConsultantDTO)
                 .collect(Collectors.toList());
     }
 
