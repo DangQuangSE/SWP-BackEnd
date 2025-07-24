@@ -2,7 +2,8 @@ package com.S_Health.GenderHealthCare.service.authentication;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.authentication.CreateUserRequest;
-import com.S_Health.GenderHealthCare.dto.response.ConsultantDTO;
+import com.S_Health.GenderHealthCare.dto.response.consultant.ConsultantCertification;
+import com.S_Health.GenderHealthCare.dto.response.consultant.ConsultantDTO;
 import com.S_Health.GenderHealthCare.dto.response.CreateUserResponse;
 import com.S_Health.GenderHealthCare.entity.Certification;
 import com.S_Health.GenderHealthCare.entity.ConsultantFeedback;
@@ -174,10 +175,10 @@ public class ManageUserService {
         ConsultantDTO consultantDTO = modelMapper.map(user, ConsultantDTO.class);
 
         if (user.getSpecializations() != null && !user.getSpecializations().isEmpty()) {
-            List<Long> specializationIds = user.getSpecializations().stream()
-                    .map(Specialization::getId)
+            List<String> specialization = user.getSpecializations().stream()
+                    .map(Specialization::getName)
                     .collect(Collectors.toList());
-            consultantDTO.setSpecializationIds(specializationIds);
+            consultantDTO.setSpecializationNames(specialization);
         }
 
         double avgRating = consultantFeedbackRepository
@@ -188,12 +189,16 @@ public class ManageUserService {
                 .orElse(0.0);
         consultantDTO.setRating(avgRating);
 
-        List<String> certNames = certificationRepository
+        List<ConsultantCertification> certNames = certificationRepository
                 .findByConsultantAndIsActiveTrue(user)
                 .stream()
-                .map(Certification::getName)
+                .map(cert -> ConsultantCertification.builder()
+                        .name(cert.getName())
+                        .imageUrl(cert.getImage())
+                        .build())
                 .collect(Collectors.toList());
-        consultantDTO.setCertificationNames(certNames);
+        consultantDTO.setCertification(certNames);
+
         return consultantDTO;
     }
 
