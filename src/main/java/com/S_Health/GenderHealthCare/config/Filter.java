@@ -63,9 +63,7 @@ public class Filter extends OncePerRequestFilter {
             "GET:/webjars/**",
 
             "POST:/api/me/profile"
-//            "POST:/api/swagger-ui/**",
-//            "POST:/api/v3/api-docs/**",
-//            "POST:/api/swagger-resources/**"
+
             );
 
     private final List<String> PROTECTED_GET_API = List.of(
@@ -79,11 +77,10 @@ public class Filter extends OncePerRequestFilter {
             "/api/medical-profile/**",           // Medical profile APIs (bao gồm patient history)
             "/api/medical-result/**",            // Medical results
             "/api/payment/history/**",           // Payment history
-            "/api/blog/my-blogs",                // User's own blogs
-            "/api/blog/detail/*",                // Blog details for editing (specific ID)
-            "/api/chat/sessions",                // Staff get chat sessions (GET method)// Staff get session messages (GET method)
-            "/api/zoom/**",// Staff get chat sessions (GET method// Staff get session messages (GET method)
-            "/api/chat/sessions",// Staff get chat sessions (GET method// Staff get session messages (GET method)
+            "/api/blog/my-blogs",
+            "/api/blog/admin/by-status",// Blog details - REMOVED: Cho phép public access để đọc blog
+            "/api/chat/sessions",                // Staff get chat sessions (GET method)
+            "/api/zoom/**",                      // Zoom APIs
             "/api/notifications",
             "/api/certifications/my-certifications"
     );
@@ -183,6 +180,14 @@ public class Filter extends OncePerRequestFilter {
                 return;
             } catch (MalformedJwtException malformedJwtException) {
                 resolver.resolveException(request, response, null, new AuthException("Token không hợp lệ!"));
+                return;
+            } catch (IllegalArgumentException illegalArgumentException) {
+                // token null hoặc empty
+                resolver.resolveException(request, response, null, new AuthException("Token không được để trống!"));
+                return;
+            } catch (Exception e) {
+                // Các lỗi khác khi parse token
+                resolver.resolveException(request, response, null, new AuthException("Lỗi xử lý token: " + e.getMessage()));
                 return;
             }
             // => token dung

@@ -63,11 +63,10 @@ public class BlogAPI {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Tạo blog mới", description = "Tạo blog mới với hình ảnh")
+    @Operation(summary = "Tạo blog mới", description = "Tạo blog mới với hình ảnh. Status sẽ được tự động set: PENDING cho user thường, PUBLISHED cho Admin")
     public ResponseEntity createBlogWithImage(
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam("status") String status,
             @RequestParam("image") MultipartFile image,
             @RequestParam(value = "tags", required = false) List<String> tags) {
 
@@ -75,12 +74,8 @@ public class BlogAPI {
         request.setTitle(title);
         request.setContent(content);
         request.setImg(image);
-        request.setTagNames(tags);
-        try {
-            request.setStatus(BlogStatus.valueOf(status));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Trạng thái blog không hợp lệ");
-        }
+        request.setTagNames(tags);  
+        // Không cần set status nữa, sẽ được xử lý tự động trong service
         return ResponseEntity.ok(blogService.createBlog(request));
     }
 

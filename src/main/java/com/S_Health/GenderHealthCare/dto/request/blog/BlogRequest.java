@@ -19,8 +19,7 @@ public class BlogRequest {
     @NotBlank(message = "Content is required")
     private String content;
 
-    @NotNull(message = "Status is required")
-    private BlogStatus status;
+    private BlogStatus status; // Optional - sẽ được set tự động trong service
 
     MultipartFile img;
     String imgUrl;
@@ -36,8 +35,6 @@ public class BlogRequest {
             throw new IllegalArgumentException("Nội dung bài viết phải có ít nhất 50 ký tự.");
         }
 
-        if (status == null) {
-            status = BlogStatus.DRAFT;
-        }
+        // Không cần validate status nữa vì sẽ được set tự động trong service
     }
 }

@@ -66,8 +66,17 @@ public class BlogService {
     @Transactional
     public BlogResponse createBlog(BlogRequest request) {
         request.validate();
-        // 2. Lấy user từ JWT hoặc theo author_id
+        // Lấy user từ JWT
         User author = authUtil.getCurrentUser();
+
+        // Tự động set status dựa trên role của user
+        BlogStatus blogStatus;
+        if (author.getRole() == UserRole.ADMIN) {
+            blogStatus = BlogStatus.PUBLISHED; // Admin tạo blog sẽ được publish luôn
+        } else {
+            blogStatus = BlogStatus.PENDING; // User thường tạo blog sẽ ở trạng thái pending
+        }
+
         // Upload image to Cloudinary if provided
         if (request.getImg() != null && !request.getImg().isEmpty()) {
             try {
@@ -83,18 +92,9 @@ public class BlogService {
         blog.setTitle(request.getTitle().trim());
         blog.setContent(request.getContent().trim());
         blog.setImgUrl(request.getImgUrl());
-        // Mặc định là DRAFT, author sẽ phải submit để duyệt
-        if (request.getStatus() == BlogStatus.PUBLISHED) {
-            // Chỉ admin mới có thể tạo blog với status PUBLISHED
-            if (author.getRole() == UserRole.ADMIN) {
-                blog.setStatus(BlogStatus.PUBLISHED);
-            } else {
-                blog.setStatus(BlogStatus.DRAFT);
-            }
-        } else {
-            blog.setStatus(request.getStatus());
-        }
 
+        // Sử dụng status đã được tính toán tự động dựa trên role
+        blog.setStatus(blogStatus);
         blog.setAuthor(author);
 
         // Process tags if provided - SỬ DỤNG METHOD MỚI
@@ -104,7 +104,7 @@ public class BlogService {
             if (!invalidTags.isEmpty()) {
                 throw new AppException("Các tag sau không tồn tại: " + String.join(", ", invalidTags));
             }
-            
+
             // Lấy các tag đã tồn tại
             List<Tag> tags = tagService.getExistingTags(request.getTagNames());
             blog.setTags(tags);
@@ -283,7 +283,7 @@ public class BlogService {
             throw new AppException("Chỉ có thể duyệt bài viết có trạng thái PENDING");
         }
         
-        blog.setStatus(BlogStatus.APPROVED);
+        blog.setStatus(BlogStatus.PUBLISHED);
         blogRepository.save(blog);
         BlogResponse response = modelMapper.map(blog, BlogResponse.class);
         if (blog.getAuthor() != null) {
@@ -325,9 +325,7 @@ public class BlogService {
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new AppException("Không tìm thấy bài viết"));
         
-        if (blog.getStatus() != BlogStatus.APPROVED) {
-            throw new AppException("Chỉ có thể đăng bài viết đã được duyệt");
-        }
+
         
         blog.setStatus(BlogStatus.PUBLISHED);
         blogRepository.save(blog);
@@ -351,11 +349,6 @@ public class BlogService {
         if (!(blog.getAuthor().getId() == (currentUser.getId()))) {
             throw new AppException("Bạn không có quyền gửi bài viết này để duyệt");
         }
-        
-        if (blog.getStatus() != BlogStatus.DRAFT && blog.getStatus() != BlogStatus.REJECTED) {
-            throw new AppException("Chỉ có thể gửi bài viết ở trạng thái DRAFT hoặc REJECTED để duyệt");
-        }
-        
         blog.setStatus(BlogStatus.PENDING);
         blogRepository.save(blog);
         
