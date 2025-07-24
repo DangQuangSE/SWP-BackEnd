@@ -1,4 +1,4 @@
-package com.S_Health.GenderHealthCare.dto.response;
+package com.S_Health.GenderHealthCare.dto.response.consultant;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +23,8 @@ public class ConsultantDTO {
     String imageUrl;
     LocalDate dateOfBirth;
     String address;
-    List<Long> specializationIds;
-    List<String> certificationNames;
+    List<String> specializationNames;
+    List<ConsultantCertification> certification;
     String gender;
     double rating;
 
