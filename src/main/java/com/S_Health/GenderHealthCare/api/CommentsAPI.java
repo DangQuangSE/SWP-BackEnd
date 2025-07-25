@@ -31,8 +31,8 @@ public class CommentsAPI {
     }
 
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+    public ResponseEntity<String> deleteComment(@PathVariable Long commentId) {
         commentService.deleteComment(commentId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Xóa bình luận thành công");
     }
 }
