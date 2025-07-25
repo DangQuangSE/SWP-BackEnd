@@ -48,8 +48,10 @@ public class CommentService {
         return new CommentResponse(
                 savedComment.getId(),
                 savedComment.getCommenter().getFullname() != null ? savedComment.getCommenter().getFullname() : "Unknown User",
+                savedComment.getCommenter().getId(),
                 savedComment.getDescription(),
                 savedComment.getCreateAt()
+
         );
     }
 
@@ -60,6 +62,7 @@ public class CommentService {
                 .map(comment -> new CommentResponse(
                         comment.getId(),
                         comment.getCommenter().getFullname() != null ? comment.getCommenter().getFullname() : "Unknown User",
+                        comment.getCommenter().getId(),
                         comment.getDescription(),
                         comment.getCreateAt()
                 ))
