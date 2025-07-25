@@ -43,7 +43,7 @@ public class Filter extends OncePerRequestFilter {
             "GET:/api/rooms/**",             // Room information
             "GET:/api/tags/**",              // Blog tags
             "GET:/api/blog/**",              // Blog reading (except protected ones)
-            "GET:/api/comment/**",          // Comment reading (except protected ones)
+            "GET:/api/comment/blog/{blogId}",          // Comment reading (except protected ones)
             // Chat APIs for customers (no login required)
             "POST:/api/chat/start",          // Customer start chat
             "POST:/api/chat/send",           // Customer send message
