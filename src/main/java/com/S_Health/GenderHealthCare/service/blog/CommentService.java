@@ -47,19 +47,19 @@ public class CommentService {
         // Convert to CommentResponse
         return new CommentResponse(
                 savedComment.getId(),
-                savedComment.getCommenter().getFullname(),
+                savedComment.getCommenter().getFullname() != null ? savedComment.getCommenter().getFullname() : "Unknown User",
                 savedComment.getDescription(),
                 savedComment.getCreateAt()
         );
     }
 
     public List<CommentResponse> getCommentsByBlog(Long blogId){
-        List<Comment> comments = commentRepository.findByBlogIdAndIsDeletedFalse(blogId);
+        List<Comment> comments = commentRepository.findByBlogId(blogId);
 
         return comments.stream()
                 .map(comment -> new CommentResponse(
                         comment.getId(),
-                        comment.getCommenter().getFullname(),
+                        comment.getCommenter().getFullname() != null ? comment.getCommenter().getFullname() : "Unknown User",
                         comment.getDescription(),
                         comment.getCreateAt()
                 ))
@@ -74,8 +74,7 @@ public class CommentService {
 
         if (!Objects.equals(comment.getCommenter().getId(), userId)) {
             throw new SecurityException("Bạn không có quyền xóa bình luận này");
-        }
-        commentRepository.delete(comment);
+        }commentRepository.delete(comment);
         commentRepository.save(comment);
     }
 }

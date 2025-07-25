@@ -15,7 +15,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/comment")
 @SecurityRequirement(name = "api")
-@RequiredArgsConstructor
 public class CommentsAPI {
 
     @Autowired
