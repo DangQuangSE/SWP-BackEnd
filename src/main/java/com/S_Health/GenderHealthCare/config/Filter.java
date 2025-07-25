@@ -62,8 +62,8 @@ public class Filter extends OncePerRequestFilter {
             "GET:/swagger-resources/**",
             "GET:/webjars/**",
 
-            "POST:/api/me/profile"
-
+            "POST:/api/me/profile",
+            "POST:/api/blog/{id}/like"
             );
 
     private final List<String> PROTECTED_GET_API = List.of(
