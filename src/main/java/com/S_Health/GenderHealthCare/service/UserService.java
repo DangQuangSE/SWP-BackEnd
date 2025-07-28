@@ -3,6 +3,9 @@ package com.S_Health.GenderHealthCare.service;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
+import com.S_Health.GenderHealthCare.repository.CertificationRepository;
+import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
+import com.S_Health.GenderHealthCare.repository.SpecializationRepository;
 import com.S_Health.GenderHealthCare.repository.UserRepository;
 import com.S_Health.GenderHealthCare.service.cloudinary.CloudinaryService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
@@ -23,6 +26,12 @@ public class UserService {
     ModelMapper modelMapper;
     @Autowired
     CloudinaryService cloudinaryService;
+    @Autowired
+    ConsultantFeedbackRepository consultantFeedbackRepository;
+    @Autowired
+    CertificationRepository certificationRepository;
+    @Autowired
+    SpecializationRepository specializationRepository;
 
     public UserDTO updateUserProfile(UserDTO request) {
         Long userId = authUtil.getCurrentUserId();

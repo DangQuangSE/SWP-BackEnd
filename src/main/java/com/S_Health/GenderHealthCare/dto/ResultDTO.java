@@ -40,4 +40,6 @@ public class ResultDTO {
     String consultantName;       // Tên bác sĩ nhập kết quả
     String serviceName;          // Tên dịch vụ
     String patientName;          // Tên bệnh nhân (để dễ hiển thị)
+
+    Long treatmentProtocolId;
 }

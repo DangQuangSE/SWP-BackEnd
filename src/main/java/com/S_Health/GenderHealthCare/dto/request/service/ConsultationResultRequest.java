@@ -35,4 +35,6 @@ public class ConsultationResultRequest {
     @Schema(description = "Kế hoạch điều trị, tư vấn hoặc theo dõi tiếp theo", 
             example = "Sử dụng thuốc kháng nấm, tái khám sau 1 tuần")
     private String treatmentPlan;
+
+    Long treatmentProtocolId;
 }

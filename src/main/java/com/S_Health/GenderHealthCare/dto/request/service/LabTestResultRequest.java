@@ -66,4 +66,6 @@ public class LabTestResultRequest {
 
     @Schema(description = "Ghi chú từ phòng lab", example = "Mẫu đạt chất lượng, kết quả tin cậy")
     private String labNotes;
+
+    Long treatmentProtocolId;
 }

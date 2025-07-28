@@ -1,6 +1,7 @@
 package com.S_Health.GenderHealthCare.api;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
+import com.S_Health.GenderHealthCare.dto.response.consultant.ConsultantDTO;
 import com.S_Health.GenderHealthCare.service.authentication.ManageUserService;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,8 +28,8 @@ public class ConsultantAPI {
     @GetMapping("/by-service/{serviceId}")
     @Operation(summary = "Lấy danh sách bác sĩ theo dịch vụ",
                description = "Lấy danh sách bác sĩ có thể thực hiện dịch vụ cụ thể để người dùng chọn")
-    public ResponseEntity<List<UserDTO>> getConsultantsByService(@PathVariable Long serviceId) {
-        List<UserDTO> consultants = manageUserService.getConsultantsByService(serviceId);
+    public ResponseEntity<List<ConsultantDTO>> getConsultantsByService(@PathVariable Long serviceId) {
+        List<ConsultantDTO> consultants = manageUserService.getConsultantsByService(serviceId);
         return ResponseEntity.ok(consultants);
     }
 
