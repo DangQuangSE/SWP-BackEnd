@@ -28,8 +28,7 @@ public class BlogAPI {
     @GetMapping("/{id}")
     @Operation(summary = "Xem chi tiết blog", description = "Xem chi tiết blog và tăng lượt xem")
     public ResponseEntity getBlogAndIncreaseView(@PathVariable long id) {
-        Blog blog = blogService.viewBlog(id);
-        return ResponseEntity.ok(blog);
+        return ResponseEntity.ok(blogService.viewBlog(id));
     }
 
     @PostMapping("/{id}/like")
@@ -53,6 +52,15 @@ public class BlogAPI {
         return ResponseEntity.ok(blogService.getAllBlogs(page, size));
     }
 
+    @GetMapping("/admin/all")
+    @Operation(summary = "Lấy tất cả blog cho quản lý",
+               description = "Admin xem tất cả blog (bao gồm cả chưa publish)")
+    public ResponseEntity<Page<BlogResponse>> getAllBlogsForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getAllBlogsForManagement(page, size));
+    }
+
     @GetMapping("/by-tag/{tagId}")
     @Operation(summary = "Lấy blog theo tag", description = "Lấy blog theo tag với phân trang")
     public ResponseEntity<Page<BlogResponse>> getBlogsByTag(
@@ -63,11 +71,10 @@ public class BlogAPI {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Tạo blog mới", description = "Tạo blog mới với hình ảnh")
+    @Operation(summary = "Tạo blog mới", description = "Tạo blog mới với hình ảnh. Status sẽ được tự động set: PENDING cho user thường, PUBLISHED cho Admin")
     public ResponseEntity createBlogWithImage(
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam("status") String status,
             @RequestParam("image") MultipartFile image,
             @RequestParam(value = "tags", required = false) List<String> tags) {
 
@@ -75,12 +82,8 @@ public class BlogAPI {
         request.setTitle(title);
         request.setContent(content);
         request.setImg(image);
-        request.setTagNames(tags);
-        try {
-            request.setStatus(BlogStatus.valueOf(status));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Trạng thái blog không hợp lệ");
-        }
+        request.setTagNames(tags);  
+        // Không cần set status nữa, sẽ được xử lý tự động trong service
         return ResponseEntity.ok(blogService.createBlog(request));
     }
 
@@ -105,7 +108,6 @@ public class BlogAPI {
             @PathVariable Long id,
             @RequestParam("title") String title,
             @RequestParam("content") String content,
-            @RequestParam("status") String status,
             @RequestParam(value = "image", required = false) MultipartFile image,
             @RequestParam(value = "tags", required = false) List<String> tags) {
 
@@ -116,13 +118,6 @@ public class BlogAPI {
             request.setImg(image);
         }
         request.setTagNames(tags);
-
-        try {
-            request.setStatus(BlogStatus.valueOf(status));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Trạng thái blog không hợp lệ");
-        }
-
         try {
             BlogResponse response = blogService.updateBlog(id, request);
             return ResponseEntity.ok(response);
