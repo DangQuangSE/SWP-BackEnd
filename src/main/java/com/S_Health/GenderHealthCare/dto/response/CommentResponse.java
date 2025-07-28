@@ -14,6 +14,7 @@ public class CommentResponse {
     Long id;
     String commenterName;
     long commenterId;
+    String commenterImageUrl;
     String description;
     LocalDateTime createAt;
 }
