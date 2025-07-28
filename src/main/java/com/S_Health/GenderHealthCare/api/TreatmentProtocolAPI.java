@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/treatment")
 @SecurityRequirement(name = "api")
@@ -22,6 +24,11 @@ public class TreatmentProtocolAPI {
     @PostMapping
     public ResponseEntity<TreatmentProtocolResponse> createTag(@RequestBody TreatmentProtocolRequest request) {
         return ResponseEntity.ok(treatmentProtocolService.create(request));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<TreatmentProtocolResponse>> getAllTreatmentProtocol() {
+        return ResponseEntity.ok(treatmentProtocolService.getAll());
     }
 
     @GetMapping("/{id}")

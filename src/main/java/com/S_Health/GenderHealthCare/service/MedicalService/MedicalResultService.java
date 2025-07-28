@@ -4,19 +4,11 @@ import com.S_Health.GenderHealthCare.dto.ResultDTO;
 import com.S_Health.GenderHealthCare.dto.request.service.ConsultationResultRequest;
 import com.S_Health.GenderHealthCare.dto.request.service.LabTestResultRequest;
 import com.S_Health.GenderHealthCare.dto.request.service.ResultRequest;
-import com.S_Health.GenderHealthCare.entity.Appointment;
-import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
-import com.S_Health.GenderHealthCare.entity.MedicalProfile;
-import com.S_Health.GenderHealthCare.entity.MedicalResult;
-import com.S_Health.GenderHealthCare.entity.User;
+import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ResultType;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
-import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
-import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
-import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
-import com.S_Health.GenderHealthCare.repository.MedicalProfileRepository;
-import com.S_Health.GenderHealthCare.repository.MedicalResultRepository;
+import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.appointment.AppointmentStatusCalculator;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import org.modelmapper.ModelMapper;
@@ -45,6 +37,8 @@ public class MedicalResultService {
     AuthUtil authUtil;
     @Autowired
     AppointmentStatusCalculator statusCalculator;
+    @Autowired
+    TreatmentProtocolRepository treatmentProtocolRepository;
 
     // === API MỚI - RIÊNG BIỆT CHO TỪNG LOẠI ===
 
@@ -56,6 +50,9 @@ public class MedicalResultService {
                 .orElseThrow(() -> new AppException("Không thể tìm thấy người nhập!"));
         AppointmentDetail appointmentDetail = appointmentDetailRepository.findById(request.getAppointmentDetailId())
                 .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn!"));
+        TreatmentProtocol protocol = treatmentProtocolRepository.findById(request.getTreatmentProtocolId())
+                .orElseThrow(()-> new AppException("không tìm thấy phác đồ!"));
+
 
         MedicalResult medicalResult = MedicalResult.builder()
                 .appointmentDetail(appointmentDetail)
@@ -64,6 +61,7 @@ public class MedicalResultService {
                 .description(request.getDescription())
                 .diagnosis(request.getDiagnosis())
                 .treatmentPlan(request.getTreatmentPlan())
+                .treatmentProtocol(protocol)
                 // Không set các field xét nghiệm (để null)
                 .isActive(true)
                 .build();
@@ -85,6 +83,8 @@ public class MedicalResultService {
                 .orElseThrow(() -> new AppException("Không thể tìm thấy người nhập!"));
         AppointmentDetail appointmentDetail = appointmentDetailRepository.findById(request.getAppointmentDetailId())
                 .orElseThrow(() -> new AppException("Không tìm thấy chi tiết cuộc hẹn!"));
+        TreatmentProtocol protocol = treatmentProtocolRepository.findById(request.getTreatmentProtocolId())
+                .orElseThrow(()-> new AppException("không tìm thấy phác đồ!"));
 
         MedicalResult medicalResult = MedicalResult.builder()
                 .appointmentDetail(appointmentDetail)
@@ -102,6 +102,7 @@ public class MedicalResultService {
                 .testStatus(request.getTestStatus())
                 .sampleCollectedAt(request.getSampleCollectedAt())
                 .labNotes(request.getLabNotes())
+                .treatmentProtocol(protocol)
                 .isActive(true)
                 .build();
 

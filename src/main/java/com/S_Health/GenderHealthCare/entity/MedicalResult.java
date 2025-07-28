@@ -82,4 +82,9 @@ public class MedicalResult {
 
     @Builder.Default
     Boolean isActive = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "treatment_protocol_id")
+    TreatmentProtocol treatmentProtocol;
+
 }
