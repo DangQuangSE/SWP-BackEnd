@@ -22,9 +22,6 @@ public class ConsultantAPI {
     @Autowired
     private ManageUserService manageUserService;
 
-    @Autowired
-    private ServiceSlotPoolService serviceSlotPoolService;
-
     @GetMapping("/by-service/{serviceId}")
     @Operation(summary = "Lấy danh sách bác sĩ theo dịch vụ",
                description = "Lấy danh sách bác sĩ có thể thực hiện dịch vụ cụ thể để người dùng chọn")
@@ -36,8 +33,8 @@ public class ConsultantAPI {
     @GetMapping
     @Operation(summary = "Lấy danh sách tất cả bác sĩ",
                description = "Backup API - lấy tất cả bác sĩ")
-    public ResponseEntity<List<UserDTO>> getAllConsultants() {
-        List<UserDTO> consultants = manageUserService.getUsersByRole("CONSULTANT");
+    public ResponseEntity<List<ConsultantDTO>> getAllConsultants() {
+        List<ConsultantDTO> consultants = manageUserService.getUsersByRole("CONSULTANT");
         return ResponseEntity.ok(consultants);
     }
 }
