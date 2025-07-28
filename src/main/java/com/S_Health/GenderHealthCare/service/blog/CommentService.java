@@ -49,9 +49,9 @@ public class CommentService {
                 savedComment.getId(),
                 savedComment.getCommenter().getFullname() != null ? savedComment.getCommenter().getFullname() : "Unknown User",
                 savedComment.getCommenter().getId(),
+                savedComment.getCommenter().getImageUrl(),
                 savedComment.getDescription(),
                 savedComment.getCreateAt()
-
         );
     }
 
@@ -63,6 +63,7 @@ public class CommentService {
                         comment.getId(),
                         comment.getCommenter().getFullname() != null ? comment.getCommenter().getFullname() : "Unknown User",
                         comment.getCommenter().getId(),
+                        comment.getCommenter().getImageUrl(),
                         comment.getDescription(),
                         comment.getCreateAt()
                 ))
