@@ -4,6 +4,7 @@ import com.S_Health.GenderHealthCare.dto.ApiRespone;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppsException;
 import com.S_Health.GenderHealthCare.exception.exceptions.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.TypeMismatchException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class MyExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleBadRequestException(MethodArgumentNotValidException exception) {
@@ -46,8 +48,8 @@ public class MyExceptionHandler {
 
 
     @ExceptionHandler(AppException.class)
-    public ResponseEntity handleAuthenticationException(AppException exception){
-        return new ResponseEntity(exception.getMessage(), HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<String> handleAuthenticationException(AppException exception){
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
 
@@ -62,6 +64,7 @@ public class MyExceptionHandler {
             TypeMismatchException.class
     })
     public ResponseEntity<ApiRespone> handleBadRequest(Exception e) {
+        log.error("Bad request error: ", e);
         ApiRespone response = new ApiRespone();
         response.setCode(ErrorCode.BAD_REQUEST.getCode());
         response.setMessage(ErrorCode.BAD_REQUEST.getMessage());
@@ -77,6 +80,7 @@ public class MyExceptionHandler {
             RuntimeException.class // nếu không muốn bắt Runtime chung thì bỏ ra
     })
     public ResponseEntity<ApiRespone> handleServerError(Exception e) {
+        log.error("Server error: ", e);
         ApiRespone response = new ApiRespone();
         response.setCode(ErrorCode.INTERNAL_SERVER_ERROR.getCode());
         response.setMessage(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
@@ -85,6 +89,7 @@ public class MyExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiRespone> handleUnknownError(Exception e) {
+        log.error("Unknown error: ", e);
         ApiRespone response = new ApiRespone();
         response.setCode(ErrorCode.UNKNOWN_ERROR.getCode());
         response.setMessage(ErrorCode.UNKNOWN_ERROR.getMessage());

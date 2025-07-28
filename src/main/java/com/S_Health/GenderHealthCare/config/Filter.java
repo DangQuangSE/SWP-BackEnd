@@ -44,6 +44,13 @@ public class Filter extends OncePerRequestFilter {
             "GET:/api/tags/**",              // Blog tags
             "GET:/api/blog/**",              // Blog reading (except protected ones)
             "GET:/api/comment/blog/**",                // Comment reading
+
+            // Config APIs (public access)
+            "GET:/api/config/**",            // Get config values
+            "POST:/api/config/**",           // Create config
+            "PUT:/api/config/**",            // Update config
+            "DELETE:/api/config/**",         // Delete config
+
             // Chat APIs for customers (no login required)
             "POST:/api/chat/start",          // Customer start chat
             "POST:/api/chat/send",           // Customer send message
@@ -102,7 +109,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/chat/sessions/*/end",           // Staff end chat session
             "/api/zoom/**",
             "/api/me",
-            "/api/certifications"
+            "/api/certifications",
+            "/api/feedback"
     );
 
     public boolean isPulicApi(String uri, String method) {

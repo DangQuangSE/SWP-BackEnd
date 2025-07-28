@@ -20,10 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,12 +41,16 @@ public class FeedbackService {
                 .orElseThrow(() -> new RuntimeException("Cuộc hẹn không tồn tại"));
 
         Long userId = authUtil.getCurrentUserId();
+
+        // Kiểm tra null safety
+        if (appointment.getCustomer() == null) {
+            throw new AppException("Thông tin khách hàng không hợp lệ");
+        }
         Long customerId = appointment.getCustomer().getId();
 
         if (!customerId.equals(userId)) {
             throw new AppException("Bạn chưa có cuộc hẹn nào");
         }
-
         ServiceFeedback serviceFeedback = ServiceFeedback.builder()
                 .rating(request.getRating())
                 .comment(request.getComment())
@@ -58,26 +59,40 @@ public class FeedbackService {
                 .build();
         serviceFeedbackRepository.save(serviceFeedback);
 
-        ConsultantFeedback consultantFeedback = ConsultantFeedback.builder()
-                .rating(request.getRating())
-                .comment(request.getCommentConsultant())
-                .consultantId(appointment.getConsultant().getId())
-                .serviceFeedback(serviceFeedback)
-                .createAt(serviceFeedback.getCreateAt())
-                .build();
-        consultantFeedbackRepository.save(consultantFeedback);
+        // Tạo consultant feedback cho tất cả consultant trong appointmentDetails
+        List<ConsultantFeedbackResponse> consultantFeedbacks = new ArrayList<>();
 
-        List<ConsultantFeedbackResponse> consultantFeedbacks = Optional.ofNullable(consultantFeedback)
-                .map(feedback -> Collections.singletonList(
-                        ConsultantFeedbackResponse.builder()
-                                .id(feedback.getId())
-                                .rating(feedback.getRating())
-                                .comment(feedback.getComment())
-                                .createdAt(feedback.getCreateAt())
-                                .consultantId(feedback.getConsultantId())
-                                .build()
-                ))
-                .orElse(Collections.emptyList());
+        if (appointment.getAppointmentDetails() != null && !appointment.getAppointmentDetails().isEmpty()) {
+            // Lấy danh sách unique consultant IDs từ appointmentDetails
+            Set<Long> consultantIds = appointment.getAppointmentDetails().stream()
+                    .filter(detail -> detail.getConsultant() != null)
+                    .map(detail -> detail.getConsultant().getId())
+                    .collect(Collectors.toSet());
+
+            // Tạo consultant feedback cho mỗi consultant
+            for (Long consultantId : consultantIds) {
+                if (request.getCommentConsultant() != null && !request.getCommentConsultant().trim().isEmpty()) {
+                    ConsultantFeedback consultantFeedback = ConsultantFeedback.builder()
+                            .rating(request.getRating())
+                            .comment(request.getCommentConsultant())
+                            .consultantId(consultantId)
+                            .serviceFeedback(serviceFeedback)
+                            .createAt(serviceFeedback.getCreateAt())
+                            .build();
+                    consultantFeedbackRepository.save(consultantFeedback);
+
+                    consultantFeedbacks.add(
+                            ConsultantFeedbackResponse.builder()
+                                    .id(consultantFeedback.getId())
+                                    .rating(consultantFeedback.getRating())
+                                    .comment(consultantFeedback.getComment())
+                                    .createdAt(consultantFeedback.getCreateAt())
+                                    .consultantId(consultantFeedback.getConsultantId())
+                                    .build()
+                    );
+                }
+            }
+        }
 
         return ServiceFeedbackResponse.builder()
                 .id(serviceFeedback.getId())
@@ -121,18 +136,14 @@ public class FeedbackService {
                         .build())
                 .collect(Collectors.toList());
 
-
-        return serviceFeedbackRepository.findByAppointmentId(appointmentId)
-                .stream()
-                .map(feedback -> ServiceFeedbackResponse.builder()
-                        .id(feedback.getId())
-                        .rating(feedback.getRating())
-                        .comment(feedback.getComment())
-                        .createdAt(feedback.getCreateAt())
-                        .appointmentId(feedback.getAppointment().getId())
-                        .consultantFeedbacks(consultantFeedbacks)
-                        .build())
-                .collect(Collectors.toList());
+        return List.of(ServiceFeedbackResponse.builder()
+                .id(serviceFeedback.getId())
+                .rating(serviceFeedback.getRating())
+                .comment(serviceFeedback.getComment())
+                .createdAt(serviceFeedback.getCreateAt())
+                .appointmentId(serviceFeedback.getAppointment().getId())
+                .consultantFeedbacks(consultantFeedbacks)
+                .build());
     }
 
     public ServiceFeedbackResponse update(Long id, ServiceFeedbackRequest request) {
@@ -151,8 +162,11 @@ public class FeedbackService {
         feedback.setUpdateAt(LocalDateTime.now());
         ServiceFeedback updated = serviceFeedbackRepository.save(feedback);
 
-        ConsultantFeedback consultantFeedback = consultantFeedbackRepository.findByServiceFeedbackId(feedback.getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đánh giá bác sĩ"));
+        List<ConsultantFeedback> consultantFeedbacks = consultantFeedbackRepository.findByServiceFeedbackId(feedback.getId());
+        if (consultantFeedbacks.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy đánh giá bác sĩ");
+        }
+        ConsultantFeedback consultantFeedback = consultantFeedbacks.get(0);
 
         consultantFeedback.setComment(request.getCommentConsultant());
         consultantFeedback.setRating(request.getRating());
@@ -185,8 +199,12 @@ public class FeedbackService {
         User consultant = userRepository.findByIdAndRole(request.getConsultantId(), UserRole.CONSULTANT)
                 .orElseThrow(() -> new AppException("Không có bác sĩ này"));
 
-        Long consultantId = feedback.getAppointment().getConsultant().getId();
-        if (!consultantId.equals(request.getConsultantId())) {
+        // Kiểm tra consultant có thuộc appointment này không (qua appointmentDetails)
+        boolean consultantBelongsToAppointment = feedback.getAppointment().getAppointmentDetails().stream()
+                .anyMatch(detail -> detail.getConsultant() != null &&
+                         detail.getConsultant().getId() == request.getConsultantId());
+
+        if (!consultantBelongsToAppointment) {
             throw new RuntimeException("Bác sĩ không thuộc cuộc hẹn này");
         }
 
@@ -222,8 +240,12 @@ public class FeedbackService {
         User consultant = userRepository.findByIdAndRole(request.getConsultantId(), UserRole.CONSULTANT)
                 .orElseThrow(() -> new AppException("Không có bác sĩ này"));
 
-        Long consultantId = cf.getServiceFeedback().getAppointment().getConsultant().getId();
-        if (!consultantId.equals(request.getConsultantId())) {
+        // Kiểm tra consultant có thuộc appointment này không (qua appointmentDetails)
+        boolean consultantBelongsToAppointment = cf.getServiceFeedback().getAppointment().getAppointmentDetails().stream()
+                .anyMatch(detail -> detail.getConsultant() != null &&
+                         detail.getConsultant().getId() == request.getConsultantId());
+
+        if (!consultantBelongsToAppointment) {
             throw new RuntimeException("Bác sĩ không thuộc cuộc hẹn này");
         }
 
@@ -340,11 +362,5 @@ public class FeedbackService {
                 })
                 .collect(Collectors.toList());
     }
-
-
-
-
-
-
 
 }
