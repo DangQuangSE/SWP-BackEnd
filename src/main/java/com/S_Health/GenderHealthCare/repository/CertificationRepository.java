@@ -14,9 +14,9 @@ import java.util.Optional;
 public interface CertificationRepository extends JpaRepository<Certification, Long> {
     
     List<Certification> findByConsultantAndIsActiveTrue(User consultant);
-    
+
     List<Certification> findByConsultantIdAndIsActiveTrue(Long consultantId);
-    
+
     Optional<Certification> findByIdAndConsultantAndIsActiveTrue(Long id, User consultant);
     
 //    @Query("SELECT c FROM Certification c WHERE c.consultant.id = :consultantId AND c.isActive = true ORDER BY c.createdAt DESC")

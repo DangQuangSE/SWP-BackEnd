@@ -151,12 +151,16 @@ public class ManageUserService {
         }
         return consultant.getSpecializations() != null ? consultant.getSpecializations() : new ArrayList<>();
     }
-    public List<UserDTO> getUsersByRole(String role) {
+    public List<ConsultantDTO> getUsersByRole(String role) {
         UserRole userRole;
         userRole = UserRole.valueOf(role.toUpperCase());
-        return authenticationRepository.findByRole(userRole).stream()
+
+        List<User> users = authenticationRepository.findByRole(userRole).stream()
                 .filter(User::isActive) // Chỉ lấy user đang active
-                .map(this::convertToUserDTO)
+                .collect(Collectors.toList());
+
+        return users.stream()
+                .map(this::convertToConsultantDTO)
                 .collect(Collectors.toList());
     }
     private UserDTO convertToUserDTO(User user) {
@@ -201,8 +205,6 @@ public class ManageUserService {
 
         return consultantDTO;
     }
-
-
 
     public List<ConsultantDTO> getConsultantsByService(Long serviceId) {
         List<Specialization> specializations = specializationRepository.findByServicesIdAndIsActiveTrue(serviceId);
