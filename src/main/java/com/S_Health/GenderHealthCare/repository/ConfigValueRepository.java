@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ConfigValueRepository extends JpaRepository<ConfigValue, Long> {
 
     Optional<ConfigValue> findByName(String name);
+    boolean existsByName(String name);
 }

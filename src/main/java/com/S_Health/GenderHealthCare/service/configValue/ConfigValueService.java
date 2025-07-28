@@ -25,11 +25,13 @@ public class ConfigValueService {
      * Tạo cấu hình mới
      */
     public ConfigValue createConfig(String name, Integer value) {
+        if (configValueRepository.existsByName(name)) {
+            throw new AppException("Cấu hình đã tồn tại");
+        }
         ConfigValue config = ConfigValue.builder()
                 .name(name)
                 .value(value)
                 .build();
-
         return configValueRepository.save(config);
     }
 
