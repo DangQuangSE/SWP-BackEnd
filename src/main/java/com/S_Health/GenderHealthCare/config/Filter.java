@@ -109,7 +109,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/chat/sessions/*/end",           // Staff end chat session
             "/api/zoom/**",
             "/api/me",
-            "/api/certifications"
+            "/api/certifications",
+            "/api/feedback"
     );
 
     public boolean isPulicApi(String uri, String method) {
