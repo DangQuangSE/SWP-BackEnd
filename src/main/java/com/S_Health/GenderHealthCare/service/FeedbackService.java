@@ -276,6 +276,20 @@ public class FeedbackService {
                 .collect(Collectors.toList());
     }
 
+    public List<ConsultantFeedbackResponse> getByConsultantId(Long consultantId) {
+        return consultantFeedbackRepository.findByConsultantId(consultantId)
+                .stream()
+                .map(cf -> ConsultantFeedbackResponse.builder()
+                        .id(cf.getId())
+                        .rating(cf.getRating())
+                        .consultantId(cf.getConsultantId())
+                        .comment(cf.getComment())
+                        .createdAt(cf.getCreateAt())
+                        .updateAt(cf.getUpdateAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     public AverageRatingResponse getAverageRatingByServiceId(Long serviceId) {
         List<Appointment> appointment = appointmentRepository.findByServiceIdAndIsRatedTrue(serviceId);
 
