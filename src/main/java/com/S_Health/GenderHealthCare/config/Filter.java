@@ -76,7 +76,7 @@ public class Filter extends OncePerRequestFilter {
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs",
             "/api/appointment/by-status",
-            "/api/appointment/my-schedule",
+            "/api/appointment/my-schedule/**",
             "/api/appointment/*",                // Appointment details by ID
             "/api/appointment/*/patient-history", // Patient history
             "/api/appointment/*/status-history",  // Status history
