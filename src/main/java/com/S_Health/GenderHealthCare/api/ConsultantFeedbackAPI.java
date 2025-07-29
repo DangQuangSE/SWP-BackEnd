@@ -37,10 +37,10 @@ public class ConsultantFeedbackAPI {
         return ResponseEntity.ok(feedbackService.getByServiceFeedbackId(serviceFeedbackId));
     }
 
-    @GetMapping("/consultant/{consultantId}")
-    @Operation(summary = "Lấy danh sách feedback của bác sĩ",
-               description = "Lấy tất cả feedback mà bác sĩ nhận được từ bệnh nhân")
-    public ResponseEntity<List<ConsultantFeedbackResponse>> getByConsultant(@PathVariable Long consultantId) {
-        return ResponseEntity.ok(feedbackService.getByConsultantId(consultantId));
+    @GetMapping("/my-feedbacks")
+    @Operation(summary = "Lấy danh sách feedback của bác sĩ hiện tại",
+               description = "Lấy tất cả feedback mà bác sĩ hiện tại nhận được từ bệnh nhân")
+    public ResponseEntity<List<ConsultantFeedbackResponse>> getMyFeedbacks() {
+        return ResponseEntity.ok(feedbackService.getByConsultantId());
     }
 }

@@ -276,7 +276,8 @@ public class FeedbackService {
                 .collect(Collectors.toList());
     }
 
-    public List<ConsultantFeedbackResponse> getByConsultantId(Long consultantId) {
+    public List<ConsultantFeedbackResponse> getByConsultantId() {
+        Long consultantId = authUtil.getCurrentUserId();
         return consultantFeedbackRepository.findByConsultantId(consultantId)
                 .stream()
                 .map(cf -> ConsultantFeedbackResponse.builder()
