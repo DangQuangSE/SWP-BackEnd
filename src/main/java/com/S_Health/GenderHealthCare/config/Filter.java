@@ -89,7 +89,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/chat/sessions",                // Staff get chat sessions (GET method)
             "/api/zoom/**",                      // Zoom APIs
             "/api/notifications",
-            "/api/certifications/my-certifications"
+            "/api/certifications/my-certifications",
+            "/api/consultant-feedbacks/my-feedbacks"
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
