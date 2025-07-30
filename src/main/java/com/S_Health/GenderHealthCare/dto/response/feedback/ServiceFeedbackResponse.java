@@ -1,15 +1,16 @@
 package com.S_Health.GenderHealthCare.dto.response.feedback;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.checkerframework.checker.units.qual.N;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ServiceFeedbackResponse {
     Long id;
@@ -18,6 +19,8 @@ public class ServiceFeedbackResponse {
     LocalDateTime createdAt;
     LocalDateTime updateAt;
     Long appointmentId;
+    String serviceFeedbackName;
+    String customerName;
 
     List<ConsultantFeedbackResponse> consultantFeedbacks;
 }
