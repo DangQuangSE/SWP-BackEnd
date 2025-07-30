@@ -9,6 +9,7 @@ import com.S_Health.GenderHealthCare.entity.Transaction;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.PaymentMethod;
 import com.S_Health.GenderHealthCare.enums.PaymentStatus;
+import com.S_Health.GenderHealthCare.enums.ServiceType;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
@@ -288,6 +289,9 @@ public class VNPayService {
             payment.setStatus(PaymentStatus.SUCCESS);
             payment.setPaidAt(payTime);
             Appointment appointment = payment.getAppointment();
+            if(appointment.getService().getType().equals(ServiceType.CONSULTING_ON)){
+                appointment.setStatus(AppointmentStatus.CHECKED);
+            }
             appointment.setStatus(AppointmentStatus.CONFIRMED);
             appointmentRepository.save(appointment);
 
