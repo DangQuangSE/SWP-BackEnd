@@ -9,5 +9,7 @@ import java.util.Optional;
 
 public interface TreatmentProtocolRepository extends JpaRepository<TreatmentProtocol, Long> {
     List<TreatmentProtocol> findByDiseaseNameContainingIgnoreCase(String diseaseName);
-    Optional<TreatmentProtocol> findById(Long id);
+    Optional<TreatmentProtocol> findByIdAndActiveTrue(Long id);
+    List<TreatmentProtocol> findByActiveTrue();
+
 }

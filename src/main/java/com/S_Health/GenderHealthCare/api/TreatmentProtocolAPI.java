@@ -42,4 +42,10 @@ public class TreatmentProtocolAPI {
         TreatmentProtocolResponse response = treatmentProtocolService.update(id, request);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+         treatmentProtocolService.delete(id);
+        return ResponseEntity.ok("Deleted (soft) successfully");
+    }
 }
