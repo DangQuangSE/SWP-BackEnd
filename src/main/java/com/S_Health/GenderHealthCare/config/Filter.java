@@ -1,7 +1,7 @@
 package com.S_Health.GenderHealthCare.config;
 
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.service.authentication.JWTService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -10,7 +10,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.tomcat.util.net.jsse.JSSEUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -44,6 +43,13 @@ public class Filter extends OncePerRequestFilter {
             "GET:/api/rooms/**",             // Room information
             "GET:/api/tags/**",              // Blog tags
             "GET:/api/blog/**",              // Blog reading (except protected ones)
+            "GET:/api/comment/blog/**",                // Comment reading
+
+            // Config APIs (public access)
+            "GET:/api/config/**",            // Get config values
+            "POST:/api/config/**",           // Create config
+            "PUT:/api/config/**",            // Update config
+            "DELETE:/api/config/**",         // Delete config
 
             // Chat APIs for customers (no login required)
             "POST:/api/chat/start",          // Customer start chat
@@ -55,24 +61,24 @@ public class Filter extends OncePerRequestFilter {
 
             // Payment & External APIs
             "POST:/api/payment/vnpay/**",
-            "POST:/api/zoom/**",
+
+            "DELETE:/api/treatment/**",
+
 
             // Swagger UI endpoints
             "GET:/swagger-ui/**",
             "GET:/v3/api-docs/**",
             "GET:/swagger-resources/**",
             "GET:/webjars/**",
-            "POST:/api/zoom/**",
-            "POST:/api/me/profile"
-//            "POST:/api/swagger-ui/**",
-//            "POST:/api/v3/api-docs/**",
-//            "POST:/api/swagger-resources/**"
+
+            "POST:/api/me/profile",
+            "POST:/api/blog/{id}/like"
             );
 
     private final List<String> PROTECTED_GET_API = List.of(
             "/api/cycle-track/logs",
             "/api/appointment/by-status",
-            "/api/appointment/my-schedule",
+            "/api/appointment/my-schedule/**",
             "/api/appointment/*",                // Appointment details by ID
             "/api/appointment/*/patient-history", // Patient history
             "/api/appointment/*/status-history",  // Status history
@@ -80,11 +86,13 @@ public class Filter extends OncePerRequestFilter {
             "/api/medical-profile/**",           // Medical profile APIs (bao gồm patient history)
             "/api/medical-result/**",            // Medical results
             "/api/payment/history/**",           // Payment history
-            "/api/blog/my-blogs",                // User's own blogs
-            "/api/blog/detail/*",                // Blog details for editing (specific ID)
-            "/api/chat/sessions",// Staff get chat sessions (GET method// Staff get session messages (GET method)
+            "/api/blog/my-blogs/**",
+            "/api/blog/admin/**",
+            "/api/chat/sessions",                // Staff get chat sessions (GET method)
+            "/api/zoom/**",                      // Zoom APIs
             "/api/notifications",
-            "/api/certifications/my-certifications"
+            "/api/certifications/my-certifications",
+            "/api/consultant-feedbacks/my-feedbacks"
     );
 
     private final List<String> PROTECTED_PATCH_API = List.of(
@@ -95,7 +103,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/appointment/by-status",
             "/api/zoom/**",
             "/api/notifications",
-            "/api/notifications/{notificationId}"
+            "/api/notifications/{notificationId}",
+            "/api/notifications/{id}/read"
     );
 
     private final List<String> PROTECTED_POST_API = List.of(
@@ -103,7 +112,8 @@ public class Filter extends OncePerRequestFilter {
             "/api/chat/sessions/*/end",           // Staff end chat session
             "/api/zoom/**",
             "/api/me",
-            "/api/certifications"
+            "/api/certifications",
+            "/api/feedback"
     );
 
     public boolean isPulicApi(String uri, String method) {
@@ -167,7 +177,7 @@ public class Filter extends OncePerRequestFilter {
             //xát thực
             String token = getToken(request);
             if (token == null) {
-                resolver.resolveException(request, response, null, new AuthenticationException("Empty token!") {
+                resolver.resolveException(request, response, null, new AppException("Empty token!") {
                 });
             }
 
@@ -181,6 +191,14 @@ public class Filter extends OncePerRequestFilter {
                 return;
             } catch (MalformedJwtException malformedJwtException) {
                 resolver.resolveException(request, response, null, new AuthException("Token không hợp lệ!"));
+                return;
+            } catch (IllegalArgumentException illegalArgumentException) {
+                // token null hoặc empty
+                resolver.resolveException(request, response, null, new AuthException("Token không được để trống!"));
+                return;
+            } catch (Exception e) {
+                // Các lỗi khác khi parse token
+                resolver.resolveException(request, response, null, new AuthException("Lỗi xử lý token: " + e.getMessage()));
                 return;
             }
             // => token dung

@@ -14,8 +14,8 @@ public class NotificationResponse {
     Long id;
     String title;
     String content;
-    Boolean isRead;
-    Boolean isActive;
+    Boolean isRead = false;
+    Boolean isActive = true;
     String type;
     LocalDateTime createdAt;
     LocalDateTime readAt;

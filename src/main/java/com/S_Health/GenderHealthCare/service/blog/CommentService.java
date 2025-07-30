@@ -1,10 +1,12 @@
 package com.S_Health.GenderHealthCare.service.blog;
 
 import com.S_Health.GenderHealthCare.dto.request.blog.CommentRequest;
+import com.S_Health.GenderHealthCare.dto.response.CommentResponse;
 import com.S_Health.GenderHealthCare.entity.Blog;
 import com.S_Health.GenderHealthCare.entity.Comment;
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.exception.exceptions.ResourceNotFoundException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
+import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.BlogRepository;
 import com.S_Health.GenderHealthCare.repository.CommentRepository;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
@@ -22,15 +24,17 @@ public class CommentService {
     @Autowired
     private BlogRepository blogRepository;
     @Autowired
+    private AuthenticationRepository authenticationRepository;
+    @Autowired
     private AuthUtil authUtil;
 
-    public Comment createComment(CommentRequest request) throws NotFoundException {
-        Blog blog = blogRepository.findById(request.getBogId())
-                .orElseThrow(()-> new NotFoundException("Không tim thấy blog hoặc không có blog"));
+    public CommentResponse createComment(CommentRequest request) {
+        Blog blog = blogRepository.findById(request.getBlogId())
+                .orElseThrow(() -> new AppException("Không tim thấy blog hoặc không có blog"));
 
         Long userId = authUtil.getCurrentUserId();
-        User commenter = new User();
-        commenter.setId(userId);
+        User commenter = authenticationRepository.findById(userId)
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng"));
 
         Comment comment = Comment.builder()
                 .blog(blog)
@@ -38,24 +42,40 @@ public class CommentService {
                 .description(request.getDescription())
                 .build();
 
-        return commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
+
+        // Convert to CommentResponse
+        return new CommentResponse(
+                savedComment.getId(),
+                savedComment.getCommenter().getFullname() != null ? savedComment.getCommenter().getFullname() : "Unknown User",
+                savedComment.getCommenter().getId(),
+                savedComment.getCommenter().getImageUrl(),
+                savedComment.getDescription(),
+                savedComment.getCreateAt()
+        );
     }
 
-    public List<Comment> getCommentsByBlog(Long blogId){
-        return commentRepository.findByBlogIdAndIsDeletedFalse(blogId);
+    public List<CommentResponse> getCommentsByBlog(Long blogId) {
+        List<Comment> comments = commentRepository.findByBlogId(blogId);
+
+        return comments.stream()
+                .map(comment -> new CommentResponse(
+                        comment.getId(),
+                        comment.getCommenter().getFullname() != null ? comment.getCommenter().getFullname() : "Unknown User",
+                        comment.getCommenter().getId(),
+                        comment.getCommenter().getImageUrl(),
+                        comment.getDescription(),
+                        comment.getCreateAt()
+                ))
+                .toList();
     }
 
-    public void deleteComment(Long commentID){
-        Long userId = authUtil.getCurrentUserId();;
-
-        Comment comment = commentRepository.findById(commentID)
-                .orElseThrow(()-> new ResourceNotFoundException("Không tìm thấy bình luận"));
-
-        if (!Objects.equals(comment.getCommenter().getId(), userId)) {
-            throw new SecurityException("Bạn không có quyền xóa bình luận này");
+    public void deleteComment(Long commentID) {
+        User user = authUtil.getCurrentUser();
+        Comment comment = commentRepository.findById(commentID).orElseThrow(() -> new AppException("Không tìm thấy bình luận"));
+        if (comment.getCommenter().getId() != user.getId()) {
+            throw new AppException("Bạn không có quyền xóa bình luận này");
         }
-
-        comment.setIsDeleted(true);
-        commentRepository.save(comment);
+        commentRepository.delete(comment);
     }
 }

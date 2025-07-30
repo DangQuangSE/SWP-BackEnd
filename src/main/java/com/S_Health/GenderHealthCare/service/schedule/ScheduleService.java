@@ -1,10 +1,11 @@
 package com.S_Health.GenderHealthCare.service.schedule;
 
 import com.S_Health.GenderHealthCare.dto.SlotDTO;
+import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleCancelRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleConsultantRequest;
 import com.S_Health.GenderHealthCare.dto.request.schedule.ScheduleRegisterRequest;
-import com.S_Health.GenderHealthCare.dto.request.service.BookingRequest;
+import com.S_Health.GenderHealthCare.dto.response.DoctorWorkingScheduleDTO;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleCancelResponse;
 import com.S_Health.GenderHealthCare.dto.response.WorkDateSlotResponse;
 import com.S_Health.GenderHealthCare.dto.response.ScheduleRegisterResponse;
@@ -12,15 +13,16 @@ import com.S_Health.GenderHealthCare.entity.AppointmentDetail;
 import com.S_Health.GenderHealthCare.entity.ConsultantSlot;
 import com.S_Health.GenderHealthCare.entity.Schedule;
 import com.S_Health.GenderHealthCare.entity.User;
-import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ScheduleStatus;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.enums.UserRole;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AppointmentDetailRepository;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantSlotRepository;
 import com.S_Health.GenderHealthCare.repository.ScheduleRepository;
 import com.S_Health.GenderHealthCare.service.MedicalService.BookingService;
+import com.S_Health.GenderHealthCare.service.configValue.ConfigValueService;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
 import com.S_Health.GenderHealthCare.utils.TimeSlotUtils;
 import org.modelmapper.ModelMapper;
@@ -32,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ScheduleService {
@@ -42,15 +45,17 @@ public class ScheduleService {
     @Autowired
     AppointmentDetailRepository appointmentDetailRepository;
     @Autowired
-    ServiceSlotPoolService serviceSlotPoolService;
-    @Autowired
-    BookingService bookingService;
-    @Autowired
     ConsultantSlotRepository consultantSlotRepository;
+    @Autowired
+    ConfigValueService configValueService;
     @Autowired
     ModelMapper modelMapper;
     @Autowired
     AuthUtil authUtil;
+
+    private Integer getMaxBooking() {
+        return configValueService.getConfigValue("MAX_BOOKING", 6);
+    }
 
     public List<WorkDateSlotResponse> getScheduleOfConsultant(ScheduleConsultantRequest request) {
         List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDateBetweenAndStatus(request.getConsultant_id(),
@@ -77,7 +82,7 @@ public class ScheduleService {
 
     public ScheduleRegisterResponse registerSchedule(ScheduleRegisterRequest request) {
         User consultant = authenticationRepository.findById(authUtil.getCurrentUserId())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy người tư vấn này!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy người tư vấn này!"));
         List<ScheduleRegisterRequest.ScheduleItem> scheduleItems = request.getScheduleItems();
         for (ScheduleRegisterRequest.ScheduleItem item : scheduleItems) {
             if (!item.getWorkDate().isAfter(LocalDate.now())) {
@@ -105,13 +110,14 @@ public class ScheduleService {
             List<LocalTime> slots = TimeSlotUtils.generateSlots(item.getTimeSlotDTO().getStartTime(), item.getTimeSlotDTO().getEndTime(), Duration.ofMinutes(90));
             for (LocalTime start : slots) {
                 LocalTime end = start.plusMinutes(90);
+                Integer maxBooking = getMaxBooking();
                 ConsultantSlot consultantSlot = ConsultantSlot.builder()
                         .consultant(consultant)
                         .date(item.getWorkDate())
                         .startTime(start)
                         .endTime(end)
-                        .availableBooking(6)
-                        .maxBooking(6)
+                        .availableBooking(maxBooking)
+                        .maxBooking(maxBooking)
                         .currentBooking(0)
                         .status(SlotStatus.ACTIVE)
                         .isActive(true)
@@ -152,7 +158,7 @@ public class ScheduleService {
                     .findByConsultant_idAndSlotDate(consultantId, date);
             List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDate(consultantId, date);
             if (slots.isEmpty()) {
-                throw new BadRequestException("Không tìm thấy slots cần huỷ.");
+                throw new AppException("Không tìm thấy slots cần huỷ.");
             }
             for (ConsultantSlot slot : slots) {
                 slot.setIsActive(false);
@@ -171,7 +177,7 @@ public class ScheduleService {
                 slot.setStatus(SlotStatus.DEACTIVE);
                 consultantSlotRepository.save(slot);
             } else {
-                throw new BadRequestException("Không tìm thấy slot cần huỷ.");
+                throw new AppException("Không tìm thấy slot cần huỷ.");
             }
         }
 
@@ -183,6 +189,58 @@ public class ScheduleService {
                         "Đã huỷ"
                 )).toList()
         );
+    }
+
+    /**
+     * Lấy danh sách bác sĩ làm việc theo ngày
+     */
+    public List<DoctorWorkingScheduleDTO> getDoctorsWorkingOnDate(LocalDate date) {
+        // Lấy tất cả bác sĩ có role CONSULTANT và đang active
+        List<User> doctors = authenticationRepository.findByRole(UserRole.CONSULTANT)
+                .stream()
+                .filter(User::isActive)
+                .collect(Collectors.toList());
+
+        List<DoctorWorkingScheduleDTO> result = new ArrayList<>();
+
+        for (User doctor : doctors) {
+            // Lấy các slot làm việc của bác sĩ trong ngày
+            List<ConsultantSlot> slots = consultantSlotRepository.findByConsultantIdAndDate(doctor.getId(), date)
+                    .stream()
+                    .filter(slot -> slot.getStatus() == SlotStatus.ACTIVE && slot.getIsActive())
+                    .collect(Collectors.toList());
+
+            if (!slots.isEmpty()) {
+                // Chuyển đổi slots thành SlotDTO
+                List<SlotDTO> slotDTOs = slots.stream()
+                        .map(slot -> new SlotDTO(
+                                slot.getId(),
+                                slot.getDate(),
+                                slot.getStartTime(),
+                                slot.getEndTime(),
+                                slot.getMaxBooking(),
+                                slot.getCurrentBooking(),
+                                slot.getAvailableBooking()
+                        ))
+                        .sorted(Comparator.comparing(SlotDTO::getStartTime))
+                        .collect(Collectors.toList());
+
+                // Tạo DTO cho bác sĩ
+                UserDTO doctorDTO = modelMapper.map(doctor, UserDTO.class);
+
+                DoctorWorkingScheduleDTO doctorSchedule = new DoctorWorkingScheduleDTO();
+                doctorSchedule.setDoctor(doctorDTO);
+                doctorSchedule.setWorkDate(date);
+                doctorSchedule.setSlots(slotDTOs);
+
+                result.add(doctorSchedule);
+            }
+        }
+
+        // Sắp xếp theo tên bác sĩ
+        return result.stream()
+                .sorted(Comparator.comparing(dto -> dto.getDoctor().getFullname()))
+                .collect(Collectors.toList());
     }
 
 

@@ -10,8 +10,7 @@ import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.ChatStatus;
 import com.S_Health.GenderHealthCare.enums.SenderType;
 import com.S_Health.GenderHealthCare.enums.UserRole;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
-import com.S_Health.GenderHealthCare.exception.exceptions.ResourceNotFoundException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.S_Health.GenderHealthCare.repository.ChatMessageRepository;
 import com.S_Health.GenderHealthCare.repository.ChatSessionRepository;
@@ -75,7 +74,7 @@ public class ChatService {
      */
     public ChatMessageDTO sendMessage(SendMessageRequest request) {
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(request.getSessionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chat session"));
 
         // Xác định sender type
         SenderType senderType = determineSenderType(request.getSenderName(), session);
@@ -112,11 +111,11 @@ public class ChatService {
     public ChatSessionDTO joinChatSession(String sessionId) {
         User currentStaff = authUtil.getCurrentUser();
         if (currentStaff.getRole() != UserRole.STAFF) {
-            throw new BadRequestException("Chỉ staff mới có thể join chat session");
+            throw new AppException("Chỉ staff mới có thể join chat session");
         }
 
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chat session"));
 
         session.setStaff(currentStaff);
         session.setStatus(ChatStatus.ACTIVE);
@@ -133,7 +132,7 @@ public class ChatService {
     public List<ChatSessionDTO> getChatSessionsForStaff(String statusParam) {
         User currentStaff = authUtil.getCurrentUser();
         if (currentStaff.getRole() != UserRole.STAFF) {
-            throw new BadRequestException("Chỉ staff mới có thể xem chat sessions");
+            throw new AppException("Chỉ staff mới có thể xem chat sessions");
         }
 
         List<ChatSession> sessions;
@@ -148,7 +147,7 @@ public class ChatService {
                 ChatStatus requestedStatus = ChatStatus.valueOf(statusParam.toUpperCase());
                 sessions = chatSessionRepository.findByStatusAndIsActiveTrueOrderByUpdatedAtDesc(requestedStatus);
             } catch (IllegalArgumentException e) {
-                throw new BadRequestException("Invalid status: " + statusParam + ". Valid values: WAITING, ACTIVE, ENDED");
+                throw new AppException("Invalid status: " + statusParam + ". Valid values: WAITING, ACTIVE, ENDED");
             }
         }
 
@@ -169,7 +168,7 @@ public class ChatService {
      */
     public List<ChatMessageDTO> getSessionMessages(String sessionId) {
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chat session"));
 
         List<ChatMessage> messages = chatMessageRepository.findByChatSessionOrderBySentAtAsc(session);
         return messages.stream()
@@ -182,7 +181,7 @@ public class ChatService {
      */
     public void endChatSession(String sessionId) {
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chat session"));
 
         // Xóa tất cả messages của session này trước
         chatMessageRepository.deleteByChatSession(session);
@@ -199,7 +198,7 @@ public class ChatService {
      */
     public void markMessagesAsRead(String sessionId, String readerName) {
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chat session"));
 
         // Lấy tất cả tin nhắn chưa đọc trong session này
         List<ChatMessage> unreadMessages = chatMessageRepository
@@ -223,7 +222,7 @@ public class ChatService {
      */
     public Integer getUnreadCount(String sessionId, String readerName) {
         ChatSession session = chatSessionRepository.findBySessionIdAndIsActiveTrue(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chat session"));
+                .orElseThrow(() -> new AppException("Không tìm thấy chat session"));
 
         return chatMessageRepository.countUnreadMessagesForReader(session, readerName);
     }

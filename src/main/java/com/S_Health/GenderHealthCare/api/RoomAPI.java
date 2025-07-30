@@ -82,8 +82,4 @@ public class RoomAPI {
     public ResponseEntity<List<RoomConsultantDTO>> getConsultantsInRoom(@PathVariable Long roomId) {
         return ResponseEntity.ok(roomService.getConsultantsInRoom(roomId));
     }
-
-    // TODO: Implement these APIs later when needed
-    // @GetMapping("/available") - Lấy phòng trống theo thời gian
-    // @GetMapping("/service/{serviceId}") - Lấy phòng theo dịch vụ
 }

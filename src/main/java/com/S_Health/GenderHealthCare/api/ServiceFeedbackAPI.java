@@ -5,6 +5,7 @@ import com.S_Health.GenderHealthCare.dto.response.feedback.AverageRatingResponse
 import com.S_Health.GenderHealthCare.dto.response.feedback.ServiceFeedbackResponse;
 import com.S_Health.GenderHealthCare.service.FeedbackService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class ServiceFeedbackAPI {
     FeedbackService feedbackService;
 
     @PostMapping
-    public ResponseEntity<ServiceFeedbackResponse> create(@RequestBody ServiceFeedbackRequest request) {
+    public ResponseEntity<ServiceFeedbackResponse> create(@Valid @RequestBody ServiceFeedbackRequest request) {
         return ResponseEntity.ok(feedbackService.createFeedback(request));
     }
 
@@ -47,6 +48,12 @@ public class ServiceFeedbackAPI {
     @GetMapping("/service/{serviceId}")
     public ResponseEntity<List<ServiceFeedbackResponse>> getByService(@PathVariable Long serviceId) {
         return ResponseEntity.ok(feedbackService.getByServiceId(serviceId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ServiceFeedbackResponse>> getAllServiceFeedback() {
+        List<ServiceFeedbackResponse> responses = feedbackService.getAllServiceRating();
+        return ResponseEntity.ok(responses);
     }
 
 

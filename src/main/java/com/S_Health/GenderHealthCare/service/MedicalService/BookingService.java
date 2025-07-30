@@ -9,7 +9,7 @@ import com.S_Health.GenderHealthCare.entity.*;
 import com.S_Health.GenderHealthCare.enums.AppointmentStatus;
 import com.S_Health.GenderHealthCare.enums.ServiceType;
 import com.S_Health.GenderHealthCare.enums.SlotStatus;
-import com.S_Health.GenderHealthCare.exception.exceptions.BadRequestException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.service.medicalProfile.MedicalProfileService;
 import com.S_Health.GenderHealthCare.service.schedule.ServiceSlotPoolService;
@@ -97,22 +97,22 @@ public class BookingService {
     //validate request
     public BookingContext validateAndFetchBookingEntities(BookingRequest request, long customerId) {
         com.S_Health.GenderHealthCare.entity.Service service = serviceRepository.findById(request.getService_id())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy dịch vụ!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy dịch vụ!"));
 
         ServiceSlotPool slotPool = serviceSlotPoolRepository.findById(request.getSlot_id())
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy khung giờ này!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy khung giờ này!"));
 
         if (!slotPool.getDate().equals(request.getPreferredDate()) ||
                 !slotPool.getStartTime().equals(request.getSlot())) {
-            throw new BadRequestException("Khung giờ không khớp với ngày/giờ yêu cầu!");
+            throw new AppException("Khung giờ không khớp với ngày/giờ yêu cầu!");
         }
 
         User customer = authenticationRepository.findById(customerId)
-                .orElseThrow(() -> new BadRequestException("Không tìm thấy khách hàng!"));
+                .orElseThrow(() -> new AppException("Không tìm thấy khách hàng!"));
 
         LocalDateTime slotTime = LocalDateTime.of(request.getPreferredDate(), request.getSlot());
         if (appointmentDetailRepository.existsByAppointment_Customer_IdAndSlotTime(customerId, slotTime)) {
-            throw new BadRequestException("Bạn đã có lịch hẹn vào khung giờ này");
+            throw new AppException("Bạn đã có lịch hẹn vào khung giờ này");
         }
         List<com.S_Health.GenderHealthCare.entity.Service> services = service.getIsCombo()
                 ? service.getComboItems().stream().map(ComboItem::getSubService).toList()
@@ -131,14 +131,31 @@ public class BookingService {
     //tạo appointmentDetail và cập nhật consultantSlot
     public AppointmentDetailData createAppointmentDetail(BookingRequest request, Appointment appointment, com.S_Health.GenderHealthCare.entity.Service subService) {
         List<User> consultants = serviceSlotPoolService.getConsultantInSpecialization(subService.getId());
-        User consultant = findAvailableConsultant(request, consultants);
-        if (consultant == null) {
-            throw new BadRequestException("Không có tư vấn viên rảnh cho dịch vụ: " + subService.getName());
+
+        User consultant;
+        if (request.getConsultantId() != null) {
+            // Direct booking - tìm bác sĩ cụ thể
+            consultant = consultants.stream()
+                    .filter(c -> c.getId() == (request.getConsultantId()))
+                    .findFirst()
+                    .orElseThrow(() -> new AppException("Bác sĩ được chọn không phù hợp với dịch vụ này!"));
+
+            // Kiểm tra bác sĩ có slot trống không
+            ConsultantSlot checkSlot = consultantSlotRepository
+                    .findByConsultantAndDateAndStartTimeAndStatus(consultant, request.getPreferredDate(), request.getSlot(), SlotStatus.ACTIVE)
+                    .orElseThrow(() -> new AppException("Bác sĩ không có lịch trống vào thời gian này!"));
+
+            if (checkSlot.getAvailableBooking() <= 0) {
+                throw new AppException("Bác sĩ đã hết slot trong khung giờ này!");
+            }
+        } else {
+            // Auto assign - dùng logic phân bổ đều
+            consultant = findAvailableConsultant(request, consultants);
         }
 
         ConsultantSlot slot = consultantSlotRepository
                 .findByConsultantAndDateAndStartTimeAndStatus(consultant, request.getPreferredDate(), request.getSlot(), SlotStatus.ACTIVE)
-                .orElseThrow(() -> new BadRequestException("Khung giờ không tồn tại"));
+                .orElseThrow(() -> new AppException("Khung giờ không tồn tại"));
         slot.setCurrentBooking(slot.getCurrentBooking() + 1);
         slot.setAvailableBooking(slot.getAvailableBooking() - 1);
         if (slot.getAvailableBooking() == 0) {
@@ -155,7 +172,7 @@ public class BookingService {
         detail.setAppointment(appointment);
         detail.setConsultant(consultant);
         detail.setService(subService);
-        detail.setRoom(assignedRoom); // Assign room
+        detail.setRoom(assignedRoom);
         detail.setSlotTime(LocalDateTime.of(request.getPreferredDate(), request.getSlot()));
         appointmentDetailRepository.save(detail);
 
@@ -168,8 +185,10 @@ public class BookingService {
 
         return new AppointmentDetailData(dto, slot);
     }
+
     public static record AppointmentDetailData(AppointmentDetailDTO dto, ConsultantSlot slot) {
     }
+
     public void updateServiceSlotPool(ServiceSlotPool slotPool, List<ConsultantSlot> slots) {
         int max = slots.stream().mapToInt(ConsultantSlot::getMaxBooking).sum();
         int current = slots.stream().mapToInt(ConsultantSlot::getCurrentBooking).sum();
@@ -183,6 +202,9 @@ public class BookingService {
     }
 
     public User findAvailableConsultant(BookingRequest request, List<User> consultants) {
+        User bestConsultant = null;
+        int lowestCurrentBooking = Integer.MAX_VALUE;
+
         for (User consultant : consultants) {
             try {
                 ConsultantSlot slot = consultantSlotRepository
@@ -192,22 +214,29 @@ public class BookingService {
                                 request.getSlot(),
                                 SlotStatus.ACTIVE
                         ).orElse(null);
+
                 if (slot != null && slot.getAvailableBooking() > 0) {
-                    return consultant;
+                    // Chọn bác sĩ có currentBooking thấp nhất để phân bổ đều bệnh nhân
+                    if (slot.getCurrentBooking() < lowestCurrentBooking) {
+                        lowestCurrentBooking = slot.getCurrentBooking();
+                        bestConsultant = consultant;
+                    }
                 }
             } catch (Exception e) {
-                System.out.println("Lỗi khi kiểm tra tư vấn viên " + consultant.getFullname() + ": " + e.getMessage());
+                throw new AppException("Lỗi khi kiểm tra tư vấn viên " + consultant.getFullname() + ": " + e.getMessage());
             }
         }
-        throw new BadRequestException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
+
+        if (bestConsultant == null) {
+            throw new AppException("Không tìm thấy tư vấn viên nào khả dụng cho thời gian đã chọn!");
+        }
+
+        return bestConsultant;
     }
 
-    /**
-     * Auto-assign room dựa trên bác sĩ được chọn và thời gian làm việc
-     */
     private Room autoAssignRoomForConsultant(User consultant,
-                                           java.time.LocalDate date,
-                                           java.time.LocalTime timeSlot) {
+                                             java.time.LocalDate date,
+                                             java.time.LocalTime timeSlot) {
         try {
             // Tìm tất cả phòng mà bác sĩ này được phân công
             List<RoomConsultant> consultantRooms = roomConsultantRepository
@@ -237,8 +266,7 @@ public class BookingService {
             return consultantRooms.get(0).getRoom();
 
         } catch (Exception e) {
-            System.err.println("Error auto-assigning room for consultant: " + e.getMessage());
-            return null; // Không assign room nếu có lỗi
+            throw new AppException("Có lỗi xảy ra khi auto-assign phòng: " + e.getMessage());
         }
     }
 
@@ -257,14 +285,13 @@ public class BookingService {
             List<Room> availableRooms = roomRepository.findAll().stream()
                     .filter(room -> room.isActive())
                     .filter(room -> room.getSpecialization() != null &&
-                                  room.getSpecialization().getId().equals(specialization.getId()))
+                            room.getSpecialization().getId().equals(specialization.getId()))
                     .toList();
 
             return availableRooms.isEmpty() ? null : availableRooms.get(0);
 
         } catch (Exception e) {
-            System.err.println("Error in fallback room assignment: " + e.getMessage());
-            return null;
+            throw new AppException("Có lỗi xảy ra khi auto-assign phòng: " + e.getMessage());
         }
     }
 
@@ -272,8 +299,8 @@ public class BookingService {
      * Kiểm tra thời gian slot có nằm trong giờ làm việc không
      */
     private boolean isTimeSlotInWorkingHours(java.time.LocalTime timeSlot,
-                                           java.time.LocalTime startTime,
-                                           java.time.LocalTime endTime) {
+                                             java.time.LocalTime startTime,
+                                             java.time.LocalTime endTime) {
         return !timeSlot.isBefore(startTime) && !timeSlot.isAfter(endTime);
     }
 
@@ -289,25 +316,5 @@ public class BookingService {
             roomDTO.setSpecializationName(room.getSpecialization().getName());
         }
         return roomDTO;
-    }
-
-    /**
-     * Helper method to get basic medical profile information for customer
-     */
-    private BasicMedicalProfileDTO getBasicMedicalProfile(Long customerId) {
-        List<MedicalProfile> profiles = medicalProfileRepository.findByCustomerIdAndIsActiveTrue(customerId);
-
-        if (profiles.isEmpty()) {
-            return null;
-        }
-
-        // Lấy profile mới nhất có thông tin y tế
-        MedicalProfile latestProfile = profiles.stream()
-                .filter(p -> p.getAllergies() != null || p.getFamilyHistory() != null ||
-                           p.getChronicConditions() != null || p.getSpecialNotes() != null)
-                .max((p1, p2) -> p1.getUpdatedAt().compareTo(p2.getUpdatedAt()))
-                .orElse(profiles.get(0)); // Fallback to first profile if no medical info found
-
-        return modelMapper.map(latestProfile, BasicMedicalProfileDTO.class);
     }
 }

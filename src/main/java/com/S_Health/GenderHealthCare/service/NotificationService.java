@@ -24,6 +24,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,11 +71,18 @@ public class NotificationService {
                 .type(NotificationType.valueOf(request.getType()))
                 .appointment(appointment)
                 .cycleTracking(cycleTracking)
+                .isActive(true)
                 .isRead(false)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         notification = notificationRepository.save(notification);
-        return modelMapper.map(notification, NotificationResponse.class);
+
+//        NotificationResponse notificationResponse = modelMapper.map(notification, NotificationResponse.class);
+//        notificationResponse.getAppointment().setDoctorName(appointment.getConsultant().getFullname());
+//        notificationResponse.getAppointment().setAppointmentDate(appointment.getPreferredDate());
+
+        return mapToResponse(notification);
     }
 
     public List<NotificationResponse> getNotificationsByUser() {
@@ -142,8 +150,9 @@ public class NotificationService {
                 .appointment(notification.getAppointment() != null
                         ? NotificationAppointmentResponse.builder()
                         .id(notification.getAppointment().getId())
-                        .doctorName(notification.getAppointment().getConsultant().getFullname())
-                        .appointmentDate(notification.getAppointment().getCreated_at())
+//                        .doctorName(notification.getAppointment().getConsultant().getFullname())
+                        .serviceName(notification.getAppointment().getService().getName())
+                        .appointmentDate(notification.getAppointment().getPreferredDate())
                         .build()
                         : null)
                 .cycleTracking(notification.getCycleTracking() != null
@@ -156,7 +165,7 @@ public class NotificationService {
                 .build();
     }
 
-    @Scheduled(cron = "0 37 13 * * *")
+    @Scheduled(cron = "0 00 08 * * *")
     public void sendReminders() {
         LocalDate tomorrow = LocalDate.now().plusDays(1);
 

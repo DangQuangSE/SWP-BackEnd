@@ -6,7 +6,7 @@ import com.S_Health.GenderHealthCare.dto.response.JwtResponse;
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
-import com.S_Health.GenderHealthCare.exception.exceptions.AuthenticationException;
+import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.AuthenticationRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
@@ -63,7 +63,7 @@ public class AuthenticationService implements UserDetailsService {
     }
     public void setPassword(PasswordRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new AuthenticationException("Mật khẩu không khớp!");
+            throw new AppException("Mật khẩu không khớp!");
         }
         String password = passwordEncoder.encode(request.getPassword());
         authenticationRepository.save(User.builder()
@@ -79,11 +79,11 @@ public class AuthenticationService implements UserDetailsService {
 
     public void setPasswordForgot(PasswordRequest request) {
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new AuthenticationException("Mật khẩu không khớp!");
+            throw new AppException("Mật khẩu không khớp!");
         }
         String password = passwordEncoder.encode(request.getPassword());
         User user = authenticationRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AuthenticationException("Không tìm thấy người dùng với email: " + request.getEmail()));
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng với email: " + request.getEmail()));
 
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         authenticationRepository.save(user);
@@ -99,13 +99,13 @@ public class AuthenticationService implements UserDetailsService {
             ));
         } catch (Exception e) {
             System.out.println("Thông tin đăng nhập không chính xác!");
-            throw new AuthenticationException("Email hoặc mật khẩu không chính xác!");
+            throw new AppException("Email hoặc mật khẩu không chính xác!");
         }
         User user = authenticationRepository.findUserByEmail(loginEmailRequest.getEmail());
 
         // Kiểm tra user có bị vô hiệu hóa không
         if (!user.isActive()) {
-            throw new AuthenticationException("Tài khoản đã bị vô hiệu hóa!");
+            throw new AppException("Tài khoản đã bị vô hiệu hóa!");
         }
 
         String jwt = jwtService.generateToken(user);
@@ -122,7 +122,7 @@ public class AuthenticationService implements UserDetailsService {
 
             GoogleIdToken idToken = verifier.verify(googleToken);
             if (idToken == null) {
-                throw new AuthenticationException("Mã xác minh không chính xác!");
+                throw new AppException("Mã xác minh không chính xác!");
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
@@ -143,7 +143,7 @@ public class AuthenticationService implements UserDetailsService {
 
             // Kiểm tra user có bị vô hiệu hóa không
             if (!user.isActive()) {
-                throw new AuthenticationException("Tài khoản đã bị vô hiệu hóa!");
+                throw new AppException("Tài khoản đã bị vô hiệu hóa!");
             }
 
             String jwt = jwtService.generateToken(user);
@@ -151,7 +151,7 @@ public class AuthenticationService implements UserDetailsService {
 
             return new JwtResponse(jwt, userDTO, "google", true);
         } catch (Exception e) {
-            throw new AuthenticationException("Đăng nhập Google thất bại: " + e.getMessage());
+            throw new AppException("Đăng nhập Google thất bại: " + e.getMessage());
         }
     }
 
@@ -199,7 +199,7 @@ public class AuthenticationService implements UserDetailsService {
 
             // Kiểm tra user có bị vô hiệu hóa không
             if (!user.isActive()) {
-                throw new AuthenticationException("Tài khoản đã bị vô hiệu hóa!");
+                throw new AppException("Tài khoản đã bị vô hiệu hóa!");
             }
 
             String jwt = jwtService.generateToken(user);
@@ -207,7 +207,7 @@ public class AuthenticationService implements UserDetailsService {
 
             return new JwtResponse(jwt, userDTO, "facebook", true);
         } catch (Exception e) {
-            throw new AuthenticationException("Đăng nhập Facebook: " + e.getMessage());
+            throw new AppException("Đăng nhập Facebook: " + e.getMessage());
         }
     }
     @Override

@@ -3,6 +3,7 @@ package com.S_Health.GenderHealthCare.dto.response.nofitication;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -13,5 +14,6 @@ import java.time.LocalDateTime;
 public class NotificationAppointmentResponse {
     Long id;
     String doctorName;
-    LocalDateTime appointmentDate;
+    String serviceName;
+    LocalDate appointmentDate;
 }

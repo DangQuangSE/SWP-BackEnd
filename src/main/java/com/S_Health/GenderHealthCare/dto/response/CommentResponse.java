@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 public class CommentResponse {
     Long id;
     String commenterName;
+    long commenterId;
+    String commenterImageUrl;
     String description;
     LocalDateTime createAt;
 }
