@@ -1,43 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Appointment Reminder</title>
+    <meta charset="UTF-8">
+    <title>Nhắc nhở cuộc hẹn SHeathCare</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f6f6f6;">
-<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f6f6f6;">
+<body style="margin: 0; padding: 0; background-color: #f6f6f6; font-family: Arial, sans-serif;">
+<table width="100%" bgcolor="#f6f6f6" cellpadding="0" cellspacing="0">
     <tr>
         <td align="center" style="padding: 20px 0;">
-            <table role="presentation" cellspacing="0" cellpadding="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+            <!-- Container -->
+            <table width="600" bgcolor="#ffffff" cellpadding="0" cellspacing="0" style="border-radius: 10px; overflow: hidden; box-shadow: 0 0 5px rgba(0,0,0,0.1);">
+                <!-- Logo -->
                 <tr>
-                    <td style="background-color: #007bff; padding: 20px; text-align: center; color: #ffffff;">
-                        <h1 style="margin: 0; font-size: 24px;">Appointment Reminder</h1>
+                    <td align="center" style="
+                          padding: 20px;
+                          background: linear-gradient(135deg, rgba(255, 90, 125, 0.3), rgba(56, 112, 255, 0.3));
+                          color: white;">
+                        <img src="https://14.225.198.16/image/logo.png" alt="SHeathCare Logo" width="80" style="display: block; margin-bottom: 10px; border-radius: 8px;">
+                        <p style="font-size: 25px; font-weight: bold;">Nhắc nhở cuộc hẹn của bạn</p>
                     </td>
                 </tr>
+
+                <!-- Body -->
                 <tr>
-                    <td style="padding: 30px;">
-                        <p style="font-size: 16px; color: #333333;">
-                            Dear <strong>[[${customerName}]]</strong>,
-                        </p>
-                        <p style="font-size: 16px; color: #333333;">
-                            This is a friendly reminder that you have an appointment scheduled for:
-                        </p>
-                        <p style="font-size: 18px; color: #007bff; font-weight: bold; margin: 20px 0;">
-                            [[${appointmentDate}]]
-                        </p>
-                        <p style="font-size: 16px; color: #333333;">
-                            If you have any questions or need to reschedule, please contact us.
-                        </p>
-                        <p style="font-size: 16px; color: #333333;">
-                            Best regards,<br/>
-                            <strong>Your Service Team</strong>
-                        </p>
+                    <td style="padding: 30px; color: #333;">
+                        <p>Chào <strong>[[${customerName}]]</strong>,</p>
+
+                        <p>Đây là lời nhắc nhở thân thiện rằng bạn có một cuộc hẹn đã được lên lịch vào:</p>
+
+                        <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #f1556c;">
+                            <p style="font-size: 18px; color: #f1556c; font-weight: bold; margin: 0;">
+                                [[${appointmentDate}]]
+                            </p>
+                        </div>
+
+                        <p>Vui lòng đến đúng giờ để được phục vụ tốt nhất. Nếu bạn có bất kỳ câu hỏi nào hoặc cần thay đổi lịch hẹn, hãy liên hệ với chúng tôi.</p>
+
+                        <br>
+                        <p>Trân trọng,<br><b>Đội ngũ SHeathCare</b></p>
                     </td>
                 </tr>
+
+                <!-- Footer -->
                 <tr>
-                    <td style="background-color: #f0f0f0; text-align: center; padding: 15px; font-size: 12px; color: #777777;">
-                        &copy; 2025 Your Company. All rights reserved.
+                    <td align="center" bgcolor="#f2f2f2" style="padding: 20px; font-size: 12px; color: #888;">
+                        © 2025 SHeathCare. All rights reserved. <br>
+                        <a href="#" style="color: #888; text-decoration: underline;">Hủy đăng ký nhận thông báo</a>
                     </td>
                 </tr>
             </table>
