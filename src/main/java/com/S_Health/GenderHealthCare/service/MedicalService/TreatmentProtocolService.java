@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,7 +29,7 @@ public class TreatmentProtocolService {
     }
 
     public List<TreatmentProtocolResponse> getAll (){
-        List<TreatmentProtocol> treatmentProtocol = treatmentProtocolRepository.findAll();
+        List<TreatmentProtocol> treatmentProtocol = treatmentProtocolRepository.findByActiveTrue();
         return treatmentProtocol.stream().map(x
                 -> modelMapper.map(x, TreatmentProtocolResponse.class))
                 .collect(Collectors.toList());
@@ -38,7 +37,7 @@ public class TreatmentProtocolService {
     }
 
     public TreatmentProtocolResponse getById (Long id){
-        TreatmentProtocol treatmentProtocol = treatmentProtocolRepository.findById(id)
+        TreatmentProtocol treatmentProtocol = treatmentProtocolRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new AppException("không tìm thấy ID"));
         return modelMapper.map(treatmentProtocol, TreatmentProtocolResponse.class);
 
@@ -52,5 +51,14 @@ public class TreatmentProtocolService {
 
         treatmentProtocolRepository.save(treatmentProtocol);
         return modelMapper.map(treatmentProtocol, TreatmentProtocolResponse.class);
+    }
+
+    @Transactional
+    public void delete(Long id){
+        TreatmentProtocol treatmentProtocol = treatmentProtocolRepository.findById(id)
+                .orElseThrow(() -> new AppException("không tìm thấy ID"));
+
+        treatmentProtocol.setActive(false);
+        treatmentProtocolRepository.save(treatmentProtocol);
     }
 }

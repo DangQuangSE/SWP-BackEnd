@@ -62,6 +62,8 @@ public class Filter extends OncePerRequestFilter {
             // Payment & External APIs
             "POST:/api/payment/vnpay/**",
 
+            "DELETE:/api/treatment/**",
+
 
             // Swagger UI endpoints
             "GET:/swagger-ui/**",
