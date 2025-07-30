@@ -2,6 +2,7 @@ package com.S_Health.GenderHealthCare.service;
 
 import com.S_Health.GenderHealthCare.dto.UserDTO;
 import com.S_Health.GenderHealthCare.entity.User;
+import com.S_Health.GenderHealthCare.enums.Gender;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
 import com.S_Health.GenderHealthCare.repository.CertificationRepository;
 import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
@@ -52,6 +53,8 @@ public class UserService {
         if (request.getAddress() != null) user.setAddress(request.getAddress());
         if (request.getImageUrl() != null) user.setImageUrl(request.getImageUrl());
         if (request.getDateOfBirth() != null) user.setDateOfBirth(request.getDateOfBirth());
+        if (request.getGender() != null) user.setGender(Gender.valueOf(request.getGender()));
+
 
         User updated = userRepository.save(user);
         return modelMapper.map(updated, UserDTO.class);
