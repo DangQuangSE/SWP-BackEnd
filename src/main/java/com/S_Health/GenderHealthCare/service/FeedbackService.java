@@ -11,11 +11,9 @@ import com.S_Health.GenderHealthCare.entity.ServiceFeedback;
 import com.S_Health.GenderHealthCare.entity.User;
 import com.S_Health.GenderHealthCare.enums.UserRole;
 import com.S_Health.GenderHealthCare.exception.exceptions.AppException;
-import com.S_Health.GenderHealthCare.repository.AppointmentRepository;
-import com.S_Health.GenderHealthCare.repository.ConsultantFeedbackRepository;
-import com.S_Health.GenderHealthCare.repository.ServiceFeedbackRepository;
-import com.S_Health.GenderHealthCare.repository.UserRepository;
+import com.S_Health.GenderHealthCare.repository.*;
 import com.S_Health.GenderHealthCare.utils.AuthUtil;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +33,10 @@ public class FeedbackService {
     UserRepository userRepository;
     @Autowired
     AuthUtil authUtil;
+    @Autowired
+    private ModelMapper modelMapper;
+    @Autowired
+    ServiceRepository serviceRepository;
 
     public ServiceFeedbackResponse createFeedback(ServiceFeedbackRequest request){
         Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
@@ -361,6 +363,32 @@ public class FeedbackService {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    public List<ServiceFeedbackResponse> getAllServiceRating() {
+        return serviceFeedbackRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private ServiceFeedbackResponse mapToResponse(ServiceFeedback feedback) {
+        ServiceFeedbackResponse response = new ServiceFeedbackResponse();
+        response.setId(feedback.getId());
+        response.setRating(feedback.getRating());
+        response.setComment(feedback.getComment());
+        response.setCreatedAt(feedback.getCreateAt());
+        response.setCustomerName(feedback.getAppointment().getCustomer().getFullname());
+
+        if (feedback.getAppointment().getService().getName() != null) {
+            response.setServiceFeedbackName(feedback.getAppointment().getService().getName());
+        }
+
+
+
+
+
+        return response;
     }
 
 }

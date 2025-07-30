@@ -50,5 +50,11 @@ public class ServiceFeedbackAPI {
         return ResponseEntity.ok(feedbackService.getByServiceId(serviceId));
     }
 
+    @GetMapping
+    public ResponseEntity<List<ServiceFeedbackResponse>> getAllServiceFeedback() {
+        List<ServiceFeedbackResponse> responses = feedbackService.getAllServiceRating();
+        return ResponseEntity.ok(responses);
+    }
+
 
 }
